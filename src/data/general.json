@@ -1,0 +1,8 @@
+{
+  "validators": {
+    "required": "Field is required",
+    "number": "Number only",
+    "description": "This field cannot contain special character",
+    "secret": "Your JWT"
+  }
+}
