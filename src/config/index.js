@@ -1,4 +1,4 @@
-const { REACT_APP_GATEWAY = "http://localhost:80/" } = process.env;
+const { REACT_APP_GATEWAY = "http://localhost:80/api" } = process.env;
 
 const config = {
   api: {
