@@ -3,8 +3,9 @@
             fill="none"
             viewBox="0 0 24 24"
             stroke-width="1.7"
-            stroke="currentColor"
-            class="w-9 h-9"
+            stroke="white"
+            class="w-9 h-9 "
+            
           >
             <path
               stroke-linecap="round"

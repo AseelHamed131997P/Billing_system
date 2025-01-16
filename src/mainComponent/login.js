@@ -2,6 +2,8 @@ import { useState } from "react"; // React import for useState
 import logo_agile from "../img/logo_agile.png"; // Import logo
 import ReactFlagsSelect from "react-flags-select"; // Import flags select for language selection
 import "./login.css"; // Import your CSS
+import "../CSS/general.css";
+
 import {
   Routes,
   Route,
@@ -131,10 +133,7 @@ const Login = () => {
               </div>
             </div>
 
-            <button
-              class=" w-96 tracking-wider	 rounded-full bg-gradient-to-tr from-cyan-950 to-cyan-900 py-4 px-4 text-center text-2xl text-white transition-opacity ease-in active:bg-slate-700 hover:bg-slate-700 active:opacity-50"
-              type="button"
-            >
+            <button class="py-4 px-4 w-96 btn" type="button">
               Login
             </button>
           </form>

@@ -1,0 +1,30 @@
+.btn {
+  @apply tracking-wider	 rounded-full bg-gradient-to-tr from-cyan-950 to-cyan-900  text-center text-2xl text-white transition-opacity ease-in active:bg-slate-700 hover:bg-slate-700 active:opacity-50;
+}
+.signup {
+  @apply h-screen bg-[#f1f3f6] pt-[calc(100vh/2)];
+}
+
+.register-box {
+  @apply overflow-hidden bg-white rounded-[2rem] max-w-[70rem] mx-auto shadow-[rgba(17,17,26,0.05)_0px_1px_0px,_rgba(17,17,26,0.1)_0px_0px_8px] transform translate-y-[-50%];
+}
+
+.header-title {
+  @apply text-3xl font-medium;
+}
+
+.box-header {
+  @apply flex items-center p-[1.2rem] bg-[#0e1c41] text-white;
+}
+
+.box-section {
+  @apply flex justify-center py-[3.2rem] px-0;
+}
+
+.section-title {
+  @apply text-3xl font-normal mb-[1.2rem];
+}
+
+.register-form {
+  @apply grid gap-[1.2rem];
+}

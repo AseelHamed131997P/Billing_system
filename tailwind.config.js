@@ -12,6 +12,13 @@ module.exports = {
       colors: {
         "light-blue": "#e7f5ff",
       },
+
+      fontFamily: {
+        rubik: ["Rubik", "sans-serif"], // Default font  family
+      },
+      textColor: {
+        default: "#333", // Default text color
+      },
     },
   },
   plugins: [],
