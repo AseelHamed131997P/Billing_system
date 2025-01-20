@@ -15,3 +15,5 @@ export const mqWithSmallDevice = facepaint(
 );
 
 export { default as api } from "./api";
+export { default as i18n } from "./i18n";
+export { default as i18nInvoice } from "./i18nInvoice";

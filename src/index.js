@@ -17,24 +17,23 @@ import Cookies from "js-cookie";
 import React, { Suspense } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap/dist/js/bootstrap.bundle.min.js";
-
+import "./ui/utils/index";
 const { store, persistor } = createStore();
 const rootElement = document.getElementById("root");
 const root = ReactDOM.createRoot(rootElement);
-// Cookies.set("i18next", "en");
-i18n
-  .use(initReactI18next) // passes i18n down to react-i18next
-  .use(LanguageDetector)
-  .use(HttpApi)
-  .init({
-    supportedLngs: ["en", "ar", "he"],
-    fallbackLng: "en", // if user select lang not supported the system will take en lang default
-    detection: {
-      order: ["cookie", "htmlTag", "localStorage"],
-      caches: ["cookie"], //store the first time in cookie and so on
-    },
-    backend: { loadPath: "/assets/locales/{{lng}}/translation.json" },
-  });
+// i18n
+//   .use(initReactI18next) // passes i18n down to react-i18next
+//   .use(LanguageDetector)
+//   .use(HttpApi)
+//   .init({
+//     supportedLngs: ["en", "ar", "he"],
+//     fallbackLng: "en", // if user select lang not supported the system will take en lang default
+//     detection: {
+//       order: ["cookie", "htmlTag", "localStorage"],
+//       caches: ["cookie"], //store the first time in cookie and so on
+//     },
+//     backend: { loadPath: "/assets/locales/{{lng}}/translation.json" },
+//   });
 
 const loadingMarkup = <div>Loading...</div>;
 root.render(
