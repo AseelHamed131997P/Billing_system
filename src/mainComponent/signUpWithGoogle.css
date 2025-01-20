@@ -45,7 +45,3 @@
 } */
 
 /* Using @apply to convert CSS to Tailwind */
-
-.margin-auto {
-  margin: auto;
-}

@@ -11,10 +11,10 @@ import {
   CheckBox,
 } from "../ui/subComponent/general/index.js";
 
-const SignUpWithGoogle = () => {
-  const [googleValues, setGoogleValues] = useState({
+const SignUpWithSMS = () => {
+  const [SMSValues, setSMSValues] = useState({
     Username: "",
-    Email: "",
+    Phone: "",
     Password: "",
     Confirm_Password: "",
   });
@@ -22,8 +22,8 @@ const SignUpWithGoogle = () => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     // console.log(`Changing ${name} to ${value}`);
-    setGoogleValues((prevGoogleValues) => ({
-      ...prevGoogleValues,
+    setSMSValues((prevSMSValues) => ({
+      ...prevSMSValues,
       [name]: value, // Update the specific field in the state
     }));
   };
@@ -35,7 +35,7 @@ const SignUpWithGoogle = () => {
   };
 
   const handleSubmit = () => {
-    console.log("googleValues:", googleValues); // Handle form submission (e.g., log the username)
+    console.log("SMSValues:", SMSValues); // Handle form submission (e.g., log the username)
   };
 
   return (
@@ -45,11 +45,11 @@ const SignUpWithGoogle = () => {
         <section className="box-section center-x">
           <form className="register-form">
             <h1 className="section-title">Create Your Account</h1>
-            {Object.keys(googleValues).map((key) => (
+            {Object.keys(SMSValues).map((key) => (
               <InputRegister
                 id={key}
                 handleChange={handleChange}
-                values={googleValues}
+                values={SMSValues}
               />
             ))}
             <CheckBox
@@ -71,4 +71,4 @@ const SignUpWithGoogle = () => {
   );
 };
 
-export default SignUpWithGoogle;
+export default SignUpWithSMS;

@@ -8,21 +8,45 @@ import { BrowserRouter } from "react-router-dom"; // Import BrowserRouter
 import App from "./App";
 import reportWebVitals from "./reportWebVitals";
 import "./index.css";
+import i18n from "i18next";
+import { initReactI18next } from "react-i18next";
+import ReactFlagsSelect from "react-flags-select"; // Import flags select for language selection
+import LanguageDetector from "i18next-browser-languagedetector";
+import HttpApi from "i18next-http-backend";
+import Cookies from "js-cookie";
+import React, { Suspense } from "react";
+import "bootstrap/dist/css/bootstrap.min.css";
+import "bootstrap/dist/js/bootstrap.bundle.min.js";
 
 const { store, persistor } = createStore();
 const rootElement = document.getElementById("root");
 const root = ReactDOM.createRoot(rootElement);
+// Cookies.set("i18next", "en");
+i18n
+  .use(initReactI18next) // passes i18n down to react-i18next
+  .use(LanguageDetector)
+  .use(HttpApi)
+  .init({
+    supportedLngs: ["en", "ar", "he"],
+    fallbackLng: "en", // if user select lang not supported the system will take en lang default
+    detection: {
+      order: ["cookie", "htmlTag", "localStorage"],
+      caches: ["cookie"], //store the first time in cookie and so on
+    },
+    backend: { loadPath: "/assets/locales/{{lng}}/translation.json" },
+  });
 
+const loadingMarkup = <div>Loading...</div>;
 root.render(
-  <StoreProvider store={store}>
-    {/* <UIProvider> */}
-    <PersistGate loading={<div>Loading...</div>} persistor={persistor}>
-      <BrowserRouter>
-        <App />
-      </BrowserRouter>
-    </PersistGate>
-    {/* </UIProvider> */}
-  </StoreProvider>
+  <Suspense fallback={loadingMarkup}>
+    <StoreProvider store={store}>
+      <PersistGate loading={<div>Loading...</div>} persistor={persistor}>
+        <BrowserRouter>
+          <App />
+        </BrowserRouter>
+      </PersistGate>
+    </StoreProvider>
+  </Suspense>
 );
 
 reportWebVitals();

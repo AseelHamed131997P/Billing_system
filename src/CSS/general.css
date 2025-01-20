@@ -1,12 +1,46 @@
 .btn {
   @apply tracking-wider	 rounded-full bg-gradient-to-tr from-cyan-950 to-cyan-900  text-center text-2xl text-white transition-opacity ease-in active:bg-slate-700 hover:bg-slate-700 active:opacity-50;
 }
+.margin-auto {
+  @apply m-auto;
+}
+
+.center-v {
+  @apply flex items-center;
+}
+
+.center-x {
+  @apply flex justify-center;
+}
+
+.grid-2-cols {
+  @apply grid grid-cols-2;
+}
+
+.grid-2-rows-auto-1fr {
+  @apply grid grid-rows-[auto_1fr];
+}
+
+.flex-center-v-space-between {
+  @apply flex justify-between items-center;
+}
+
+.flex-vx-center {
+  @apply flex items-center justify-center;
+}
+/* login page */
+
+.input-login {
+  @apply w-full pl-10 py-4 bg-transparent placeholder:text-slate-400 text-slate-600 text-2xl border border-gray-700 rounded-full transition duration-300 focus:outline-none focus:shadow-[inset_0_0_0_1px_black];
+}
+
+/* Apple,google,SMS Register page */
 .signup {
   @apply h-screen bg-[#f1f3f6] pt-[calc(100vh/2)];
 }
 
 .register-box {
-  @apply overflow-hidden bg-white rounded-[2rem] max-w-[70rem] mx-auto shadow-[rgba(17,17,26,0.05)_0px_1px_0px,_rgba(17,17,26,0.1)_0px_0px_8px] transform translate-y-[-50%];
+  @apply overflow-hidden bg-white rounded-[2rem] max-w-[70rem] shadow-[rgba(17,17,26,0.05)_0px_1px_0px,_rgba(17,17,26,0.1)_0px_0px_8px] transform translate-y-[-50%];
 }
 
 .header-title {
@@ -14,11 +48,11 @@
 }
 
 .box-header {
-  @apply flex items-center p-[1.2rem] bg-[#0e1c41] text-white;
+  @apply p-[1.2rem] bg-[#0e1c41] text-white;
 }
 
 .box-section {
-  @apply flex justify-center py-[3.2rem] px-0;
+  @apply py-[3.2rem] px-0;
 }
 
 .section-title {
