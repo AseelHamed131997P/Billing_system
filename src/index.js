@@ -15,8 +15,7 @@ import LanguageDetector from "i18next-browser-languagedetector";
 import HttpApi from "i18next-http-backend";
 import Cookies from "js-cookie";
 import React, { Suspense } from "react";
-import "bootstrap/dist/css/bootstrap.min.css";
-import "bootstrap/dist/js/bootstrap.bundle.min.js";
+
 import "./ui/utils/index";
 const { store, persistor } = createStore();
 const rootElement = document.getElementById("root");

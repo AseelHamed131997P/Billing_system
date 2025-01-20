@@ -1,6 +1,9 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  content: ["./src/**/*.{html,js}"],
+  content: [
+    "./src/**/*.{html,js,jsx,ts,tsx}", // Add your JSX or TSX files here
+    "./src/CSS/general.css",
+  ],
   theme: {
     extend: {
       fontSize: {
@@ -8,11 +11,8 @@ module.exports = {
       },
       colors: {
         "navy-blue": "#0F1C41",
+        "light-blue": "#e7f5ff", // Merged the colors into a single object
       },
-      colors: {
-        "light-blue": "#e7f5ff",
-      },
-
       fontFamily: {
         rubik: ["Rubik", "sans-serif"], // Default font  family
       },

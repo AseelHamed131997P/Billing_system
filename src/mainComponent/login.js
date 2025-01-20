@@ -3,6 +3,8 @@ import logo_agile from "../img/logo_agile.png"; // Import logo
 import "./login.css"; // Import your CSS
 import "../CSS/general.css";
 import { LangSelect } from "../ui/subComponent/general";
+import { useTranslation } from "react-i18next";
+
 import {
   Routes,
   Route,
@@ -21,6 +23,7 @@ const Login = () => {
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
   };
+  const { t } = useTranslation();
 
   return (
     <main className=" h-screen grid-2-cols">
@@ -66,7 +69,7 @@ const Login = () => {
               </div>
             </div>
 
-            <button class="py-2 px-4 w-96 btn" type="button">
+            <button className=" btn py-2 px-4 w-96  " type="button">
               Login
             </button>
           </form>
@@ -76,13 +79,13 @@ const Login = () => {
               OR
             </div>
           </div>
-          <button class=" py-2 px-4 w-[40rem]  btn" type="button">
+          <button className=" py-2 px-4 w-[40rem]  btn" type="button">
             Google
           </button>
-          <button class=" py-2 px-4 w-[40rem] btn" type="button">
+          <button className=" py-2 px-4 w-[40rem] btn" type="button">
             Apple
           </button>
-          <button class="py-2 px-4 w-[40rem] btn" type="button">
+          <button className="py-2 px-4 w-[40rem] btn" type="button">
             SMS
           </button>
           <a
