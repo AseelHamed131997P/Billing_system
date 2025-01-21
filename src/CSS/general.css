@@ -65,5 +65,9 @@
 
 /* admin and company page */
 .layout {
-  @apply border grid grid-cols-2 gap-4 place-items-center;
+  @apply border grid grid-cols-2 gap-5 place-items-center;
 }
+
+/* .signature-butt1 {
+  @apply px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition duration-200;
+} */
