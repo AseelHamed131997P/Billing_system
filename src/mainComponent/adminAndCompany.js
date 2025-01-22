@@ -193,8 +193,11 @@ const AdminAndCompany = () => {
                 )}
               </div>
 
-              <div className="border w-full col-start-1 flex-vx-center flex-col col-start-1 col-span-2 mx-auto">
-                <div>OR </div>
+              <div className="border w-full col-start-1 col-span-2 flex-vx-center flex-col  ">
+                <div className="transform -translate-y-[1.2rem]  font-semibold text-xl tracking-[0.2rem]">
+                  OR
+                </div>
+
                 <FileInput
                   setFile={setSignatureComp}
                   file={signatureComp}
@@ -220,14 +223,8 @@ const AdminAndCompany = () => {
                     />
                   )
               )}
-              <FileInput
-                setFile={setCompanyLogo}
-                file={companyLogo}
-                name={"Choose Company Logo"}
-              />
 
-              <div className="border  col-start-1 col-span-3 flex-vx-center gap-3">
-                {" "}
+              <div className=" border col-start-1 col-span-full flex-vx-center gap-[1.2rem]">
                 <Input
                   name="start"
                   value={deliveryNumber["start"]}
@@ -241,7 +238,7 @@ const AdminAndCompany = () => {
                   value={deliveryNumber["end"]}
                   handleChange={handleChangeDeliveryNumber}
                   label={"Delivery NO end"}
-                  width="w-40 mr-[1rem]"
+                  width="w-40 mr-[3.2rem]"
                 />
                 <Input
                   name="start"
@@ -256,7 +253,7 @@ const AdminAndCompany = () => {
                   value={invoiceNumber["end"]}
                   handleChange={handleChangeInvoiceNumber}
                   label={"Invoice NO end"}
-                  width="w-40"
+                  width="w-40 mr-[3.2rem]"
                 />
                 <FileInput
                   setFile={setInvoicePhoto}
@@ -264,11 +261,20 @@ const AdminAndCompany = () => {
                   name={"upload invoice photo"}
                 />
               </div>
-              <FileInput
-                setFile={setCompanyLicense}
-                file={CompanyLicense}
-                name={"Choose Company License"}
-              />
+
+              <div className=" border col-start-1 col-span-full flex-vx-center gap-[4.8rem]">
+                <FileInput
+                  setFile={setCompanyLicense}
+                  file={CompanyLicense}
+                  name={"Choose Company License"}
+                />
+
+                <FileInput
+                  setFile={setCompanyLogo}
+                  file={companyLogo}
+                  name={"Choose Company Logo"}
+                />
+              </div>
 
               <div className="w-50rem border-2 col-start-1 col-span-2 mx-auto">
                 <p className="text-lg	font-medium	 center-x">
@@ -296,8 +302,10 @@ const AdminAndCompany = () => {
                 )}
               </div>
 
-              <div className="border w-full col-start-1 flex-vx-center flex-col col-span-2 mx-auto">
-                <div>OR </div>
+              <div className="border w-full col-start-1 col-span-2 flex-vx-center flex-col  ">
+                <div className="transform -translate-y-[1.2rem]  font-semibold text-xl tracking-[0.2rem]">
+                  OR{" "}
+                </div>
                 <FileInput
                   setFile={setSignatureAdmin}
                   file={signatureAdmin}

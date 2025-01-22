@@ -42,7 +42,7 @@ const FileInput = (props) => {
   };
 
   return (
-    <div className="p-4">
+    <div>
       <div className="flex items-center gap-4">
         {/* File Input */}
         <label className="cursor-pointer bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition duration-200">
@@ -56,20 +56,35 @@ const FileInput = (props) => {
         </label>
 
         {/* Display selected file name */}
-        {selectedFile && (
-          <span className="text-gray-700">{selectedFile.name}</span>
-        )}
+
+        <span
+          className="text-gray-700 w-32 truncate block"
+          style={{
+            display: "inline-block",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+            cursor: "default", // Ensures the mouse pointer is an arrow
+          }}
+          title={selectedFile ? selectedFile.name : "No file chosen"}
+        >
+          {selectedFile ? selectedFile.name : "No file chosen"}
+        </span>
 
         {/* Clear Button */}
-        {selectedFile && (
-          <button
-            type="button"
-            onClick={handleClear}
-            className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition duration-200"
-          >
-            Clear
-          </button>
-        )}
+
+        <button
+          type="button"
+          onClick={handleClear}
+          className={`px-4 py-2 rounded transition duration-200 ${
+            selectedFile
+              ? "bg-red-500 text-white hover:bg-red-600"
+              : "bg-gray-300 text-gray-500 cursor-not-allowed"
+          }`}
+          disabled={!selectedFile}
+        >
+          Clear
+        </button>
       </div>
     </div>
   );

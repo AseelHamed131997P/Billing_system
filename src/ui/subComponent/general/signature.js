@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef } from "react";
 
 const Signature = (props) => {
   const canvasRef = useRef(null);
@@ -151,10 +151,16 @@ const Signature = (props) => {
         >
           Save as image
         </button>
+
         <button
           type="button"
           onClick={handleClear}
-          className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition duration-200"
+          className={`px-4 py-2 rounded transition duration-200 ${
+            props.signature.urlSign
+              ? "bg-red-500 text-white hover:bg-red-600"
+              : "bg-gray-300 text-gray-500 cursor-not-allowed"
+          }`}
+          disabled={!props.signature.urlSign}
         >
           Clear
         </button>
