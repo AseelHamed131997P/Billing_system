@@ -13,7 +13,7 @@ const DropDown = (props) => {
         onChange={props.handleChangeOption}
         onFocus={handleFocus}
         onBlur={handleBlur}
-        className="block w-80 px-3 py-3 text-lg border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white peer"
+        className="block w-80 px-3 py-3 text-lg border border-gray-400 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white peer"
       >
         {/* Optional placeholder */}
         <option value="" disabled hidden>

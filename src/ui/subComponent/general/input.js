@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 
-const Input = ({ name, value, handleChange, label, width = "w-80" }) => {
+const Input = ({ name, value, handleChange, label, width = "w-96" }) => {
   const [isFocused, setIsFocused] = useState(false);
 
   const handleFocus = () => setIsFocused(true);
@@ -15,7 +15,7 @@ const Input = ({ name, value, handleChange, label, width = "w-80" }) => {
         onChange={handleChange}
         onFocus={handleFocus}
         onBlur={handleBlur}
-        className={`block ${width} px-3 py-3 text-lg border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent peer`}
+        className={`block ${width} px-3 py-3 text-lg border border-gray-400 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent peer`}
       />
       <label
         className={`absolute left-3 transition-all duration-200 ease-in-out ${

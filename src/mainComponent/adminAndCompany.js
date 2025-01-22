@@ -143,8 +143,8 @@ const AdminAndCompany = () => {
       <div className="overflow-hidden bg-white rounded-[2rem] shadow-[rgba(17,17,26,0.05)_0px_1px_0px,_rgba(17,17,26,0.1)_0px_0px_8px] margin-auto max-w-[100rem]">
         <HeaderRegister />
         <section className="box-section center-x ">
-          <form className="register-form border">
-            <div className="flex-center-v-space-between border">
+          <form className="register-form ">
+            <div className="flex-center-v-space-between ">
               <DropDown
                 options={companyType}
                 option={option}
@@ -167,7 +167,7 @@ const AdminAndCompany = () => {
                   label={labels[index]}
                 />
               ))}
-              <div className="w-50rem border-2 col-start-1 col-span-2 mx-auto ">
+              <div className="w-50rem  col-start-1 col-span-2 mx-auto ">
                 <p className="text-lg	font-medium	 center-x">
                   Enter Your Signature
                 </p>
@@ -193,7 +193,7 @@ const AdminAndCompany = () => {
                 )}
               </div>
 
-              <div className="border w-full col-start-1 col-span-2 flex-vx-center flex-col  ">
+              <div className=" w-full col-start-1 col-span-2 flex-vx-center flex-col  ">
                 <div className="transform -translate-y-[1.2rem]  font-semibold text-xl tracking-[0.2rem]">
                   OR
                 </div>
@@ -224,7 +224,7 @@ const AdminAndCompany = () => {
                   )
               )}
 
-              <div className=" border col-start-1 col-span-full flex-vx-center gap-[1.2rem]">
+              <div className=" col-start-1 col-span-full flex-vx-center gap-[1.2rem] px-[1.2rem]">
                 <Input
                   name="start"
                   value={deliveryNumber["start"]}
@@ -262,7 +262,7 @@ const AdminAndCompany = () => {
                 />
               </div>
 
-              <div className=" border col-start-1 col-span-full flex-vx-center gap-[4.8rem]">
+              <div className=" col-start-1 col-span-full flex-vx-center gap-[4.8rem]">
                 <FileInput
                   setFile={setCompanyLicense}
                   file={CompanyLicense}
@@ -276,7 +276,7 @@ const AdminAndCompany = () => {
                 />
               </div>
 
-              <div className="w-50rem border-2 col-start-1 col-span-2 mx-auto">
+              <div className="w-50rem  col-start-1 col-span-2 mx-auto">
                 <p className="text-lg	font-medium	 center-x">
                   Enter Company Signature
                 </p>
@@ -302,7 +302,7 @@ const AdminAndCompany = () => {
                 )}
               </div>
 
-              <div className="border w-full col-start-1 col-span-2 flex-vx-center flex-col  ">
+              <div className=" w-full col-start-1 col-span-2 flex-vx-center flex-col  ">
                 <div className="transform -translate-y-[1.2rem]  font-semibold text-xl tracking-[0.2rem]">
                   OR{" "}
                 </div>
