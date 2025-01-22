@@ -137,7 +137,7 @@ const Signature = (props) => {
   return (
     <>
       <canvas
-        className="w-full h-[10rem] mb-4 border-2"
+        className="w-full h-[10rem] mb-4 border-2 "
         ref={canvasRef}
         width={480}
         height={160}
