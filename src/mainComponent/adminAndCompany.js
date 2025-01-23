@@ -16,7 +16,7 @@ import {
 } from "../ui/subComponent/general/index.js";
 import image_name from "../img/image_name.png";
 import { Fi } from "react-flags-select";
-
+import UserModal from "./userModal.js";
 const AdminAndCompany = () => {
   const [signatureComp, setSignatureComp] = useState({
     urlSign: null,
@@ -27,9 +27,16 @@ const AdminAndCompany = () => {
     urlSign: null,
     urlFile: null,
   }); // here save the signature value just when not null if null does not save
+  console.log(`test  admin urlSign ${signatureAdmin.urlSign}`);
+  console.log(`test admin page urlFile ${signatureAdmin.urlFile}`);
 
   console.log(`test company page urlSign ${signatureComp.urlSign}`);
   console.log(`test company page urlFile ${signatureComp.urlFile}`);
+
+  console.log(
+    `test company page urlFile type:  typeOf: ${typeof signatureComp.urlFile}`
+  );
+
   let companyType = [
     "Simple User",
     "Commerical With VAT NO",
@@ -138,6 +145,12 @@ const AdminAndCompany = () => {
 
   console.log(`invoice Photo: ${invoicePhoto.urlFile}`);
 
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const toggleModal = () => {
+    setIsModalOpen(!isModalOpen);
+  };
+
   return (
     <main className="bg-[#f1f3f6] pt-[3.2rem] pb-[3.2rem]">
       <div className="overflow-hidden bg-white rounded-[2rem] shadow-[rgba(17,17,26,0.05)_0px_1px_0px,_rgba(17,17,26,0.1)_0px_0px_8px] margin-auto max-w-[100rem]">
@@ -152,7 +165,11 @@ const AdminAndCompany = () => {
                 handleChangeOption={handleChangeOption}
                 label={"select your company type"}
               />
-              <button className="btn py-2 px-4 w-64" type="button">
+              <button
+                className="btn py-2 px-4 w-64"
+                type="button"
+                onClick={toggleModal}
+              >
                 Create Users
               </button>
             </div>
@@ -167,40 +184,39 @@ const AdminAndCompany = () => {
                   label={labels[index]}
                 />
               ))}
-              <div className="w-50rem  col-start-1 col-span-2 mx-auto ">
+              <div className="w-50rem  col-start-1 col-span-2 mx-auto">
                 <p className="text-lg	font-medium	 center-x">
                   Enter Your Signature
                 </p>
                 <Signature
-                  setSignature={setSignatureComp}
-                  signature={signatureComp}
+                  setSignature={setSignatureAdmin}
+                  signature={signatureAdmin}
                 />
               </div>
 
               <div className="border col-start-3 row-span-2 center-x">
-                {signatureComp.urlSign || signatureComp.urlFile ? (
+                {signatureAdmin.urlSign || signatureAdmin.urlFile ? (
                   <img
                     src={
-                      signatureComp.urlSign && signatureComp.urlFile
-                        ? signatureComp.urlFile // Show urlFile if both exist
-                        : signatureComp.urlSign || signatureComp.urlFile // Show the existing URL
+                      signatureAdmin.urlSign && signatureAdmin.urlFile
+                        ? signatureAdmin.urlFile // Show urlFile if both exist
+                        : signatureAdmin.urlSign || signatureAdmin.urlFile // Show the existing URL
                     }
                     alt="Signature"
                     className="w-[18rem] h-[9rem]"
                   />
                 ) : (
-                  "Admin Signature"
+                  "Company Signature"
                 )}
               </div>
 
               <div className=" w-full col-start-1 col-span-2 flex-vx-center flex-col  ">
                 <div className="transform -translate-y-[1.2rem]  font-semibold text-xl tracking-[0.2rem]">
-                  OR
+                  OR{" "}
                 </div>
-
                 <FileInput
-                  setFile={setSignatureComp}
-                  file={signatureComp}
+                  setFile={setSignatureAdmin}
+                  file={signatureAdmin}
                   name={"Choose Signature Image"}
                 />
               </div>
@@ -275,40 +291,40 @@ const AdminAndCompany = () => {
                   name={"Choose Company Logo"}
                 />
               </div>
-
-              <div className="w-50rem  col-start-1 col-span-2 mx-auto">
+              <div className="w-50rem  col-start-1 col-span-2 mx-auto ">
                 <p className="text-lg	font-medium	 center-x">
                   Enter Company Signature
                 </p>
                 <Signature
-                  setSignature={setSignatureAdmin}
-                  signature={signatureAdmin}
+                  setSignature={setSignatureComp}
+                  signature={signatureComp}
                 />
               </div>
 
               <div className="border col-start-3 row-span-2 center-x">
-                {signatureAdmin.urlSign || signatureAdmin.urlFile ? (
+                {signatureComp.urlSign || signatureComp.urlFile ? (
                   <img
                     src={
-                      signatureAdmin.urlSign && signatureAdmin.urlFile
-                        ? signatureAdmin.urlFile // Show urlFile if both exist
-                        : signatureAdmin.urlSign || signatureAdmin.urlFile // Show the existing URL
+                      signatureComp.urlSign && signatureComp.urlFile
+                        ? signatureComp.urlFile // Show urlFile if both exist
+                        : signatureComp.urlSign || signatureComp.urlFile // Show the existing URL
                     }
                     alt="Signature"
                     className="w-[18rem] h-[9rem]"
                   />
                 ) : (
-                  "Company Signature"
+                  "Admin Signature"
                 )}
               </div>
 
               <div className=" w-full col-start-1 col-span-2 flex-vx-center flex-col  ">
                 <div className="transform -translate-y-[1.2rem]  font-semibold text-xl tracking-[0.2rem]">
-                  OR{" "}
+                  OR
                 </div>
+
                 <FileInput
-                  setFile={setSignatureAdmin}
-                  file={signatureAdmin}
+                  setFile={setSignatureComp}
+                  file={signatureComp}
                   name={"Choose Signature Image"}
                 />
               </div>
@@ -316,6 +332,9 @@ const AdminAndCompany = () => {
           </form>
         </section>
       </div>
+
+      {/* Modal */}
+      {isModalOpen && <UserModal toggleModal={toggleModal} />}
     </main>
   );
 };

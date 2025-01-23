@@ -24,10 +24,28 @@
 .flex-center-v-space-between {
   @apply flex justify-between items-center;
 }
-
+.flex-center-v-end-x {
+  @apply flex items-center justify-end;
+}
 .flex-vx-center {
   @apply flex items-center justify-center;
 }
+
+.grid-2-cols-center-vx {
+  @apply grid grid-cols-2  place-items-center w-full;
+}
+.grid-2-cols-center-v {
+  @apply grid grid-cols-2 items-center w-full;
+}
+
+.grid-2-cols-center-x {
+  @apply grid grid-cols-2 justify-items-center w-full;
+}
+
+.grid-3-cols-center-v {
+  @apply grid grid-cols-3 items-center w-full;
+}
+
 /* login page */
 
 .input-login {

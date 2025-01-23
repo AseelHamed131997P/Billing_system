@@ -6,10 +6,29 @@ const Input = ({ name, value, handleChange, label, width = "w-96" }) => {
   const handleFocus = () => setIsFocused(true);
   const handleBlur = () => setIsFocused(false);
 
+  const type =
+    name === "Email"
+      ? "email"
+      : name === "Mobile_NO"
+      ? "tel"
+      : name === "VAT_NO"
+      ? "number"
+      : name === "ID_NO"
+      ? "number"
+      : name === "Password"
+      ? "password"
+      : name === "start"
+      ? "number"
+      : name === "end"
+      ? "number"
+      : name === "Price"
+      ? "number"
+      : "text"; // Default to text
+
   return (
     <div className="relative">
       <input
-        type="text"
+        type={type}
         name={name}
         value={value}
         onChange={handleChange}

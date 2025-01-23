@@ -3,6 +3,8 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import { PrivateRoute, PublicRoute } from "./componentsRoutes/index";
 import {
   AdminAndCompany,
+  Customer,
+  Item,
   Home,
   Login,
   SignUpWithGoogle,
@@ -31,6 +33,8 @@ function App() {
         path="/adminAndCompany"
         element={<PublicRoute element={AdminAndCompany} />}
       />
+      <Route path="/customer" element={<PublicRoute element={Customer} />} />
+      <Route path="/item" element={<PublicRoute element={Item} />} />
     </Routes>
   );
 }

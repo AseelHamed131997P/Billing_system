@@ -4,3 +4,6 @@ export { default as SignUpWithGoogle } from "./signUpWithGoogle";
 export { default as SignUpWithSMS } from "./signUpWithSMS";
 export { default as OTP } from "./OTP";
 export { default as AdminAndCompany } from "./adminAndCompany";
+export { default as UserModal } from "./userModal";
+export { default as Customer } from "./customer";
+export { default as Item } from "./item";

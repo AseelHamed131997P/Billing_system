@@ -19,6 +19,9 @@ module.exports = {
       textColor: {
         default: "#333", // Default text color
       },
+      maxWidth: {
+        "190rem": "190rem",
+      },
     },
   },
   plugins: [],
