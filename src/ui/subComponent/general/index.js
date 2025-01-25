@@ -8,3 +8,4 @@ export { default as DropDown } from "./dropDown";
 export { default as Signature } from "./signature";
 export { default as FileInput } from "./fileInput";
 export { default as NumberValue } from "./numberValue";
+export { default as Table } from "./table";

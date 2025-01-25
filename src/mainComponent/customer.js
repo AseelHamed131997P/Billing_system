@@ -18,6 +18,7 @@ import {
   Input,
   DropDown,
   NumberValue,
+  Table,
 } from "../ui/subComponent/general/index.js";
 
 const Customer = () => {
@@ -103,7 +104,9 @@ const Customer = () => {
           </form>
         </section>
         <section className="box-section">
-          <div>ldfaoer</div>
+          <div>
+            <Table />
+          </div>
         </section>
       </div>
     </main>

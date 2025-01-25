@@ -1,0 +1,42 @@
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #table-container,
+  #table-container * {
+    visibility: visible;
+  }
+  #table-container {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+  }
+  #header {
+    visibility: visible;
+  }
+}
+
+.fixed-width-table {
+  width: 100%;
+  table-layout: fixed; /* Ensures equal column widths */
+  border-collapse: collapse; /* Ensures borders are collapsed */
+}
+
+.fixed-width-table th,
+.fixed-width-table td {
+  width: 25%; /* Adjust this percentage based on the number of columns */
+  padding: 8px; /* Add padding for better spacing */
+  border: 1px solid #ddd; /* Add borders for better visibility */
+  text-align: left; /* Align text to the left */
+}
+
+.fixed-width-table input {
+  width: 100%; /* Ensure input fields take up the full width of the cell */
+  padding: 8px; /* Add padding for better spacing */
+  box-sizing: border-box; /* Ensure padding and border are included in the width */
+}
+
+tr {
+  height: 50px; /* Equal row height */
+}
