@@ -9,3 +9,4 @@ export { default as Signature } from "./signature";
 export { default as FileInput } from "./fileInput";
 export { default as NumberValue } from "./numberValue";
 export { default as Table } from "./table";
+export { default as MultiSelectInput } from "./multiSelectInput";

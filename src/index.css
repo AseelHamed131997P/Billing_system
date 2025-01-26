@@ -27,3 +27,7 @@ body {
   /* color: #333; */
   @apply font-rubik text-default;
 }
+
+.ReactFlagsSelect-module_flagsSelect__2pfa2 {
+  padding-bottom: 0;
+}

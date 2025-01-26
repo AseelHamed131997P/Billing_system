@@ -47,14 +47,14 @@ function RowActions({ isEditing, onEdit, onCancel, onSave, onDelete }) {
   );
 }
 
-function Table() {
-  const initialData = [
-    { id: 1, name: "Alice", age: 25, city: "New York" },
-    { id: 2, name: "Bob", age: 30, city: "Los Angeles" },
-    { id: 3, name: "Charlie", age: 35, city: "Chicago" },
-  ];
+function Table({ data, setData }) {
+  // const initialData = [
+  //   { id: 1, name: "Alice", age: 25, city: "New York" },
+  //   { id: 2, name: "Bob", age: 30, city: "Los Angeles" },
+  //   { id: 3, name: "Charlie", age: 35, city: "Chicago" },
+  // ];
 
-  const [data, setData] = useState(initialData);
+  // const [data, setData] = useState(initialData);
   const [globalFilter, setGlobalFilter] = useState("");
   const [editingRowId, setEditingRowId] = useState(null);
   const [editingValues, setEditingValues] = useState({});
@@ -132,7 +132,7 @@ function Table() {
   });
 
   return (
-    <div>
+    <div className="p-10">
       <div className="flex justify-between mb-4">
         <button
           onClick={() =>

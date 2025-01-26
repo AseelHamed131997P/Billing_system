@@ -62,6 +62,14 @@ const Customer = () => {
     "VAT NO",
   ];
 
+  const initialData = [
+    { id: 1, name: "Alice", age: 25, city: "New York" },
+    { id: 2, name: "Bob", age: 30, city: "Los Angeles" },
+    { id: 3, name: "Charlie", age: 35, city: "Chicago" },
+  ];
+
+  const [data, setData] = useState(initialData);
+
   return (
     <main className="bg-[#f1f3f6] pt-[3.2rem] pb-[3.2rem]">
       <div className="overflow-hidden bg-white rounded-[2rem] shadow-[rgba(17,17,26,0.05)_0px_1px_0px,_rgba(17,17,26,0.1)_0px_0px_8px] margin-auto max-w-[100rem]">
@@ -105,7 +113,7 @@ const Customer = () => {
         </section>
         <section className="box-section">
           <div>
-            <Table />
+            <Table data={data} setData={setData} />
           </div>
         </section>
       </div>

@@ -7,3 +7,5 @@ export { default as AdminAndCompany } from "./adminAndCompany";
 export { default as UserModal } from "./userModal";
 export { default as Customer } from "./customer";
 export { default as Item } from "./item";
+export { default as Header } from "./header";
+export { default as Invoice } from "./invoice";
