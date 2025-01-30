@@ -45,6 +45,12 @@
 .grid-3-cols-center-v {
   @apply grid grid-cols-3 items-center w-full;
 }
+.grid-3-cols-center-vx {
+  @apply grid grid-cols-3 items-center justify-items-center w-full;
+}
+.grid-4-cols-center-vx {
+  @apply grid grid-cols-4 items-center justify-items-center w-full;
+}
 
 /* login page */
 

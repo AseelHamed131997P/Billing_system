@@ -6,41 +6,34 @@ const DropDown = (props) => {
   const handleFocus = () => setIsFocused(true);
   const handleBlur = () => setIsFocused(false);
 
-  const hasValue = props.option && props.option.value;
-
   return (
     <div className="relative">
       <select
-        value={hasValue ? props.option.value : ""} // Handle selected value
+        value={props.option.value}
         onChange={props.handleChangeOption}
         onFocus={handleFocus}
         onBlur={handleBlur}
-        className={`block ${
-          props.width ? props.width : "w-80"
-        } px-3 py-3 text-lg border border-gray-400 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white peer`}
+        className="block w-80 px-3 py-3 text-lg border border-gray-400 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white peer"
       >
-        {/* Hidden placeholder option */}
+        {/* Optional placeholder */}
         <option value="" disabled hidden>
           Select an Option
         </option>
-        {props.options.map((item, index) => (
-          <option key={index} value={item.value}>
-            {item.label}
+        {props.options.map((option, index) => (
+          <option key={index} value={option.value}>
+            {option.label}
           </option>
         ))}
       </select>
-
-      {/* Label (floating when focused or value is selected) */}
       <label
         className={`absolute left-3 transition-all duration-200 ease-in-out ${
-          isFocused || hasValue
+          isFocused || props.option.value
             ? "text-md -top-3 bg-white px-1 text-blue-500"
             : "top-2 text-gray-400"
         } pointer-events-none`}
       >
         {props.label}
       </label>
-
       {/* Dropdown arrow icon */}
       <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
         <svg

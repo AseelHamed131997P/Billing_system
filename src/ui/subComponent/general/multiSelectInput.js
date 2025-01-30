@@ -14,15 +14,23 @@ const MultiSelectInput = ({
   };
 
   const handleSelect = (option) => {
-    if (!selectedOptions.includes(option)) {
-      setSelectedOptions([...selectedOptions, option]);
+    const isAlreadySelected = selectedOptions.some(
+      (selected) => selected.value === option.value
+    );
+
+    if (!isAlreadySelected) {
+      setSelectedOptions([...selectedOptions, option]); // Add full object
     } else {
-      setSelectedOptions(selectedOptions.filter((item) => item !== option));
+      setSelectedOptions(
+        selectedOptions.filter((item) => item.value !== option.value)
+      );
     }
   };
 
   const removeOption = (option) => {
-    setSelectedOptions(selectedOptions.filter((item) => item !== option));
+    setSelectedOptions(
+      selectedOptions.filter((item) => item.value !== option.value)
+    );
   };
 
   return (
@@ -38,7 +46,7 @@ const MultiSelectInput = ({
                 key={index}
                 className="flex items-center bg-blue-500 text-white rounded-full px-2 py-1 text-sm"
               >
-                {option}
+                {option.label}
                 <button
                   type="button"
                   className="ml-1 text-white hover:text-gray-300"
@@ -66,11 +74,15 @@ const MultiSelectInput = ({
             <div
               key={index}
               className={`p-2 cursor-pointer hover:bg-blue-500 hover:text-white ${
-                selectedOptions.includes(option) ? "bg-blue-100" : ""
+                selectedOptions.some(
+                  (selected) => selected.value === option.value
+                )
+                  ? "bg-blue-100"
+                  : ""
               }`}
               onClick={() => handleSelect(option)}
             >
-              {option}
+              {option.label}
             </div>
           ))}
         </div>
