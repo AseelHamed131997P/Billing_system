@@ -16,7 +16,6 @@ import "../CSS/general.css";
 const Invoice = () => {
   const dispatch = useDispatch();
   const location = useLocation();
-
   const deliveries = [
     { label: "delivery 1", value: "0001" },
     { label: "delivery 2", value: "0002" },
@@ -26,26 +25,50 @@ const Invoice = () => {
   ];
   const [selectedDeliveries, setSelectedDeliveries] = useState([]);
   console.log(`selected delivery items:${selectedDeliveries}`);
-
-  const customers = [
+  const [customers, setCustomers] = useState([
+    { label: "", value: "Select a customer" },
     { label: "customer 1", value: "aseel" },
     { label: "customer 2", value: "alaa" },
     { label: "customer 3", value: "fadi" },
     { label: "customer 4", value: "sara" },
     { label: "customer 5", value: "lara" },
-  ];
+  ]);
+  // const [customers, setCustomers] = useState([
+  //   { label: "", value: "Select a customer" },
+  //   { label: "customer 1", value: "aseel" },
+  //   { label: "customer 2", value: "alaa" },
+  //   { label: "customer 3", value: "fadi" },
+  //   { label: "customer 4", value: "sara" },
+  //   { label: "customer 5", value: "lara" },
+  // ]);
 
-  const [customer, setCustomer] = useState(customers[0]); // Store entire object
-  // const [customer, setCustomer] = useState(null); // Start as null (no default selection)
+  const [customer, setCustomer] = useState(customers[0]);
+  const [isCreating, setIsCreating] = useState(false); // Toggle modal visibility
+  const [newCustomer, setNewCustomer] = useState(""); // Store new customer name
 
   const handleChangeCustomer = (e) => {
+    if (e.target.value === "create_new") {
+      setIsCreating(true); // Show popup to create a new customer
+      return;
+    }
+
     const selectedOption = customers.find(
       (item) => item.value === e.target.value
     );
-    setCustomer(selectedOption || null); // ✅ Ensure valid selection
+    setCustomer(selectedOption || customers[0]);
   };
 
-  console.log(customer); // Logs entire object { label: "...", value: "..." }
+  const handleCreateCustomer = () => {
+    if (!newCustomer.trim()) return; // Prevent empty names
+
+    const newEntry = { label: newCustomer, value: newCustomer.toLowerCase() };
+    setCustomers([...customers, newEntry]);
+    setCustomer(newEntry);
+    setNewCustomer("");
+    setIsCreating(false);
+  };
+
+  console.log(customer);
 
   const [customerInfo, setCustomerInfo] = useState({
     Mobile_NO: null,
@@ -74,12 +97,6 @@ const Invoice = () => {
         City: customer.label,
       }));
     }
-    // if (selectedDeliveries.length > 0) {
-    //   setCustomer((prev) => ({
-    //     label: selectedDeliveries[selectedDeliveries.length - 1].label,
-    //     value: selectedDeliveries[selectedDeliveries.length - 1].value,
-    //   }));
-    // }
   }, [customer]); // Dependency array: useEffect runs when `customer` changes
 
   // useEffect depending on the `customer` state
@@ -95,7 +112,6 @@ const Invoice = () => {
           item.value === selectedDeliveries[selectedDeliveries.length - 1].value
       );
 
-      // If a matching customer is found, update the `customer` state
       if (selectedOption) {
         setCustomer({
           label: selectedDeliveries[selectedDeliveries.length - 1].label,
@@ -106,7 +122,6 @@ const Invoice = () => {
       setCustomer(customers[0]);
     }
   }, [selectedDeliveries]); // Dependency array: useEffect runs when `selectedDeliveries` changes
-
   return (
     <main className="p-10 border grid gap-10">
       <section className="border rounded-[20px] p-10 flex-center-v-space-between">
@@ -133,9 +148,9 @@ const Invoice = () => {
           <CreatableDropDown
             options={customers}
             option={customer}
-            // setOption={setCustomer}
             handleChangeOption={handleChangeCustomer}
-            label={"select customer"}
+            valueKey="value"
+            // label={"select customer"}
             width="w-96"
           />
           {Object.keys(customerInfo).map((key, index) => (
@@ -150,6 +165,35 @@ const Invoice = () => {
           ))}
         </div>
       </section>
+
+      {isCreating && (
+        <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50">
+          <div className="bg-white p-5 rounded-md shadow-lg">
+            <h2 className="text-lg font-semibold mb-3">Create New Customer</h2>
+            <input
+              type="text"
+              value={newCustomer}
+              onChange={(e) => setNewCustomer(e.target.value)}
+              placeholder="Enter customer name"
+              className="border border-gray-300 rounded p-2 w-full"
+            />
+            <div className="flex justify-end space-x-3 mt-3">
+              <button
+                onClick={() => setIsCreating(false)}
+                className="px-4 py-2 bg-gray-300 rounded"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleCreateCustomer}
+                className="px-4 py-2 bg-blue-500 text-white rounded"
+              >
+                Create
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 };
