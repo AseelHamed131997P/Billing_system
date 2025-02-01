@@ -14,7 +14,7 @@ const CheckBox = (props) => {
       />
       <label
         htmlFor="checkbox"
-        className=" ml-4 text-2xl font-medium text-gray-700 cursor-pointer leading-none"
+        className=" ml-4 text-xl font-medium text-gray-700 cursor-pointer leading-none"
       >
         {props.label}
       </label>

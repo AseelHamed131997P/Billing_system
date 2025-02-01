@@ -3,6 +3,7 @@ import { useDispatch } from "../hooks/index";
 import { useSelector } from "../hooks";
 import { useLocation } from "react-router-dom";
 import React, { useState, useEffect } from "react";
+import { toWords } from "number-to-words";
 
 import "../index.css";
 import {
@@ -11,6 +12,10 @@ import {
   NumberValue,
   Input,
   CreatableDropDown,
+  DropDown,
+  CheckBox,
+  Signature,
+  FileInput,
 } from "../ui/subComponent/general/index.js";
 import "../CSS/general.css";
 const Invoice = () => {
@@ -34,12 +39,12 @@ const Invoice = () => {
     { label: "customer 5", value: "lara" },
   ]);
   // const [customers, setCustomers] = useState([
-  //   { label: "", value: "Select a customer" },
-  //   { label: "customer 1", value: "aseel" },
-  //   { label: "customer 2", value: "alaa" },
-  //   { label: "customer 3", value: "fadi" },
-  //   { label: "customer 4", value: "sara" },
-  //   { label: "customer 5", value: "lara" },
+  //   { id : "", name: "Select a customer", mobile_NO:'', full_address:'sfr', city:'wew',VAT_NO:'1234' },
+  //   {  id : "", name: "aseel", mobile_NO:'122323232', full_address:'sdfer', city:'efrr',VAT_NO:'3434'},
+  //   {  id : "1", name: "alaa", mobile_NO:'333333333', full_address:'dsf', city:'frrr',VAT_NO:'122122' },
+  //   {  id : "2", name: "fadi", mobile_NO:'444444444', full_address:'dfe', city:'cvdf',VAT_NO:'4444'},
+  //   {  id : "3", name: "sara", mobile_NO:'555555555', full_address:'gerg', city:'ccc',VAT_NO:'4343' },
+  //   { id : "4", name: "lara", mobile_NO:'666666666', full_address:'rfgg', city:'sss',VAT_NO:'6666' },
   // ]);
 
   const [customer, setCustomer] = useState(customers[0]);
@@ -51,12 +56,13 @@ const Invoice = () => {
       setIsCreating(true); // Show popup to create a new customer
       return;
     }
-
+    console.log(`ddddddddddddddddddd ${e.target.value}`);
     const selectedOption = customers.find(
       (item) => item.value === e.target.value
     );
     setCustomer(selectedOption || customers[0]);
   };
+  console.log(customer);
 
   const handleCreateCustomer = () => {
     if (!newCustomer.trim()) return; // Prevent empty names
@@ -67,8 +73,6 @@ const Invoice = () => {
     setNewCustomer("");
     setIsCreating(false);
   };
-
-  console.log(customer);
 
   const [customerInfo, setCustomerInfo] = useState({
     Mobile_NO: null,
@@ -122,6 +126,65 @@ const Invoice = () => {
       setCustomer(customers[0]);
     }
   }, [selectedDeliveries]); // Dependency array: useEffect runs when `selectedDeliveries` changes
+
+  let invoiceType = [
+    "Simple User",
+    "Commerical With VAT NO",
+    "Commerical with Free VAT NO",
+    "Company Non Profit",
+  ];
+  const [invoiceTypeOption, setInvoiceTypeOption] = useState(invoiceType[0]);
+
+  const handleChangeInvoiceTypeOption = (e) =>
+    setInvoiceTypeOption(e.target.value);
+  console.log(`invoice type that selected : ${invoiceTypeOption}`);
+
+  let currencyType = ["NIS", "USD", "ERO"];
+  const [currencyTypeOption, setCurrencyTypeOption] = useState(invoiceType[0]);
+
+  const handleChangeCurrencyTypeOption = (e) =>
+    setCurrencyTypeOption(e.target.value);
+  console.log(`currency type that selected : ${currencyTypeOption}`);
+
+  // here query to get invoice number in useeffect
+
+  const [totalPrice, setTotalPrice] = useState("2355.3");
+  console.log(`total price : ${totalPrice}`);
+
+  const [isIncludeVAT, setIsIncludeVAT] = useState(false);
+
+  const handleIsIncludeVATChange = () => {
+    setIsIncludeVAT(!isIncludeVAT);
+  };
+  console.log(`include vat : ${isIncludeVAT}`);
+  //here adding useeffect based on isIncludeVAT codition inside useeffect isIncludeVAT when true  get vat from DB ans setState on VAT
+
+  const [VAT, setVAT] = useState(".17");
+  console.log(`VAT : ${VAT}`);
+
+  const [totalPriceWithVAT, setTotalPriceWithVAT] = useState("20.1");
+  console.log(`total Price With VAT : ${totalPriceWithVAT}`);
+
+  function convertNumberToWords(number) {
+    const [integerPart, decimalPart] = totalPriceWithVAT.split(".");
+
+    const integerInWords = toWords(parseInt(integerPart));
+
+    const decimalInWords = decimalPart ? toWords(parseInt(decimalPart)) : "";
+
+    return `${integerInWords} point ${decimalInWords}`;
+  }
+  //here will condition on isIncludeVAT if true pass totalPriceWithVAT else pass totalPrice
+  const [totalPriceInWords, setTotalPriceInWords] = useState(
+    convertNumberToWords(totalPriceWithVAT)
+  );
+  console.log(`total Price inwords : ${totalPriceInWords}`);
+  const [signatureInvoice, setSignatureInvoice] = useState({
+    urlSign: null,
+    urlFile: null,
+  }); // here save the signature value just when not null if null does not save
+  console.log(`test  invoice urlSign ${signatureInvoice.urlSign}`);
+  console.log(`test invoice urlFile ${signatureInvoice.urlFile}`);
   return (
     <main className="p-10 border grid gap-10">
       <section className="border rounded-[20px] p-10 flex-center-v-space-between">
@@ -165,7 +228,128 @@ const Invoice = () => {
           ))}
         </div>
       </section>
+      <section className="border rounded-[20px] p-10 grid gap-10 ">
+        <div className="flex-center-v-space-between ">
+          {" "}
+          <h1 className=" flex-grow text-center font-medium text-2xl">
+            Invoice 0001
+          </h1>
+          <div className="text-xl">
+            {new Date().toLocaleDateString("en-GB", {
+              day: "2-digit",
+              month: "2-digit",
+              year: "numeric",
+            })}
+          </div>
+        </div>
+        <div className=" border mx-auto grid-2-cols-center-vx max-w-[100rem]">
+          <DropDown
+            options={invoiceType}
+            option={invoiceTypeOption}
+            handleChangeOption={handleChangeInvoiceTypeOption}
+            label={"select invoice type"}
+            width="w-96"
+          />
+          <DropDown
+            options={currencyType}
+            option={currencyTypeOption}
+            handleChangeOption={handleChangeCurrencyTypeOption}
+            label={"select currency type"}
+            width="w-96"
+          />
+        </div>
+      </section>
+      <section className="border rounded-[20px] p-10 grid gap-10 ">
+        <h1 className="text-2xl font-semibold">Invoice Summary</h1>
+        <div className="flex gap-10">
+          <Input
+            key={"Total_Price"}
+            name={"Total_Price"}
+            value={totalPrice}
+            // handleChange={handleChangeCustomerInfo}
+            label={"Total Price"}
+            // width="w-80"
+          />
+          <CheckBox
+            isChecked={isIncludeVAT}
+            handleChange={handleIsIncludeVATChange}
+            label="Include VAT"
+          />
+        </div>
+        {isIncludeVAT ? (
+          <div className="flex gap-10">
+            <Input
+              key={"VAT"}
+              name={"VAT"}
+              value={VAT}
+              // handleChange={handleChangeCustomerInfo}
+              label={"VAT"}
+              // width="w-80"
+            />
+            <Input
+              key={"Total_Price_VAT"}
+              name={"Total_Price_VAT"}
+              value={totalPriceWithVAT}
+              // handleChange={handleChangeCustomerInfo}
+              label={"Total Price With VAT"}
+              // width="w-80"
+            />
+          </div>
+        ) : (
+          ""
+        )}
+        <div>
+          {" "}
+          <Input
+            key={"total_Price_IN_Words"}
+            name={"total_Price_IN_Words"}
+            value={totalPriceInWords}
+            // handleChange={handleChangeCustomerInfo}
+            label={"Total Price In Words"}
+            // width="w-80"
+          />
+        </div>
+        <div>
+          <div className="grid-2-cols-center-vx">
+            <div className="w-50rem ">
+              <p className="text-lg	font-medium	 center-x">
+                Enter Your Signature
+              </p>
+              <Signature
+                setSignature={setSignatureInvoice}
+                signature={signatureInvoice}
+              />
+            </div>
 
+            <div className="border">
+              {signatureInvoice.urlSign || signatureInvoice.urlFile ? (
+                <img
+                  src={
+                    signatureInvoice.urlSign && signatureInvoice.urlFile
+                      ? signatureInvoice.urlFile // Show urlFile if both exist
+                      : signatureInvoice.urlSign || signatureInvoice.urlFile // Show the existing URL
+                  }
+                  alt="Signature"
+                  className="w-[18rem] h-[9rem]"
+                />
+              ) : (
+                "Invoice Signature"
+              )}
+            </div>
+
+            <div className=" w-full  flex-vx-center flex-col  ">
+              <div className="  font-semibold text-xl tracking-[0.2rem]">
+                OR{" "}
+              </div>
+              <FileInput
+                setFile={setSignatureInvoice}
+                file={signatureInvoice}
+                name={"Choose Signature Image"}
+              />
+            </div>
+          </div>
+        </div>
+      </section>
       {isCreating && (
         <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50">
           <div className="bg-white p-5 rounded-md shadow-lg">

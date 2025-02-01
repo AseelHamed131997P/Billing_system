@@ -6,7 +6,9 @@ const CreatableDropDown = (props) => {
       <select
         value={props.option[props.valueKey]}
         onChange={props.handleChangeOption}
-        className="block w-80 px-3 py-3 text-lg border border-gray-400 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white peer"
+        className={`block ${
+          props.width ? props.width : "w-80"
+        } px-3 py-3 text-lg border border-gray-400 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white peer`}
       >
         {props.options.map((option, index) => (
           <option key={index} value={option[props.valueKey]}>
