@@ -16,68 +16,188 @@ import {
   CheckBox,
   Signature,
   FileInput,
+  CustomerModal,
 } from "../ui/subComponent/general/index.js";
 import "../CSS/general.css";
 const Invoice = () => {
   const dispatch = useDispatch();
   const location = useLocation();
+
+  // here two useeffect one to get all customers and other to get all deliveries
+  // const deliveries = [
+  //   { label: "delivery 1", value: "0001" },
+  //   { label: "delivery 2", value: "0002" },
+  //   { label: "delivery 3", value: "0003" },
+  //   { label: "delivery 4", value: "0004" },
+  //   { label: "customer 5", value: "lara" },
+  // ];
+
   const deliveries = [
-    { label: "delivery 1", value: "0001" },
-    { label: "delivery 2", value: "0002" },
-    { label: "delivery 3", value: "0003" },
-    { label: "delivery 4", value: "0004" },
-    { label: "customer 5", value: "lara" },
+    {
+      id: 1,
+      delivery_number: "0001",
+      customer: {
+        id: 1,
+        name: "aseel",
+        mobile_NO: "122323232",
+        full_address: "sdfer",
+        city: "efrr",
+        VAT_NO: "3434",
+        customer_Number: 2,
+      },
+    },
+    {
+      id: 2,
+      delivery_number: "0002",
+      customer: {
+        id: 2,
+        name: "alaa",
+        mobile_NO: "333333333",
+        full_address: "dsf",
+        city: "frrr",
+        VAT_NO: "122122",
+        customer_Number: 3,
+      },
+    },
+    {
+      id: 3,
+      delivery_number: "0003",
+      customer: {
+        id: 3,
+        name: "fadi",
+        mobile_NO: "444444444",
+        full_address: "dfe",
+        city: "cvdf",
+        VAT_NO: "4444",
+        customer_Number: 4,
+      },
+    },
+    {
+      id: 4,
+      delivery_number: "0004",
+      customer: {
+        id: 4,
+        name: "sara",
+        mobile_NO: "555555555",
+        full_address: "gerg",
+        city: "ccc",
+        VAT_NO: "4343",
+        customer_Number: 5,
+      },
+    },
+    {
+      id: 5,
+      delivery_number: "0005",
+      customer: {
+        id: 5,
+        name: "lara",
+        mobile_NO: "666666666",
+        full_address: "rfgg",
+        city: "sss",
+        VAT_NO: "6666",
+        customer_Number: 6,
+      },
+    },
   ];
+
   const [selectedDeliveries, setSelectedDeliveries] = useState([]);
   console.log(`selected delivery items:${selectedDeliveries}`);
-  const [customers, setCustomers] = useState([
-    { label: "", value: "Select a customer" },
-    { label: "customer 1", value: "aseel" },
-    { label: "customer 2", value: "alaa" },
-    { label: "customer 3", value: "fadi" },
-    { label: "customer 4", value: "sara" },
-    { label: "customer 5", value: "lara" },
-  ]);
   // const [customers, setCustomers] = useState([
-  //   { id : "", name: "Select a customer", mobile_NO:'', full_address:'sfr', city:'wew',VAT_NO:'1234' },
-  //   {  id : "", name: "aseel", mobile_NO:'122323232', full_address:'sdfer', city:'efrr',VAT_NO:'3434'},
-  //   {  id : "1", name: "alaa", mobile_NO:'333333333', full_address:'dsf', city:'frrr',VAT_NO:'122122' },
-  //   {  id : "2", name: "fadi", mobile_NO:'444444444', full_address:'dfe', city:'cvdf',VAT_NO:'4444'},
-  //   {  id : "3", name: "sara", mobile_NO:'555555555', full_address:'gerg', city:'ccc',VAT_NO:'4343' },
-  //   { id : "4", name: "lara", mobile_NO:'666666666', full_address:'rfgg', city:'sss',VAT_NO:'6666' },
+  //   { label: "", value: "Select a customer" },
+  //   { label: "customer 1", value: "aseel" },
+  //   { label: "customer 2", value: "alaa" },
+  //   { label: "customer 3", value: "fadi" },
+  //   { label: "customer 4", value: "sara" },
+  //   { label: "customer 5", value: "lara" },
   // ]);
+  const [customers, setCustomers] = useState([
+    {
+      id: null,
+      name: "Select a customer",
+      mobile_NO: "",
+      full_address: "",
+      city: "",
+      VAT_NO: "",
+      customer_Number: null,
+    },
+    {
+      id: 1,
+      name: "aseel",
+      mobile_NO: "122323232",
+      full_address: "sdfer",
+      city: "efrr",
+      VAT_NO: "3434",
+      customer_Number: 2,
+    },
+    {
+      id: 2,
+      name: "alaa",
+      mobile_NO: "333333333",
+      full_address: "dsf",
+      city: "frrr",
+      VAT_NO: "122122",
+      customer_Number: 3,
+    },
+    {
+      id: 3,
+      name: "fadi",
+      mobile_NO: "444444444",
+      full_address: "dfe",
+      city: "cvdf",
+      VAT_NO: "4444",
+      customer_Number: 4,
+    },
+    {
+      id: 4,
+      name: "sara",
+      mobile_NO: "555555555",
+      full_address: "gerg",
+      city: "ccc",
+      VAT_NO: "4343",
+      customer_Number: 5,
+    },
+    {
+      id: 5,
+      name: "lara",
+      mobile_NO: "666666666",
+      full_address: "rfgg",
+      city: "sss",
+      VAT_NO: "6666",
+      customer_Number: 6,
+    },
+  ]);
 
   const [customer, setCustomer] = useState(customers[0]);
-  const [isCreating, setIsCreating] = useState(false); // Toggle modal visibility
+  const [isCreatingCustomer, setIsCreatingCustomer] = useState(false); // Toggle modal visibility
   const [newCustomer, setNewCustomer] = useState(""); // Store new customer name
 
   const handleChangeCustomer = (e) => {
     if (e.target.value === "create_new") {
-      setIsCreating(true); // Show popup to create a new customer
+      setIsCreatingCustomer(true); // Show popup to create a new customer
       return;
     }
     console.log(`ddddddddddddddddddd ${e.target.value}`);
-    const selectedOption = customers.find(
-      (item) => item.value === e.target.value
-    );
+    const selectedOption = customers.find((item) => item.id == e.target.value);
     setCustomer(selectedOption || customers[0]);
   };
-  console.log(customer);
-
+  console.log(`here after change on customer ${customer.name}`);
+  //alternative of this function I will validation and send API and when return success I will setIsCreatingCustomer false and will automatically clear the data
+  //because I pass isCreatingCustomer based on it when false clear the data
   const handleCreateCustomer = () => {
-    if (!newCustomer.trim()) return; // Prevent empty names
-
-    const newEntry = { label: newCustomer, value: newCustomer.toLowerCase() };
+    if (!newCustomer.trim()) return;
+    setNewCustomer("");
+    //I will use the same here
+    const newEntry = { id: newCustomer, name: newCustomer.toLowerCase() };
     setCustomers([...customers, newEntry]);
     setCustomer(newEntry);
-    setNewCustomer("");
-    setIsCreating(false);
+    setIsCreatingCustomer(false);
   };
 
   const [customerInfo, setCustomerInfo] = useState({
-    Mobile_NO: null,
-    Full_Address: null,
-    City: null,
+    Mobile_NO: "",
+    Full_Address: "",
+    City: "",
+    VAT_NO: "",
   });
 
   const handleChangeCustomerInfo = (e) => {
@@ -87,18 +207,30 @@ const Invoice = () => {
       [name]: value,
     }));
   };
-  let labels = ["Mobile NO", "Full Address", "City"];
+
+  let labels = ["Mobile NO", "Full Address", "City", "VAT NO"];
   console.log(
-    `customer Information ${customerInfo.Mobile_NO} ${customerInfo.Mobile_NO} ${customerInfo.Mobile_NO}`
+    `customer Information ${customerInfo.Mobile_NO} ${customerInfo.Full_Address} ${customerInfo.City}`
   );
   // useEffect depending on the `customer` state
   useEffect(() => {
     console.log(`here run first time and when customer change`);
-    if (customer) {
+    if (customer.id) {
+      console.log(
+        `here run first time and when customer change:${customer.id}`
+      );
       setCustomerInfo((prev) => ({
-        Mobile_NO: customer.label,
-        Full_Address: customer.label,
-        City: customer.label,
+        Mobile_NO: customer.mobile_NO,
+        Full_Address: customer.full_address,
+        City: customer.city,
+        VAT_NO: customer.VAT_NO,
+      }));
+    } else {
+      setCustomerInfo((prev) => ({
+        Mobile_NO: "",
+        Full_Address: "",
+        City: "",
+        VAT_NO: "",
       }));
     }
   }, [customer]); // Dependency array: useEffect runs when `customer` changes
@@ -111,19 +243,23 @@ const Invoice = () => {
       //compare based on customer_id
       const selectedOption = customers.find(
         (item) =>
-          item.label ===
-            selectedDeliveries[selectedDeliveries.length - 1].label &&
-          item.value === selectedDeliveries[selectedDeliveries.length - 1].value
+          item.id ===
+          selectedDeliveries[selectedDeliveries.length - 1].customer.id
       );
 
       if (selectedOption) {
         setCustomer({
-          label: selectedDeliveries[selectedDeliveries.length - 1].label,
-          value: selectedDeliveries[selectedDeliveries.length - 1].value,
+          ...selectedDeliveries[selectedDeliveries.length - 1].customer,
+        });
+      } else {
+        setCustomer({
+          ...(customers.find((item) => item.id === null) || customers[0]),
         });
       }
     } else {
-      setCustomer(customers[0]);
+      setCustomer({
+        ...(customers.find((item) => item.id === null) || customers[0]),
+      });
     }
   }, [selectedDeliveries]); // Dependency array: useEffect runs when `selectedDeliveries` changes
 
@@ -185,6 +321,10 @@ const Invoice = () => {
   }); // here save the signature value just when not null if null does not save
   console.log(`test  invoice urlSign ${signatureInvoice.urlSign}`);
   console.log(`test invoice urlFile ${signatureInvoice.urlFile}`);
+
+  //adding useeffect based on isCreatingCustomer when true api to get last Customer_number and increment it by one
+  //adding useeffect to get invoice_number and increment it by one
+
   return (
     <main className="p-10 border grid gap-10">
       <section className="border rounded-[20px] p-10 flex-center-v-space-between">
@@ -212,20 +352,26 @@ const Invoice = () => {
             options={customers}
             option={customer}
             handleChangeOption={handleChangeCustomer}
-            valueKey="value"
+            valueKey="id"
+            label="name"
             // label={"select customer"}
             width="w-96"
           />
-          {Object.keys(customerInfo).map((key, index) => (
-            <Input
-              key={key}
-              name={key}
-              value={customerInfo[key]}
-              handleChange={handleChangeCustomerInfo}
-              label={labels[index]}
-              // width="w-80"
-            />
-          ))}
+          {Object.keys(customerInfo).map((key, index) => {
+            console.log("assssssssl");
+            console.log(customerInfo);
+
+            return (
+              <Input
+                key={key}
+                name={key}
+                value={customerInfo[key] || ""} // Ensure value is never null
+                handleChange={handleChangeCustomerInfo}
+                label={labels[index]}
+                // width="w-80"
+              />
+            );
+          })}
         </div>
       </section>
       <section className="border rounded-[20px] p-10 grid gap-10 ">
@@ -350,33 +496,59 @@ const Invoice = () => {
           </div>
         </div>
       </section>
-      {isCreating && (
-        <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50">
-          <div className="bg-white p-5 rounded-md shadow-lg">
-            <h2 className="text-lg font-semibold mb-3">Create New Customer</h2>
-            <input
-              type="text"
-              value={newCustomer}
-              onChange={(e) => setNewCustomer(e.target.value)}
-              placeholder="Enter customer name"
-              className="border border-gray-300 rounded p-2 w-full"
-            />
-            <div className="flex justify-end space-x-3 mt-3">
-              <button
-                onClick={() => setIsCreating(false)}
-                className="px-4 py-2 bg-gray-300 rounded"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleCreateCustomer}
-                className="px-4 py-2 bg-blue-500 text-white rounded"
-              >
-                Create
-              </button>
-            </div>
+      {isCreatingCustomer && (
+        <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center z-50 ">
+          <div className=" bg-white rounded-lg shadow-lg p-6 border w-full max-w-[60rem]">
+            <h1 className="text-3xl font-bold mb-[3.2rem]">Create Customer</h1>
+            <form className="register-form border p-10 rounded-[20px] mb-10">
+              <CustomerModal isCreatingCustomer={isCreatingCustomer} />
+              <div className="border text-center">
+                <button className="btn py-2 px-4 w-64 mr-10" type="button">
+                  Create Customer
+                </button>
+                <button
+                  className="btn py-2 px-4 w-64 "
+                  type="button"
+                  onClick={() => {
+                    setCustomer({
+                      ...(customers.find((item) => item.id === null) ||
+                        customers[0]),
+                    });
+                    setIsCreatingCustomer(false);
+                  }}
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
           </div>
         </div>
+        // <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50">
+        //   <div className="bg-white p-5 rounded-md shadow-lg">
+        //     <h2 className="text-lg font-semibold mb-3">Create New Customer</h2>
+        //     <input
+        //       type="text"
+        //       value={newCustomer}
+        //       onChange={(e) => setNewCustomer(e.target.value)}
+        //       placeholder="Enter customer name"
+        //       className="border border-gray-300 rounded p-2 w-full"
+        //     />
+        //     <div className="flex justify-end space-x-3 mt-3">
+        //       <button
+        //         onClick={() => setIsCreatingCustomer(false)}
+        //         className="px-4 py-2 bg-gray-300 rounded"
+        //       >
+        //         Cancel
+        //       </button>
+        //       <button
+        //         onClick={handleCreateCustomer}
+        //         className="px-4 py-2 bg-blue-500 text-white rounded"
+        //       >
+        //         Create
+        //       </button>
+        //     </div>
+        //   </div>
+        // </div>
       )}
     </main>
   );
