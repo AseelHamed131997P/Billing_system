@@ -263,7 +263,7 @@ const Invoice = () => {
   const handleChangeItemQuantity = (e) => setItemQuantity(e.target.value);
   console.log(` item quantity is : ${itemQuantity}`);
   //here will create state invoiceItems [{item_number:,name:,itemPrice:,currency:itemQuantity:,totalPriceItem},{}]
-  //useeffect based on invoiceItems if any change increase or change enter it do map on all invoiceItems and calculate totalPriceItem
+  //useeffect based on invoiceItems if any change increase or change enter it do map on all invoiceItems and calculate totalPriceItem every item and sum totalPriceItem to set totapPrice
   const [totalPriceItem, setTotalPriceItem] = useState();
 
   useEffect(() => {
@@ -447,9 +447,33 @@ const Invoice = () => {
       }
 
       // Now update state in one go
-      setTotalPriceWithoutVAT(calculatedTotalPriceWithoutVAT);
-      setTotalVAT(calculatedTotalVAT);
-      setTotalPriceWithVAT(calculatedTotalPriceWithVAT);
+      setTotalPriceWithoutVAT(
+        calculatedTotalPriceWithoutVAT?.toString().includes(".")
+          ? Number(
+              calculatedTotalPriceWithoutVAT?.toString().split(".")[0] +
+                "." +
+                calculatedTotalPriceWithoutVAT?.toString().split(".")[1][0]
+            )
+          : calculatedTotalPriceWithoutVAT
+      );
+      setTotalVAT(
+        calculatedTotalVAT?.toString().includes(".")
+          ? Number(
+              calculatedTotalVAT?.toString().split(".")[0] +
+                "." +
+                calculatedTotalVAT?.toString().split(".")[1][0]
+            )
+          : calculatedTotalVAT
+      );
+      setTotalPriceWithVAT(
+        calculatedTotalPriceWithVAT?.toString().includes(".")
+          ? Number(
+              calculatedTotalPriceWithVAT?.toString().split(".")[0] +
+                "." +
+                calculatedTotalPriceWithVAT?.toString().split(".")[1][0]
+            )
+          : calculatedTotalPriceWithVAT
+      );
       setTotalPriceInWords(convertNumberToWords(calculatedTotalPriceInWords));
     } else {
       setTotalPriceWithoutVAT(null);
