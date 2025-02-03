@@ -4,7 +4,7 @@ import Invoice from "../../../svgs/invoice.svg";
 
 const CheckBox = (props) => {
   return (
-    <div className="center-v">
+    <div className={`center-v ${props.style ? "hidden" : "block"}`}>
       <input
         id="checkbox"
         type="checkbox"

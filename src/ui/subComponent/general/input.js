@@ -23,6 +23,8 @@ const Input = ({ name, value, handleChange, label, width = "w-96" }) => {
       ? "text"
       : name === "Price"
       ? "number"
+      : name === "quantity"
+      ? "number"
       : "text"; // Default to text
 
   return (
@@ -38,8 +40,9 @@ const Input = ({ name, value, handleChange, label, width = "w-96" }) => {
       />
       <label
         className={`absolute left-3 transition-all duration-200 ease-in-out ${
-          isFocused || value
-            ? "text-sm -top-3 bg-white px-1 text-blue-500"
+          isFocused || (value !== undefined && value !== null && value !== "")
+            ? // isFocused || value
+              "text-sm -top-3 bg-white px-1 text-blue-500"
             : "top-5 text-gray-400"
         } pointer-events-none`}
       >

@@ -43,7 +43,7 @@ const Invoice = () => {
         full_address: "sdfer",
         city: "efrr",
         VAT_NO: "3434",
-        customer_Number: 2,
+        customer_number: 2,
       },
     },
     {
@@ -56,7 +56,7 @@ const Invoice = () => {
         full_address: "dsf",
         city: "frrr",
         VAT_NO: "122122",
-        customer_Number: 3,
+        customer_number: 3,
       },
     },
     {
@@ -69,7 +69,7 @@ const Invoice = () => {
         full_address: "dfe",
         city: "cvdf",
         VAT_NO: "4444",
-        customer_Number: 4,
+        customer_number: 4,
       },
     },
     {
@@ -82,7 +82,7 @@ const Invoice = () => {
         full_address: "gerg",
         city: "ccc",
         VAT_NO: "4343",
-        customer_Number: 5,
+        customer_number: 5,
       },
     },
     {
@@ -95,7 +95,7 @@ const Invoice = () => {
         full_address: "rfgg",
         city: "sss",
         VAT_NO: "6666",
-        customer_Number: 6,
+        customer_number: 6,
       },
     },
   ];
@@ -118,7 +118,7 @@ const Invoice = () => {
       full_address: "",
       city: "",
       VAT_NO: "",
-      customer_Number: null,
+      customer_number: null,
     },
     {
       id: 1,
@@ -127,7 +127,7 @@ const Invoice = () => {
       full_address: "sdfer",
       city: "efrr",
       VAT_NO: "3434",
-      customer_Number: 2,
+      customer_number: 2,
     },
     {
       id: 2,
@@ -136,7 +136,7 @@ const Invoice = () => {
       full_address: "dsf",
       city: "frrr",
       VAT_NO: "122122",
-      customer_Number: 3,
+      customer_number: 3,
     },
     {
       id: 3,
@@ -145,7 +145,7 @@ const Invoice = () => {
       full_address: "dfe",
       city: "cvdf",
       VAT_NO: "4444",
-      customer_Number: 4,
+      customer_number: 4,
     },
     {
       id: 4,
@@ -154,7 +154,7 @@ const Invoice = () => {
       full_address: "gerg",
       city: "ccc",
       VAT_NO: "4343",
-      customer_Number: 5,
+      customer_number: 5,
     },
     {
       id: 5,
@@ -163,11 +163,12 @@ const Invoice = () => {
       full_address: "rfgg",
       city: "sss",
       VAT_NO: "6666",
-      customer_Number: 6,
+      customer_number: 6,
     },
   ]);
 
   const [customer, setCustomer] = useState(customers[0]);
+
   const [isCreatingCustomer, setIsCreatingCustomer] = useState(false); // Toggle modal visibility
   const [newCustomer, setNewCustomer] = useState(""); // Store new customer name
 
@@ -176,11 +177,101 @@ const Invoice = () => {
       setIsCreatingCustomer(true); // Show popup to create a new customer
       return;
     }
-    console.log(`ddddddddddddddddddd ${e.target.value}`);
+    console.log(`print id of customer from database ${e.target.value}`);
     const selectedOption = customers.find((item) => item.id == e.target.value);
     setCustomer(selectedOption || customers[0]);
   };
   console.log(`here after change on customer ${customer.name}`);
+  //here api to get all items
+  const [items, setItems] = useState([
+    {
+      id: null,
+      name: "Select an item",
+      price: null,
+      currency: "",
+      item_number: null,
+    },
+    {
+      id: 1,
+      name: "item1",
+      price: 12,
+      currency: "NIS",
+      item_number: 2,
+    },
+    {
+      id: 2,
+      name: "item2",
+      price: 10,
+      currency: "USD",
+      item_number: 3,
+    },
+    {
+      id: 3,
+      name: "item3",
+      price: 10,
+      currency: "ERO",
+      item_number: 4,
+    },
+    {
+      id: 4,
+      name: "item4",
+      price: 10,
+      currency: "NIS",
+      item_number: 5,
+    },
+    {
+      id: 5,
+      name: "item5",
+      price: 10,
+      currency: "USD",
+      item_number: 6,
+    },
+  ]);
+
+  const [item, setItem] = useState(items[0]);
+
+  const [isCreatingItem, setIsCreatingItem] = useState(false); // Toggle modal visibility
+  const [newItem, setNewItem] = useState(""); // Store new customer name
+
+  const handleChangeItem = (e) => {
+    if (e.target.value === "create_new") {
+      setIsCreatingItem(true); // Show popup to create a new customer
+      return;
+    }
+    console.log(`print id of item from database ${e.target.value}`);
+    const selectedOption = items.find((item) => item.id == e.target.value);
+    setItem(selectedOption || items[0]);
+  };
+  console.log(`here after change on item ${item.name}`);
+
+  let currencyItems = ["NIS", "USD", "ERO"];
+  const [currencyItemOption, setCurrencyItemOption] = useState(
+    currencyItems[0]
+  );
+
+  const handleChangeCurrencyItemOption = (e) =>
+    setCurrencyItemOption(e.target.value);
+  console.log(`currency item that selected : ${currencyItemOption}`);
+
+  const [itemPrice, setItemPrice] = useState();
+
+  const handleChangeItemPrice = (e) => setItemPrice(e.target.value);
+  console.log(` item price is : ${itemPrice}`);
+
+  const [itemQuantity, setItemQuantity] = useState();
+
+  const handleChangeItemQuantity = (e) => setItemQuantity(e.target.value);
+  console.log(` item quantity is : ${itemQuantity}`);
+  //here will create state invoiceItems [{item_number:,name:,itemPrice:,currency:itemQuantity:,totalPriceItem},{}]
+  //useeffect based on invoiceItems if any change increase or change enter it do map on all invoiceItems and calculate totalPriceItem
+  const [totalPriceItem, setTotalPriceItem] = useState();
+
+  useEffect(() => {
+    if (itemPrice && itemQuantity) {
+      setTotalPriceItem(itemPrice * itemQuantity);
+    }
+  }, [itemPrice, itemQuantity]);
+
   //alternative of this function I will validation and send API and when return success I will setIsCreatingCustomer false and will automatically clear the data
   //because I pass isCreatingCustomer based on it when false clear the data
   const handleCreateCustomer = () => {
@@ -276,16 +367,30 @@ const Invoice = () => {
   console.log(`invoice type that selected : ${invoiceTypeOption}`);
 
   let currencyType = ["NIS", "USD", "ERO"];
-  const [currencyTypeOption, setCurrencyTypeOption] = useState(invoiceType[0]);
+  const [currencyTypeOption, setCurrencyTypeOption] = useState(currencyType[0]);
 
   const handleChangeCurrencyTypeOption = (e) =>
     setCurrencyTypeOption(e.target.value);
   console.log(`currency type that selected : ${currencyTypeOption}`);
 
   // here query to get invoice number in useeffect
+  function convertNumberToWords(number) {
+    const [integerPart, decimalPart] = number.toString().split(".");
 
-  const [totalPrice, setTotalPrice] = useState("2355.3");
-  console.log(`total price : ${totalPrice}`);
+    // Convert integer and decimal parts to words
+    const integerInWords = toWords(parseInt(integerPart, 10));
+    const decimalInWords = decimalPart
+      ? toWords(parseInt(decimalPart, 10))
+      : "";
+
+    // Handle cases where there's no decimal part
+    return decimalPart
+      ? `${integerInWords} point ${decimalInWords}`
+      : integerInWords;
+  }
+
+  const [totalPriceWithoutVAT, setTotalPriceWithoutVAT] = useState();
+  console.log(`total price without VAT : ${totalPriceWithoutVAT}`);
 
   const [isIncludeVAT, setIsIncludeVAT] = useState(false);
 
@@ -293,33 +398,72 @@ const Invoice = () => {
     setIsIncludeVAT(!isIncludeVAT);
   };
   console.log(`include vat : ${isIncludeVAT}`);
-  //here adding useeffect based on isIncludeVAT codition inside useeffect isIncludeVAT when true  get vat from DB ans setState on VAT
+
+  const [isIncludeItemVAT, setIsIncludeItemVAT] = useState(false);
+
+  const handleIsIncludeItemVATChange = () => {
+    setIsIncludeItemVAT(!isIncludeItemVAT);
+  };
+  console.log(`include item vat : ${isIncludeItemVAT}`);
+  //here adding useeffect based on isIncludeVAT or isIncludeItemVAT codition inside useeffect isIncludeVAT when true  get vat from DB ans setState on VAT
 
   const [VAT, setVAT] = useState(".17");
   console.log(`VAT : ${VAT}`);
 
-  const [totalPriceWithVAT, setTotalPriceWithVAT] = useState("20.1");
+  const [totalPrice, setTotalPrice] = useState(100);
+
+  const [totalVAT, setTotalVAT] = useState(null);
+  console.log(`totalVAT is : ${totalVAT}`);
+
+  const [totalPriceWithVAT, setTotalPriceWithVAT] = useState();
   console.log(`total Price With VAT : ${totalPriceWithVAT}`);
 
-  function convertNumberToWords(number) {
-    const [integerPart, decimalPart] = totalPriceWithVAT.split(".");
-
-    const integerInWords = toWords(parseInt(integerPart));
-
-    const decimalInWords = decimalPart ? toWords(parseInt(decimalPart)) : "";
-
-    return `${integerInWords} point ${decimalInWords}`;
-  }
-  //here will condition on isIncludeVAT if true pass totalPriceWithVAT else pass totalPrice
-  const [totalPriceInWords, setTotalPriceInWords] = useState(
-    convertNumberToWords(totalPriceWithVAT)
-  );
+  const [totalPriceInWords, setTotalPriceInWords] = useState("");
   console.log(`total Price inwords : ${totalPriceInWords}`);
+
+  useEffect(() => {
+    if (totalPrice) {
+      let calculatedTotalPriceWithoutVAT;
+      let calculatedTotalVAT;
+      let calculatedTotalPriceWithVAT;
+      let calculatedTotalPriceInWords;
+
+      if (isIncludeVAT) {
+        calculatedTotalPriceWithoutVAT = totalPrice;
+        calculatedTotalVAT = totalPrice * VAT;
+        calculatedTotalPriceWithVAT =
+          calculatedTotalPriceWithoutVAT + calculatedTotalVAT;
+        calculatedTotalPriceInWords = calculatedTotalPriceWithVAT;
+      } else if (isIncludeItemVAT) {
+        calculatedTotalPriceWithoutVAT = totalPrice / 1.17;
+        calculatedTotalVAT = calculatedTotalPriceWithoutVAT - totalPrice;
+        calculatedTotalPriceWithVAT = totalPrice;
+        calculatedTotalPriceInWords = calculatedTotalPriceWithVAT;
+      } else {
+        calculatedTotalPriceWithoutVAT = totalPrice;
+        calculatedTotalVAT = null;
+        calculatedTotalPriceWithVAT = null;
+        calculatedTotalPriceInWords = calculatedTotalPriceWithoutVAT;
+      }
+
+      // Now update state in one go
+      setTotalPriceWithoutVAT(calculatedTotalPriceWithoutVAT);
+      setTotalVAT(calculatedTotalVAT);
+      setTotalPriceWithVAT(calculatedTotalPriceWithVAT);
+      setTotalPriceInWords(convertNumberToWords(calculatedTotalPriceInWords));
+    } else {
+      setTotalPriceWithoutVAT(null);
+      setTotalVAT(null);
+      setTotalPriceWithVAT(null);
+      setTotalPriceInWords("");
+    }
+  }, [totalPrice, isIncludeVAT, isIncludeItemVAT, VAT]); // Ensure all dependencies are included
+
   const [signatureInvoice, setSignatureInvoice] = useState({
     urlSign: null,
     urlFile: null,
   }); // here save the signature value just when not null if null does not save
-  console.log(`test  invoice urlSign ${signatureInvoice.urlSign}`);
+  console.log(`test invoice urlSign ${signatureInvoice.urlSign}`);
   console.log(`test invoice urlFile ${signatureInvoice.urlFile}`);
 
   //adding useeffect based on isCreatingCustomer when true api to get last Customer_number and increment it by one
@@ -344,8 +488,7 @@ const Invoice = () => {
       <section className="border rounded-[20px] p-10">
         <div className=" border flex-center-v-space-between">
           <h1 className="text-2xl font-semibold">Customer</h1>
-          <NumberValue label="Customer" num="00001" />
-          {/* <div>dsfs</div> */}
+          <NumberValue label="Customer" num={customer.customer_number} />
         </div>
         <div className="border py-8 grid-4-cols-center-vx gap-y-10">
           <CreatableDropDown
@@ -405,36 +548,116 @@ const Invoice = () => {
           />
         </div>
       </section>
+
+      <section className="border rounded-[20px] p-10">
+        <div className=" border flex-center-v-space-between">
+          <h1 className="text-2xl font-semibold">Item</h1>
+          <CheckBox
+            isChecked={isIncludeItemVAT}
+            handleChange={handleIsIncludeItemVATChange}
+            label="Include Item VAT"
+            style={isIncludeVAT}
+          />
+        </div>
+        <div className="border py-8 grid-4-cols-center-vx gap-y-10">
+          <NumberValue label="Item" num={item.item_number} />
+          <CreatableDropDown
+            options={items}
+            option={item}
+            handleChangeOption={handleChangeItem}
+            valueKey="id"
+            label="name"
+            width="w-96"
+          />
+          <Input
+            key={"item_price"}
+            name={"Price"}
+            value={itemPrice || ""} // Ensure value is never null
+            handleChange={handleChangeItemPrice}
+            label={"Item price"}
+            // width="w-80"
+          />
+          <DropDown
+            options={currencyItems}
+            option={currencyItemOption}
+            handleChangeOption={handleChangeCurrencyItemOption}
+            label={"select item currency "}
+            width="w-96"
+          />
+          <Input
+            key={"item_quantity"}
+            name={"quantity"}
+            value={itemQuantity || ""} // Ensure value is never null
+            handleChange={handleChangeItemQuantity}
+            label={"Item quantity"}
+            // width="w-80"
+          />
+          <Input
+            key={"total_price_item"}
+            name={"Price"}
+            value={totalPriceItem}
+            // handleChange={handleChangeCustomerInfo}
+            label={"Total price item"}
+            // width="w-80"
+          />
+          <button className="btn py-2 px-4 w-64" type="button">
+            Create Customer
+          </button>
+          {/* {Object.keys(customerInfo).map((key, index) => {
+            return (
+              <Input
+                key={key}
+                name={key}
+                value={customerInfo[key] || ""} // Ensure value is never null
+                handleChange={handleChangeCustomerInfo}
+                label={labels[index]}
+                // width="w-80"
+              />
+            );
+          })} */}
+        </div>
+      </section>
+
       <section className="border rounded-[20px] p-10 grid gap-10 ">
         <h1 className="text-2xl font-semibold">Invoice Summary</h1>
         <div className="flex gap-10">
           <Input
-            key={"Total_Price"}
-            name={"Total_Price"}
-            value={totalPrice}
+            key={"Total_Price_without_VAT"}
+            name={"Price"}
+            value={totalPriceWithoutVAT}
             // handleChange={handleChangeCustomerInfo}
-            label={"Total Price"}
+            label={"Total Price Without VAT"}
             // width="w-80"
           />
           <CheckBox
             isChecked={isIncludeVAT}
             handleChange={handleIsIncludeVATChange}
             label="Include VAT"
+            style={isIncludeItemVAT}
           />
         </div>
-        {isIncludeVAT ? (
+        {isIncludeVAT || isIncludeItemVAT ? (
           <div className="flex gap-10">
             <Input
               key={"VAT"}
-              name={"VAT"}
+              name={"Price"}
               value={VAT}
               // handleChange={handleChangeCustomerInfo}
               label={"VAT"}
               // width="w-80"
             />
+
             <Input
-              key={"Total_Price_VAT"}
-              name={"Total_Price_VAT"}
+              key={"Total_VAT"}
+              name={"Price"}
+              value={totalVAT}
+              // handleChange={handleChangeCustomerInfo}
+              label={"Total VAT"}
+              // width="w-80"
+            />
+            <Input
+              key={"Total_Price_With_VAT"}
+              name={"Price"}
               value={totalPriceWithVAT}
               // handleChange={handleChangeCustomerInfo}
               label={"Total Price With VAT"}
