@@ -2,7 +2,7 @@ import { FunctionComponent } from "react";
 import { useDispatch } from "../hooks/index";
 import { useSelector } from "../hooks";
 import { useLocation } from "react-router-dom";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { toWords } from "number-to-words";
 
 import "../index.css";
@@ -17,6 +17,7 @@ import {
   Signature,
   FileInput,
   CustomerModal,
+  CreateItem,
 } from "../ui/subComponent/general/index.js";
 import "../CSS/general.css";
 const Invoice = () => {
@@ -182,6 +183,7 @@ const Invoice = () => {
     setCustomer(selectedOption || customers[0]);
   };
   console.log(`here after change on customer ${customer.name}`);
+
   //here api to get all items
   const [items, setItems] = useState([
     {
@@ -228,49 +230,134 @@ const Invoice = () => {
     },
   ]);
 
-  const [item, setItem] = useState(items[0]);
+  // const [item, setItem] = useState(items[0]);
 
   const [isCreatingItem, setIsCreatingItem] = useState(false); // Toggle modal visibility
-  const [newItem, setNewItem] = useState(""); // Store new customer name
+  // const [newItem, setNewItem] = useState(""); // Store new customer name
 
-  const handleChangeItem = (e) => {
+  let itemsCurrency = ["NIS", "USD", "ERO"];
+
+  //here for invoice items
+  const [invoiceItems, setInvoiceItems] = useState([
+    {
+      item: items[0],
+      itemPrice: null,
+      itemCurrency: itemsCurrency[0],
+      itemQuantity: null,
+      totalPriceItem: null,
+    },
+  ]);
+
+  const handleChangeItem = (e, invoiceItemIndex) => {
     if (e.target.value === "create_new") {
-      setIsCreatingItem(true); // Show popup to create a new customer
+      setIsCreatingItem(true); // Show popup to create a new item
       return;
     }
+
     console.log(`print id of item from database ${e.target.value}`);
-    const selectedOption = items.find((item) => item.id == e.target.value);
-    setItem(selectedOption || items[0]);
+
+    // Find the selected item from the list
+    const selectedOption =
+      items.find((item) => item.id == e.target.value) || items[0];
+
+    // Update the invoiceItems array correctly
+    setInvoiceItems((prevInvoiceItems) =>
+      prevInvoiceItems.map((item, index) =>
+        index === invoiceItemIndex ? { ...item, item: selectedOption } : item
+      )
+    );
   };
-  console.log(`here after change on item ${item.name}`);
 
-  let currencyItems = ["NIS", "USD", "ERO"];
-  const [currencyItemOption, setCurrencyItemOption] = useState(
-    currencyItems[0]
-  );
+  console.table(invoiceItems);
 
-  const handleChangeCurrencyItemOption = (e) =>
-    setCurrencyItemOption(e.target.value);
-  console.log(`currency item that selected : ${currencyItemOption}`);
+  const handleChangeItemPrice = (e, invoiceItemIndex) => {
+    setInvoiceItems((prevInvoiceItems) =>
+      prevInvoiceItems.map((item, index) =>
+        index === invoiceItemIndex
+          ? {
+              ...item,
+              itemPrice: e.target.value,
+              totalPriceItem: e.target.value * (item.itemQuantity || 0),
+            }
+          : item
+      )
+    );
+  };
 
-  const [itemPrice, setItemPrice] = useState();
+  const handleChangeItemCurrency = (e, invoiceItemIndex) => {
+    setInvoiceItems((prevInvoiceItems) =>
+      prevInvoiceItems.map((item, index) =>
+        index === invoiceItemIndex
+          ? { ...item, itemCurrency: e.target.value }
+          : item
+      )
+    );
+  };
 
-  const handleChangeItemPrice = (e) => setItemPrice(e.target.value);
-  console.log(` item price is : ${itemPrice}`);
+  // const [itemQuantity, setItemQuantity] = useState();
 
-  const [itemQuantity, setItemQuantity] = useState();
+  const handleChangeItemQuantity = (e, invoiceItemIndex) => {
+    setInvoiceItems((prevInvoiceItems) =>
+      prevInvoiceItems.map((item, index) =>
+        index === invoiceItemIndex
+          ? {
+              ...item,
+              itemQuantity: e.target.value,
+              totalPriceItem: e.target.value * (item.itemPrice || 0),
+            }
+          : item
+      )
+    );
+  };
 
-  const handleChangeItemQuantity = (e) => setItemQuantity(e.target.value);
-  console.log(` item quantity is : ${itemQuantity}`);
-  //here will create state invoiceItems [{item_number:,name:,itemPrice:,currency:itemQuantity:,totalPriceItem},{}]
-  //useeffect based on invoiceItems if any change increase or change enter it do map on all invoiceItems and calculate totalPriceItem every item and sum totalPriceItem to set totapPrice
-  const [totalPriceItem, setTotalPriceItem] = useState();
+  let addItem = () => {
+    setInvoiceItems((prevItems) => [
+      ...prevItems,
+      {
+        item: items[0],
+        itemPrice: null,
+        itemCurrency: itemsCurrency[0],
+        itemQuantity: null,
+        totalPriceItem: null,
+      },
+    ]);
+  };
 
-  useEffect(() => {
-    if (itemPrice && itemQuantity) {
-      setTotalPriceItem(itemPrice * itemQuantity);
-    }
-  }, [itemPrice, itemQuantity]);
+  const deleteItem = (invoiceItemIndex) => {
+    setInvoiceItems((prevInvoiceItems) =>
+      prevInvoiceItems.filter((_, index) => index !== invoiceItemIndex)
+    );
+  };
+
+  const totalPrice = useMemo(() => {
+    return invoiceItems.reduce(
+      (sum, item) => sum + (item.totalPriceItem || 0),
+      0
+    );
+  }, [invoiceItems]);
+
+  // //here will create state invoiceItems [{item_number:,name:,itemPrice:,currency:itemQuantity:,totalPriceItem},{}]
+  // //useeffect based on invoiceItems if any change increase or change enter it do map on all invoiceItems and calculate totalPriceItem every item and sum totalPriceItem to set totapPrice
+  // const [totalPriceItem, setTotalPriceItem] = useState();
+
+  // useEffect(() => {
+  //   setInvoiceItems((prevInvoiceItems) =>
+  //     prevInvoiceItems.map((invoiceItem) => {
+  //       if (
+  //         invoiceItem.item &&
+  //         invoiceItem.item.itemPrice &&
+  //         invoiceItem.item.itemQuantity
+  //       ) {
+  //         return {
+  //           ...invoiceItem,
+  //           totalPriceItem:
+  //             invoiceItem.item.itemPrice * invoiceItem.item.itemQuantity,
+  //         };
+  //       }
+  //       return invoiceItem;
+  //     })
+  //   );
+  // }, [invoiceItems]);
 
   //alternative of this function I will validation and send API and when return success I will setIsCreatingCustomer false and will automatically clear the data
   //because I pass isCreatingCustomer based on it when false clear the data
@@ -409,8 +496,6 @@ const Invoice = () => {
 
   const [VAT, setVAT] = useState(".17");
   console.log(`VAT : ${VAT}`);
-
-  const [totalPrice, setTotalPrice] = useState(100);
 
   const [totalVAT, setTotalVAT] = useState(null);
   console.log(`totalVAT is : ${totalVAT}`);
@@ -576,69 +661,92 @@ const Invoice = () => {
       <section className="border rounded-[20px] p-10">
         <div className=" border flex-center-v-space-between">
           <h1 className="text-2xl font-semibold">Item</h1>
+          <button
+            className="btn py-2 px-4 w-64"
+            type="button"
+            onClick={addItem}
+          >
+            Add Item
+          </button>
+        </div>
+        <div className="border grid gap-y-10">
+          {invoiceItems.map((invoiceItem, index) => {
+            return (
+              <div
+                key={index}
+                className="border grid-7-cols-center-vx gap-y-10"
+              >
+                <NumberValue
+                  label="Item"
+                  num={invoiceItem.item.item_number}
+                  width="w-40"
+                />
+                <CreatableDropDown
+                  options={items}
+                  option={invoiceItem.item}
+                  handleChangeOption={(e) => handleChangeItem(e, index)} // Fix this line
+                  valueKey="id"
+                  label="name"
+                  width="w-48"
+                />
+                <Input
+                  key={"item_price"}
+                  name={"Price"}
+                  value={invoiceItem.itemPrice || ""} // Ensure value is never null
+                  handleChange={(e) => handleChangeItemPrice(e, index)}
+                  label={"Item price"}
+                  width="w-40"
+                />
+                <DropDown
+                  options={itemsCurrency}
+                  option={invoiceItem.itemCurrency}
+                  handleChangeOption={(e) => handleChangeItemCurrency(e, index)}
+                  label={"Select item currency "}
+                  width="w-40"
+                />
+                <Input
+                  key={"item_quantity"}
+                  name={"quantity"}
+                  value={invoiceItem.itemQuantity || ""}
+                  handleChange={(e) => handleChangeItemQuantity(e, index)}
+                  label={"Item quantity"}
+                  width="w-40"
+                />
+                <Input
+                  key={"total_price_item"}
+                  name={"Price"}
+                  value={invoiceItem.totalPriceItem || ""}
+                  label={"Total price item"}
+                  width="w-40"
+                  readOnly={true}
+                />
+
+                <button
+                  className="btn-delete py-2 px-4 w-64"
+                  type="button"
+                  onClick={() => deleteItem(index)}
+                >
+                  Delete Item
+                </button>
+              </div>
+            );
+          })}
+        </div>
+        <div className=" border flex-center-v-end-x gap-10">
+          <Input
+            key={"total_price"}
+            name={"Price"}
+            value={totalPrice || ""}
+            label={"Total price "}
+            width="w-40"
+            readOnly={true}
+          />
           <CheckBox
             isChecked={isIncludeItemVAT}
             handleChange={handleIsIncludeItemVATChange}
             label="Include Item VAT"
             style={isIncludeVAT}
           />
-        </div>
-        <div className="border py-8 grid-4-cols-center-vx gap-y-10">
-          <NumberValue label="Item" num={item.item_number} />
-          <CreatableDropDown
-            options={items}
-            option={item}
-            handleChangeOption={handleChangeItem}
-            valueKey="id"
-            label="name"
-            width="w-96"
-          />
-          <Input
-            key={"item_price"}
-            name={"Price"}
-            value={itemPrice || ""} // Ensure value is never null
-            handleChange={handleChangeItemPrice}
-            label={"Item price"}
-            // width="w-80"
-          />
-          <DropDown
-            options={currencyItems}
-            option={currencyItemOption}
-            handleChangeOption={handleChangeCurrencyItemOption}
-            label={"select item currency "}
-            width="w-96"
-          />
-          <Input
-            key={"item_quantity"}
-            name={"quantity"}
-            value={itemQuantity || ""} // Ensure value is never null
-            handleChange={handleChangeItemQuantity}
-            label={"Item quantity"}
-            // width="w-80"
-          />
-          <Input
-            key={"total_price_item"}
-            name={"Price"}
-            value={totalPriceItem}
-            // handleChange={handleChangeCustomerInfo}
-            label={"Total price item"}
-            // width="w-80"
-          />
-          <button className="btn py-2 px-4 w-64" type="button">
-            Create Customer
-          </button>
-          {/* {Object.keys(customerInfo).map((key, index) => {
-            return (
-              <Input
-                key={key}
-                name={key}
-                value={customerInfo[key] || ""} // Ensure value is never null
-                handleChange={handleChangeCustomerInfo}
-                label={labels[index]}
-                // width="w-80"
-              />
-            );
-          })} */}
         </div>
       </section>
 
@@ -648,10 +756,9 @@ const Invoice = () => {
           <Input
             key={"Total_Price_without_VAT"}
             name={"Price"}
-            value={totalPriceWithoutVAT}
-            // handleChange={handleChangeCustomerInfo}
+            value={totalPriceWithoutVAT || ""}
             label={"Total Price Without VAT"}
-            // width="w-80"
+            readOnly={true}
           />
           <CheckBox
             isChecked={isIncludeVAT}
@@ -666,26 +773,23 @@ const Invoice = () => {
               key={"VAT"}
               name={"Price"}
               value={VAT}
-              // handleChange={handleChangeCustomerInfo}
               label={"VAT"}
-              // width="w-80"
+              readOnly={true}
             />
 
             <Input
               key={"Total_VAT"}
               name={"Price"}
-              value={totalVAT}
-              // handleChange={handleChangeCustomerInfo}
+              value={totalVAT || ""}
               label={"Total VAT"}
-              // width="w-80"
+              readOnly={true}
             />
             <Input
               key={"Total_Price_With_VAT"}
               name={"Price"}
-              value={totalPriceWithVAT}
-              // handleChange={handleChangeCustomerInfo}
+              value={totalPriceWithVAT || ""}
               label={"Total Price With VAT"}
-              // width="w-80"
+              readOnly={true}
             />
           </div>
         ) : (
@@ -697,9 +801,8 @@ const Invoice = () => {
             key={"total_Price_IN_Words"}
             name={"total_Price_IN_Words"}
             value={totalPriceInWords}
-            // handleChange={handleChangeCustomerInfo}
             label={"Total Price In Words"}
-            // width="w-80"
+            readOnly={true}
           />
         </div>
         <div>
@@ -796,6 +899,15 @@ const Invoice = () => {
         //     </div>
         //   </div>
         // </div>
+      )}
+
+      {isCreatingItem && (
+        <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center z-50 ">
+          <div className=" bg-white rounded-lg shadow-lg py-10 px-6 border w-full max-w-[60rem]">
+            <h1 className="text-3xl font-bold mb-[1.6rem]">Create Item</h1>
+            <CreateItem />
+          </div>
+        </div>
       )}
     </main>
   );

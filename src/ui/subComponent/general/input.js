@@ -1,6 +1,13 @@
 import React, { useState } from "react";
 
-const Input = ({ name, value, handleChange, label, width = "w-96" }) => {
+const Input = ({
+  name,
+  value,
+  handleChange,
+  label,
+  width = "w-96",
+  readOnly,
+}) => {
   const [isFocused, setIsFocused] = useState(false);
 
   const handleFocus = () => setIsFocused(true);
@@ -30,6 +37,7 @@ const Input = ({ name, value, handleChange, label, width = "w-96" }) => {
   return (
     <div className="relative">
       <input
+        readOnly={readOnly || false}
         type={type}
         name={name}
         value={value}
