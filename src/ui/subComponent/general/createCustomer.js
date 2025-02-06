@@ -1,20 +1,9 @@
-import { useState } from "react"; // React import for useState
+import { React, useState } from "react"; // React import for useState
+import "../../../CSS/general.css";
 
 import { Input, DropDown, NumberValue } from "./index.js";
 
-const CustomerModal = (props) => {
-  if (props.isCreatingCustomer === false) {
-    setCustomerInfo({
-      Name_In_Arabic: null,
-      Name_In_English: null,
-      Name_In_Hebrew: null,
-      Email: null,
-      Mobile_NO: null,
-      Full_Address: null,
-      City: null,
-      VAT_NO: null,
-    });
-  }
+const CreateCustomer = () => {
   let companyType = [
     "Simple User",
     "Commerical With VAT NO",
@@ -25,7 +14,6 @@ const CustomerModal = (props) => {
 
   const handleChangeOption = (e) => setOption(e.target.value);
   console.log(option);
-
   const [customerInfo, setCustomerInfo] = useState({
     Name_In_Arabic: null,
     Name_In_English: null,
@@ -57,7 +45,7 @@ const CustomerModal = (props) => {
   ];
 
   return (
-    <>
+    <form className="register-form border p-10 rounded-[20px]">
       <div className="flex-center-v-space-between ">
         <DropDown
           options={companyType}
@@ -84,9 +72,15 @@ const CustomerModal = (props) => {
             width="w-full"
           />
         ))}
+        <div className="col-start-1 col-span-full place-self-center">
+          {" "}
+          <button className="btn py-2 px-4 w-64" type="button">
+            Create Customer
+          </button>
+        </div>
       </section>
-    </>
+    </form>
   );
 };
 
-export default CustomerModal;
+export default CreateCustomer;

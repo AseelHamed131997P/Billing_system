@@ -16,7 +16,7 @@ import {
   CheckBox,
   Signature,
   FileInput,
-  CustomerModal,
+  CreateCustomer,
   CreateItem,
 } from "../ui/subComponent/general/index.js";
 import "../CSS/general.css";
@@ -46,6 +46,15 @@ const Invoice = () => {
         VAT_NO: "3434",
         customer_number: 2,
       },
+      items: [
+        {
+          id: 1,
+          name: "item1",
+          price: 12,
+          currency: "NIS",
+          item_number: 2,
+        },
+      ],
     },
     {
       id: 2,
@@ -59,6 +68,17 @@ const Invoice = () => {
         VAT_NO: "122122",
         customer_number: 3,
       },
+      items: [
+        {
+          id: 2,
+          name: "alaa",
+          mobile_NO: "333333333",
+          full_address: "dsf",
+          city: "frrr",
+          VAT_NO: "122122",
+          customer_number: 3,
+        },
+      ],
     },
     {
       id: 3,
@@ -72,6 +92,17 @@ const Invoice = () => {
         VAT_NO: "4444",
         customer_number: 4,
       },
+      items: [
+        {
+          id: 3,
+          name: "fadi",
+          mobile_NO: "444444444",
+          full_address: "dfe",
+          city: "cvdf",
+          VAT_NO: "4444",
+          customer_number: 4,
+        },
+      ],
     },
     {
       id: 4,
@@ -85,6 +116,17 @@ const Invoice = () => {
         VAT_NO: "4343",
         customer_number: 5,
       },
+      items: [
+        {
+          id: 4,
+          name: "sara",
+          mobile_NO: "555555555",
+          full_address: "gerg",
+          city: "ccc",
+          VAT_NO: "4343",
+          customer_number: 5,
+        },
+      ],
     },
     {
       id: 5,
@@ -98,6 +140,17 @@ const Invoice = () => {
         VAT_NO: "6666",
         customer_number: 6,
       },
+      items: [
+        {
+          id: 5,
+          name: "lara",
+          mobile_NO: "666666666",
+          full_address: "rfgg",
+          city: "sss",
+          VAT_NO: "6666",
+          customer_number: 6,
+        },
+      ],
     },
   ];
 
@@ -190,7 +243,7 @@ const Invoice = () => {
       id: null,
       name: "Select an item",
       price: null,
-      currency: "",
+      currency: "NIS",
       item_number: null,
     },
     {
@@ -266,7 +319,14 @@ const Invoice = () => {
     // Update the invoiceItems array correctly
     setInvoiceItems((prevInvoiceItems) =>
       prevInvoiceItems.map((item, index) =>
-        index === invoiceItemIndex ? { ...item, item: selectedOption } : item
+        index === invoiceItemIndex
+          ? {
+              ...item,
+              item: selectedOption,
+              itemPrice: selectedOption.price,
+              itemCurrency: selectedOption.currency,
+            }
+          : item
       )
     );
   };
@@ -852,56 +912,25 @@ const Invoice = () => {
       {isCreatingCustomer && (
         <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center z-50 ">
           <div className=" bg-white rounded-lg shadow-lg p-6 border w-full max-w-[60rem]">
-            <h1 className="text-3xl font-bold mb-[3.2rem]">Create Customer</h1>
-            <form className="register-form border p-10 rounded-[20px] mb-10">
-              <CustomerModal isCreatingCustomer={isCreatingCustomer} />
-              <div className="border text-center">
-                <button className="btn py-2 px-4 w-64 mr-10" type="button">
-                  Create Customer
-                </button>
-                <button
-                  className="btn py-2 px-4 w-64 "
-                  type="button"
-                  onClick={() => {
-                    setCustomer({
-                      ...(customers.find((item) => item.id === null) ||
-                        customers[0]),
-                    });
-                    setIsCreatingCustomer(false);
-                  }}
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
+            <div className="flex-center-v-space-between mb-[1.6rem]">
+              <h1 className="text-3xl font-bold ">Create Customer</h1>
+              <button
+                onClick={() => {
+                  setCustomer({
+                    ...(customers.find((item) => item.id === null) ||
+                      customers[0]),
+                  });
+                  setIsCreatingCustomer(false);
+                }}
+                className="text-3xl font-bold text-gray-600 hover:text-red-600"
+              >
+                &times;
+              </button>
+            </div>
+
+            <CreateCustomer />
           </div>
         </div>
-        // <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50">
-        //   <div className="bg-white p-5 rounded-md shadow-lg">
-        //     <h2 className="text-lg font-semibold mb-3">Create New Customer</h2>
-        //     <input
-        //       type="text"
-        //       value={newCustomer}
-        //       onChange={(e) => setNewCustomer(e.target.value)}
-        //       placeholder="Enter customer name"
-        //       className="border border-gray-300 rounded p-2 w-full"
-        //     />
-        //     <div className="flex justify-end space-x-3 mt-3">
-        //       <button
-        //         onClick={() => setIsCreatingCustomer(false)}
-        //         className="px-4 py-2 bg-gray-300 rounded"
-        //       >
-        //         Cancel
-        //       </button>
-        //       <button
-        //         onClick={handleCreateCustomer}
-        //         className="px-4 py-2 bg-blue-500 text-white rounded"
-        //       >
-        //         Create
-        //       </button>
-        //     </div>
-        //   </div>
-        // </div>
       )}
 
       {isCreatingItem && (
@@ -913,21 +942,34 @@ const Invoice = () => {
               <button
                 onClick={() => {
                   if (selectedItemIndex !== null) {
-                    setInvoiceItems((prevInvoiceItems) =>
-                      prevInvoiceItems.map((item, index) =>
-                        index === selectedItemIndex
-                          ? {
-                              ...item,
-                              item:
-                                items.find((item) => item.id === null) ||
-                                items[0],
-                            }
-                          : item
-                      )
-                    );
+                    setInvoiceItems((prevInvoiceItems) => {
+                      // Create a completely new array to trigger re-render
+                      const updatedInvoiceItems = prevInvoiceItems.map(
+                        (item, index) =>
+                          index === selectedItemIndex
+                            ? {
+                                ...item,
+                                item: {
+                                  ...(items.find((item) => item.id === null) ||
+                                    items[0]),
+                                }, // Create a new object reference
+
+                                itemPrice: (
+                                  items.find((item) => item.id === null) ||
+                                  items[0]
+                                ).price,
+                                itemCurrency: (
+                                  items.find((item) => item.id === null) ||
+                                  items[0]
+                                ).currency,
+                              }
+                            : item
+                      );
+                      return [...updatedInvoiceItems]; // Ensures React detects the change
+                    });
                   }
                   setIsCreatingItem(false);
-                  setSelectedItemIndex(null); // Reset index
+                  setSelectedItemIndex(null);
                 }}
                 className="text-3xl font-bold text-gray-600 hover:text-red-600"
               >

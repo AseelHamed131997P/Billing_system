@@ -3,7 +3,7 @@ import "../../../CSS/general.css";
 
 import { HeaderRegister, Input, DropDown, NumberValue } from "./index.js";
 
-const CreateItem = () => {
+const CreateItem = (props) => {
   const [itemInfo, setItemInfo] = useState({
     Name_In_Arabic: null,
     Name_In_English: null,

@@ -11,5 +11,5 @@ export { default as NumberValue } from "./numberValue";
 export { default as Table } from "./table";
 export { default as MultiSelectInput } from "./multiSelectInput";
 export { default as CreatableDropDown } from "./creatableDropDown";
-export { default as CustomerModal } from "./customerModal";
 export { default as CreateItem } from "./createItem";
+export { default as CreateCustomer } from "./createCustomer";
