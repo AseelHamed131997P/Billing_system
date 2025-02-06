@@ -27,6 +27,11 @@ const CreatableDropDown = (props) => {
             {option[props.label]}
           </option>
         ))}
+        {props.item ? (
+          <option value="another" className="text-blue-500 font-semibold">
+            another
+          </option>
+        ) : null}
         <option value="create_new" className="text-blue-500 font-semibold">
           + Create New
         </option>

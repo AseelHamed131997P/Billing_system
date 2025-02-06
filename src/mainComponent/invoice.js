@@ -48,11 +48,32 @@ const Invoice = () => {
       },
       items: [
         {
-          id: 1,
-          name: "item1",
-          price: 12,
-          currency: "NIS",
-          item_number: 2,
+          delivery_item_id: 9,
+          item: {
+            id: 1,
+            name: "item1",
+            price: 12,
+            currency: "NIS",
+            item_number: 2,
+          },
+          itemPrice: 20,
+          itemCurrency: "NIS",
+          itemQuantity: 2,
+          totalPriceItem: 40,
+        },
+        {
+          delivery_item_id: 10,
+          item: {
+            id: 1,
+            name: "item1",
+            price: 12,
+            currency: "NIS",
+            item_number: 2,
+          },
+          itemPrice: 4,
+          itemCurrency: "NIS",
+          itemQuantity: 2,
+          totalPriceItem: 8,
         },
       ],
     },
@@ -70,13 +91,18 @@ const Invoice = () => {
       },
       items: [
         {
-          id: 2,
-          name: "alaa",
-          mobile_NO: "333333333",
-          full_address: "dsf",
-          city: "frrr",
-          VAT_NO: "122122",
-          customer_number: 3,
+          delivery_item_id: 11,
+          item: {
+            id: 2,
+            name: "item2",
+            price: 10,
+            currency: "USD",
+            item_number: 3,
+          },
+          itemPrice: 10,
+          itemCurrency: "ERO",
+          itemQuantity: 2,
+          totalPriceItem: 20,
         },
       ],
     },
@@ -94,13 +120,18 @@ const Invoice = () => {
       },
       items: [
         {
-          id: 3,
-          name: "fadi",
-          mobile_NO: "444444444",
-          full_address: "dfe",
-          city: "cvdf",
-          VAT_NO: "4444",
-          customer_number: 4,
+          delivery_item_id: 12,
+          item: {
+            id: 3,
+            name: "item3",
+            price: 10,
+            currency: "ERO",
+            item_number: 4,
+          },
+          itemPrice: 5,
+          itemCurrency: "NIS",
+          itemQuantity: 2,
+          totalPriceItem: 10,
         },
       ],
     },
@@ -118,13 +149,18 @@ const Invoice = () => {
       },
       items: [
         {
-          id: 4,
-          name: "sara",
-          mobile_NO: "555555555",
-          full_address: "gerg",
-          city: "ccc",
-          VAT_NO: "4343",
-          customer_number: 5,
+          delivery_item_id: 13,
+          item: {
+            id: 4,
+            name: "item4",
+            price: 10,
+            currency: "NIS",
+            item_number: 5,
+          },
+          itemPrice: 30,
+          itemCurrency: "NIS",
+          itemQuantity: 1,
+          totalPriceItem: 30,
         },
       ],
     },
@@ -142,13 +178,18 @@ const Invoice = () => {
       },
       items: [
         {
-          id: 5,
-          name: "lara",
-          mobile_NO: "666666666",
-          full_address: "rfgg",
-          city: "sss",
-          VAT_NO: "6666",
-          customer_number: 6,
+          delivery_item_id: 14,
+          item: {
+            id: 5,
+            name: "item5",
+            price: 10,
+            currency: "USD",
+            item_number: 6,
+          },
+          itemPrice: 6,
+          itemCurrency: "NIS",
+          itemQuantity: 2,
+          totalPriceItem: 12,
         },
       ],
     },
@@ -294,19 +335,24 @@ const Invoice = () => {
 
   //here for invoice items
   const [invoiceItems, setInvoiceItems] = useState([
-    {
-      item: items[0],
-      itemPrice: null,
-      itemCurrency: itemsCurrency[0],
-      itemQuantity: null,
-      totalPriceItem: null,
-    },
+    // {
+    //   item: items[0],
+    //   itemPrice: null,
+    //   itemCurrency: itemsCurrency[0],
+    //   itemQuantity: null,
+    //   totalPriceItem: null,
+    // },
   ]);
 
+  const [anotherItem, setAnotherItem] = useState({ exist: false, name: "" });
   const handleChangeItem = (e, invoiceItemIndex) => {
     if (e.target.value === "create_new") {
       setIsCreatingItem(true);
       setSelectedItemIndex(invoiceItemIndex);
+      return;
+    }
+    if (e.target.value === "another") {
+      setAnotherItem({ ...anotherItem, exist: true });
       return;
     }
 
@@ -325,6 +371,26 @@ const Invoice = () => {
               item: selectedOption,
               itemPrice: selectedOption.price,
               itemCurrency: selectedOption.currency,
+              totalPriceItem: selectedOption.price * (item.itemQuantity || 0), // Use selectedOption.price
+            }
+          : item
+      )
+    );
+  };
+
+  const handleChangeAnotherItem = (e, invoiceItemIndex) => {
+    setInvoiceItems((prevInvoiceItems) =>
+      prevInvoiceItems.map((item, index) =>
+        index === invoiceItemIndex
+          ? {
+              ...item,
+              item: {
+                id: null,
+                name: anotherItem.value,
+                price: null,
+                currency: "USD",
+                item_number: null,
+              },
             }
           : item
       )
@@ -640,6 +706,66 @@ const Invoice = () => {
 
   //adding useeffect based on isCreatingCustomer when true api to get last Customer_number and increment it by one
   //adding useeffect to get invoice_number and increment it by one
+  useEffect(() => {
+    setInvoiceItems((prevInvoiceItems) => {
+      if (selectedDeliveries.length === 0) {
+        // If no deliveries are selected, reset to default item
+        return [
+          {
+            item: items[0], // Default first item
+            itemPrice: null,
+            itemCurrency: itemsCurrency[0], // Default currency
+            itemQuantity: null,
+            totalPriceItem: null,
+          },
+        ];
+      }
+
+      // Remove the default item if it's present
+      let filteredInvoiceItems = prevInvoiceItems.filter(
+        (item) => item.item.id !== items[0].id // Remove default item if it exists
+      );
+
+      // Get a list of delivery IDs that are still selected
+      const selectedDeliveryIds = selectedDeliveries.map(
+        (delivery) => delivery.id
+      );
+      console.log("sdsddfggggggggggggggggggggggggggggggggggggg");
+      console.log(selectedDeliveryIds);
+
+      // Remove items belonging to unselected deliveries
+      filteredInvoiceItems = filteredInvoiceItems.filter((item) =>
+        selectedDeliveryIds.includes(item.delivery_item_id)
+      );
+
+      // Extract all items from newly selected deliveries
+      const newItems = selectedDeliveries.flatMap((delivery) =>
+        delivery.items.map((item) => ({
+          delivery_item_id: item.delivery_item_id,
+          item: item.item,
+          itemPrice: item.itemPrice,
+          itemCurrency: item.itemCurrency,
+          itemQuantity: item.itemQuantity,
+          totalPriceItem: item.totalPriceItem,
+        }))
+      );
+
+      // Combine new items with existing ones, avoiding duplicates
+      const mergedInvoiceItems = [...filteredInvoiceItems];
+
+      newItems.forEach((newItem) => {
+        const exists = mergedInvoiceItems.some(
+          (existingItem) =>
+            existingItem.delivery_item_id === newItem.delivery_item_id
+        );
+        if (!exists) {
+          mergedInvoiceItems.push(newItem);
+        }
+      });
+
+      return mergedInvoiceItems;
+    });
+  }, [selectedDeliveries]);
 
   return (
     <main className="p-10 border grid gap-10">
@@ -751,7 +877,18 @@ const Invoice = () => {
                   valueKey="id"
                   label="name"
                   width="w-48"
+                  item={"anotherItem"}
                 />
+                {anotherItem.exist ? (
+                  <Input
+                    key={"another_item"}
+                    name={"another_item"}
+                    value={anotherItem.value || ""} // Ensure value is never null
+                    handleChange={(e) => handleChangeAnotherItem(e, index)}
+                    label={"Another item"}
+                    // width="w-80"
+                  />
+                ) : null}
                 <Input
                   key={"item_price"}
                   name={"Price"}
@@ -962,6 +1099,11 @@ const Invoice = () => {
                                   items.find((item) => item.id === null) ||
                                   items[0]
                                 ).currency,
+                                totalPriceItem:
+                                  ((
+                                    items.find((item) => item.id === null) ||
+                                    items[0]
+                                  ).price || 0) * (item.itemQuantity || 0), // Use selectedOption.price
                               }
                             : item
                       );
