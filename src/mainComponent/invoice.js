@@ -232,7 +232,9 @@ const Invoice = () => {
 
   // const [item, setItem] = useState(items[0]);
 
-  const [isCreatingItem, setIsCreatingItem] = useState(false); // Toggle modal visibility
+  const [isCreatingItem, setIsCreatingItem] = useState(false);
+  const [selectedItemIndex, setSelectedItemIndex] = useState(null);
+
   // const [newItem, setNewItem] = useState(""); // Store new customer name
 
   let itemsCurrency = ["NIS", "USD", "ERO"];
@@ -250,7 +252,8 @@ const Invoice = () => {
 
   const handleChangeItem = (e, invoiceItemIndex) => {
     if (e.target.value === "create_new") {
-      setIsCreatingItem(true); // Show popup to create a new item
+      setIsCreatingItem(true);
+      setSelectedItemIndex(invoiceItemIndex);
       return;
     }
 
@@ -904,7 +907,34 @@ const Invoice = () => {
       {isCreatingItem && (
         <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center z-50 ">
           <div className=" bg-white rounded-lg shadow-lg py-10 px-6 border w-full max-w-[60rem]">
-            <h1 className="text-3xl font-bold mb-[1.6rem]">Create Item</h1>
+            <div className="flex-center-v-space-between mb-[1.6rem]">
+              <h1 className="text-3xl font-bold ">Create Item</h1>
+
+              <button
+                onClick={() => {
+                  if (selectedItemIndex !== null) {
+                    setInvoiceItems((prevInvoiceItems) =>
+                      prevInvoiceItems.map((item, index) =>
+                        index === selectedItemIndex
+                          ? {
+                              ...item,
+                              item:
+                                items.find((item) => item.id === null) ||
+                                items[0],
+                            }
+                          : item
+                      )
+                    );
+                  }
+                  setIsCreatingItem(false);
+                  setSelectedItemIndex(null); // Reset index
+                }}
+                className="text-3xl font-bold text-gray-600 hover:text-red-600"
+              >
+                &times;
+              </button>
+            </div>
+
             <CreateItem />
           </div>
         </div>
