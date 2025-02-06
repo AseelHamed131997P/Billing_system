@@ -345,22 +345,36 @@ const Invoice = () => {
   ]);
 
   const [anotherItem, setAnotherItem] = useState({ exist: false, name: "" });
+
   const handleChangeItem = (e, invoiceItemIndex) => {
-    if (e.target.value === "create_new") {
+    const selectedValue = e.target.value;
+
+    if (selectedValue === "create_new") {
       setIsCreatingItem(true);
       setSelectedItemIndex(invoiceItemIndex);
       return;
     }
-    if (e.target.value === "another") {
-      setAnotherItem({ ...anotherItem, exist: true });
+
+    if (selectedValue === "another") {
+      // If user selects "another", enable input field
+      setInvoiceItems((prevInvoiceItems) =>
+        prevInvoiceItems.map((item, index) =>
+          index === invoiceItemIndex
+            ? {
+                ...item,
+                anotherItem: { exist: true, value: "" }, // Initialize another item
+              }
+            : item
+        )
+      );
       return;
     }
 
-    console.log(`print id of item from database ${e.target.value}`);
+    console.log(`Selected item ID: ${selectedValue}`);
 
     // Find the selected item from the list
     const selectedOption =
-      items.find((item) => item.id == e.target.value) || items[0];
+      items.find((item) => item.id == selectedValue) || items[0];
 
     // Update the invoiceItems array correctly
     setInvoiceItems((prevInvoiceItems) =>
@@ -371,7 +385,9 @@ const Invoice = () => {
               item: selectedOption,
               itemPrice: selectedOption.price,
               itemCurrency: selectedOption.currency,
-              totalPriceItem: selectedOption.price * (item.itemQuantity || 0), // Use selectedOption.price
+              totalPriceItem:
+                (selectedOption.price || 0) * (item.itemQuantity || 0),
+              anotherItem: { exist: false, value: "" }, // Reset anotherItem if selecting from list
             }
           : item
       )
@@ -379,18 +395,21 @@ const Invoice = () => {
   };
 
   const handleChangeAnotherItem = (e, invoiceItemIndex) => {
+    const newValue = e.target.value;
+
     setInvoiceItems((prevInvoiceItems) =>
       prevInvoiceItems.map((item, index) =>
         index === invoiceItemIndex
           ? {
               ...item,
-              item: {
-                id: null,
-                name: anotherItem.value,
-                price: null,
-                currency: "USD",
-                item_number: null,
-              },
+              anotherItem: { exist: true, value: newValue }, // Update input value
+              // item: {
+              //   id: null, // Custom item has no ID
+              //   name: newValue, // Store user input as item name
+              //   price: null,
+              //   currency: "NIS",
+              //   item_number: null,
+              // },
             }
           : item
       )
@@ -873,20 +892,19 @@ const Invoice = () => {
                 <CreatableDropDown
                   options={items}
                   option={invoiceItem.item}
-                  handleChangeOption={(e) => handleChangeItem(e, index)} // Fix this line
+                  handleChangeOption={(e) => handleChangeItem(e, index)}
                   valueKey="id"
                   label="name"
                   width="w-48"
-                  item={"anotherItem"}
+                  item={"anotherItem"} // Ensure another item is included
                 />
-                {anotherItem.exist ? (
+                {invoiceItem.anotherItem?.exist ? (
                   <Input
-                    key={"another_item"}
-                    name={"another_item"}
-                    value={anotherItem.value || ""} // Ensure value is never null
+                    key={`another_item_${index}`}
+                    name="another_item"
+                    value={invoiceItem.anotherItem.value || ""} // Ensure value is never null
                     handleChange={(e) => handleChangeAnotherItem(e, index)}
-                    label={"Another item"}
-                    // width="w-80"
+                    label="Another item"
                   />
                 ) : null}
                 <Input
