@@ -13,3 +13,4 @@ export { default as MultiSelectInput } from "./multiSelectInput";
 export { default as CreatableDropDown } from "./creatableDropDown";
 export { default as CreateItem } from "./createItem";
 export { default as CreateCustomer } from "./createCustomer";
+export { default as HeaderReceiptVoucher } from "./headerReceiptVoucher";

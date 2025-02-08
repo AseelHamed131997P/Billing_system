@@ -4,7 +4,7 @@ import { useSelector } from "../hooks";
 import { useLocation } from "react-router-dom";
 import React, { useState, useEffect, useMemo } from "react";
 import { toWords } from "number-to-words";
-
+import AddIcon from "../svgs/addIcon.js";
 import "../index.css";
 import {
   InvoiceLangSelect,
@@ -18,8 +18,10 @@ import {
   FileInput,
   CreateCustomer,
   CreateItem,
+  HeaderReceiptVoucher,
 } from "../ui/subComponent/general/index.js";
 import "../CSS/general.css";
+import DeleteIcon from "../svgs/deleteIcon.js";
 const Invoice = () => {
   const dispatch = useDispatch();
   const location = useLocation();
@@ -265,6 +267,11 @@ const Invoice = () => {
   const [customer, setCustomer] = useState(customers[0]);
 
   const [isCreatingCustomer, setIsCreatingCustomer] = useState(false); // Toggle modal visibility
+  const [
+    isCreatingCustomerReceiptVoucher,
+    setIsCreatingCustomerReceiptVoucher,
+  ] = useState(false); // Toggle modal visibility
+
   const [newCustomer, setNewCustomer] = useState(""); // Store new customer name
 
   const handleChangeCustomer = (e) => {
@@ -331,14 +338,14 @@ const Invoice = () => {
 
   // const [newItem, setNewItem] = useState(""); // Store new customer name
 
-  let itemsCurrency = ["NIS", "USD", "ERO"];
+  let currencies = ["NIS", "USD", "ERO"];
 
   //here for invoice items
   const [invoiceItems, setInvoiceItems] = useState([
     // {
     //   item: items[0],
     //   itemPrice: null,
-    //   itemCurrency: itemsCurrency[0],
+    //   itemCurrency: currencies[0],
     //   itemQuantity: null,
     //   totalPriceItem: null,
     // },
@@ -362,6 +369,15 @@ const Invoice = () => {
           index === invoiceItemIndex
             ? {
                 ...item,
+                itemPrice: null,
+                itemCurrency: "NIS",
+                // item: {
+                //   id: "custom_item", // Custom item has no ID
+                //   name: "Another Item", // Store user input as item name
+                //   price: null,
+                //   currency: "NIS",
+                //   item_number: null,
+                // },
                 anotherItem: { exist: true, value: "" }, // Initialize another item
               }
             : item
@@ -404,7 +420,7 @@ const Invoice = () => {
               ...item,
               anotherItem: { exist: true, value: newValue }, // Update input value
               // item: {
-              //   id: null, // Custom item has no ID
+              //   id: "custom_item", // Custom item has no ID
               //   name: newValue, // Store user input as item name
               //   price: null,
               //   currency: "NIS",
@@ -464,7 +480,7 @@ const Invoice = () => {
       {
         item: items[0],
         itemPrice: null,
-        itemCurrency: itemsCurrency[0],
+        itemCurrency: currencies[0],
         itemQuantity: null,
         totalPriceItem: null,
       },
@@ -729,15 +745,20 @@ const Invoice = () => {
     setInvoiceItems((prevInvoiceItems) => {
       if (selectedDeliveries.length === 0) {
         // If no deliveries are selected, reset to default item
-        return [
-          {
-            item: items[0], // Default first item
-            itemPrice: null,
-            itemCurrency: itemsCurrency[0], // Default currency
-            itemQuantity: null,
-            totalPriceItem: null,
-          },
-        ];
+        if (invoiceItems.length === 0) {
+          return [
+            {
+              item: items[0], // Default first item
+              itemPrice: null,
+              itemCurrency: currencies[0], // Default currency
+              itemQuantity: null,
+              totalPriceItem: null,
+            },
+          ];
+        } else {
+          // ✅ Return only invoiceItems that do NOT have `delivery_item_id`
+          return prevInvoiceItems.filter((item) => !item.delivery_item_id);
+        }
       }
 
       // Remove the default item if it's present
@@ -752,9 +773,11 @@ const Invoice = () => {
       console.log("sdsddfggggggggggggggggggggggggggggggggggggg");
       console.log(selectedDeliveryIds);
 
-      // Remove items belonging to unselected deliveries
-      filteredInvoiceItems = filteredInvoiceItems.filter((item) =>
-        selectedDeliveryIds.includes(item.delivery_item_id)
+      // // Remove items belonging to unselected deliveries
+      filteredInvoiceItems = filteredInvoiceItems.filter(
+        (item) =>
+          !item.delivery_item_id || // ✅ Keep items without `delivery_item_id`
+          selectedDeliveryIds.includes(item.delivery_item_id) // ✅ Keep only relevant delivery items
       );
 
       // Extract all items from newly selected deliveries
@@ -786,8 +809,106 @@ const Invoice = () => {
     });
   }, [selectedDeliveries]);
 
+  const [paymentMethods, setPaymentMethods] = useState([
+    { id: 1, label: "Unpaid", isChecked: false },
+    { id: 2, label: "Cash", isChecked: true },
+    { id: 3, label: "Cheque", isChecked: false },
+    { id: 4, label: "Cash & Cheque", isChecked: false },
+    { id: 5, label: "Bank Transfer", isChecked: false },
+  ]);
+
+  console.table(paymentMethods);
+
+  const handlePaymentMethodsChange = (id) => {
+    setPaymentMethods((prevPaymentMethods) =>
+      prevPaymentMethods.map((paymentMethod) =>
+        paymentMethod.id === id
+          ? { ...paymentMethod, isChecked: !paymentMethod.isChecked }
+          : paymentMethod
+      )
+    );
+  };
+
+  const [customerReceiptVoucher, setCustomerReceiptVoucher] = useState(
+    customers[0]
+  );
+
+  console.log(`customerReceiptVoucher :${customerReceiptVoucher}`);
+  console.dir(customerReceiptVoucher);
+
+  const handleChangeCustomerReceiptVoucher = (e) => {
+    if (e.target.value === "create_new") {
+      setIsCreatingCustomerReceiptVoucher(true); // Show popup to create a new customer
+      return;
+    }
+    console.log(
+      `print id of customer ReceiptVoucher from database ${e.target.value}`
+    );
+    const selectedOption = customers.find((item) => item.id == e.target.value);
+    setCustomerReceiptVoucher(selectedOption || customers[0]);
+  };
+
+  const [amount, setAmount] = useState();
+
+  const handleChangeAmount = (e) => {
+    setAmount(e.target.value); // Update the state with the new amount
+  };
+  console.log(`amount : ${amount}`);
+
+  const [onAccountOf, setOnAccountOf] = useState();
+
+  const handleChangeOnAccountOf = (e) => {
+    setOnAccountOf(e.target.value);
+  };
+
+  console.log(`onAccountOf : ${onAccountOf}`);
+
+  const [totalAmountInWords, setTotalAmountInWords] = useState();
+
+  const [note, setNote] = useState("");
+
+  const handleChangeNote = (e) => {
+    setNote(e.target.value);
+  };
+
+  const [currencyReceiptVoucher, setCurrencyReceiptVoucher] = useState("NIS");
+
+  const handleChangeCurrencyReceiptVoucher = (e) => {
+    setCurrencyReceiptVoucher(e.target.value);
+  };
   return (
     <main className="p-10 border grid gap-10">
+      <section className="border rounded-[20px] p-10 grid gap-10 ">
+        <div className="grid-auto-fr-auto-cols border ">
+          <div className=" border w-80 ">
+            <InvoiceLangSelect />
+          </div>
+          <h1 className="  font-medium text-2xl">Invoice 0001</h1>
+          <div className="text-2xl">
+            {new Date().toLocaleDateString("en-GB", {
+              day: "2-digit",
+              month: "2-digit",
+              year: "numeric",
+            })}
+          </div>
+        </div>
+        {/* <div className=" border mx-auto grid-2-cols-center-vx max-w-[100rem]">
+          <DropDown
+            options={invoiceType}
+            option={invoiceTypeOption}
+            handleChangeOption={handleChangeInvoiceTypeOption}
+            label={"select invoice type"}
+            width="w-96"
+          />
+          <DropDown
+            options={currencyType}
+            option={currencyTypeOption}
+            handleChangeOption={handleChangeCurrencyTypeOption}
+            label={"select currency type"}
+            width="w-96"
+          />
+        </div> */}
+      </section>
       <section className="border rounded-[20px] p-10 flex-center-v-space-between">
         <div className=" border   center-v  w-full max-w-[40rem] ">
           <label className="text-xl">Delivery Numbers: &nbsp; </label>
@@ -798,16 +919,16 @@ const Invoice = () => {
             placeholder="Select Your Delivery Number"
           />
         </div>
-        <div className=" border w-80 ">
+        {/* <div className=" border w-80 ">
           <InvoiceLangSelect />
-        </div>
+        </div> */}
       </section>
       <section className="border rounded-[20px] p-10">
         <div className=" border flex-center-v-space-between">
           <h1 className="text-2xl font-semibold">Customer</h1>
           <NumberValue label="Customer" num={customer.customer_number} />
         </div>
-        <div className="border py-8 grid-4-cols-center-vx gap-y-10">
+        <div className="border py-8 grid-5-cols-center-vx gap-y-10">
           <CreatableDropDown
             options={customers}
             option={customer}
@@ -834,47 +955,20 @@ const Invoice = () => {
           })}
         </div>
       </section>
-      <section className="border rounded-[20px] p-10 grid gap-10 ">
-        <div className="flex-center-v-space-between ">
-          {" "}
-          <h1 className=" flex-grow text-center font-medium text-2xl">
-            Invoice 0001
-          </h1>
-          <div className="text-xl">
-            {new Date().toLocaleDateString("en-GB", {
-              day: "2-digit",
-              month: "2-digit",
-              year: "numeric",
-            })}
-          </div>
-        </div>
-        <div className=" border mx-auto grid-2-cols-center-vx max-w-[100rem]">
-          <DropDown
-            options={invoiceType}
-            option={invoiceTypeOption}
-            handleChangeOption={handleChangeInvoiceTypeOption}
-            label={"select invoice type"}
-            width="w-96"
-          />
-          <DropDown
-            options={currencyType}
-            option={currencyTypeOption}
-            handleChangeOption={handleChangeCurrencyTypeOption}
-            label={"select currency type"}
-            width="w-96"
-          />
-        </div>
-      </section>
 
       <section className="border rounded-[20px] p-10">
         <div className=" border flex-center-v-space-between">
           <h1 className="text-2xl font-semibold">Item</h1>
           <button
-            className="btn py-2 px-4 w-64"
+            className="bg-green-600 text-white w-10 h-10 rounded-full flex-vx-center relative group"
             type="button"
             onClick={addItem}
           >
-            Add Item
+            <AddIcon />
+            {/* Tooltip */}
+            <span className="absolute -top-11 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-lg rounded-md px-4 py-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">
+              Add Item
+            </span>
           </button>
         </div>
         <div className="border grid gap-y-10">
@@ -882,7 +976,11 @@ const Invoice = () => {
             return (
               <div
                 key={index}
-                className="border grid-7-cols-center-vx gap-y-10"
+                className={`border ${
+                  invoiceItem?.anotherItem?.exist
+                    ? "grid-8-cols-center-vx"
+                    : "grid-7-cols-center-vx"
+                } gap-y-10`}
               >
                 <NumberValue
                   label="Item"
@@ -905,6 +1003,7 @@ const Invoice = () => {
                     value={invoiceItem.anotherItem.value || ""} // Ensure value is never null
                     handleChange={(e) => handleChangeAnotherItem(e, index)}
                     label="Another item"
+                    width="w-48"
                   />
                 ) : null}
                 <Input
@@ -916,7 +1015,7 @@ const Invoice = () => {
                   width="w-40"
                 />
                 <DropDown
-                  options={itemsCurrency}
+                  options={currencies}
                   option={invoiceItem.itemCurrency}
                   handleChangeOption={(e) => handleChangeItemCurrency(e, index)}
                   label={"Select item currency "}
@@ -940,11 +1039,15 @@ const Invoice = () => {
                 />
 
                 <button
-                  className="btn-delete py-2 px-4 w-64"
-                  type="button"
+                  className="relative group w-10 h-10 flex-vx-center"
                   onClick={() => deleteItem(index)}
                 >
-                  Delete Item
+                  <DeleteIcon />
+
+                  {/* Tooltip */}
+                  <span className="absolute -top-11 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-lg rounded-md px-4 py-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">
+                    Delete Item
+                  </span>
                 </button>
               </div>
             );
@@ -1064,18 +1167,113 @@ const Invoice = () => {
           </div>
         </div>
       </section>
-      {isCreatingCustomer && (
-        <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center z-50 ">
-          <div className=" bg-white rounded-lg shadow-lg p-6 border w-full max-w-[60rem]">
+      <section className="border rounded-[20px] p-10 grid gap-10 ">
+        <h1 className="text-2xl font-semibold">Payment Method</h1>
+        <div className="center-v gap-10">
+          {paymentMethods.map((paymentMethod) => (
+            <CheckBox
+              key={paymentMethod.id}
+              isChecked={paymentMethod.isChecked}
+              handleChange={() => handlePaymentMethodsChange(paymentMethod.id)}
+              label={paymentMethod.label}
+            />
+          ))}
+        </div>
+
+        <div className=" border grid gap-10 ">
+          <HeaderReceiptVoucher
+            name={"company name"}
+            title={"Receipt Voucher"}
+            invoiceNum={"0001"}
+            receiptVoucherNum={"0002"}
+          />
+          <div className="px-10 grid gap-10 ">
+            <div className=" flex-center-v-end-x text-2xl">
+              {new Date().toLocaleDateString("en-GB", {
+                day: "2-digit",
+                month: "2-digit",
+                year: "numeric",
+              })}
+            </div>
+
+            <div className="grid-5-cols-center-vx gap-10">
+              <CreatableDropDown
+                options={customers}
+                option={customerReceiptVoucher}
+                handleChangeOption={handleChangeCustomerReceiptVoucher}
+                valueKey="id"
+                label="name"
+                // label={"select customer"}
+                width="w-64"
+              />
+
+              <Input
+                key={"amount"}
+                name={"Price"}
+                value={amount || ""} // Ensure value is never null
+                handleChange={(e) => handleChangeAmount(e)}
+                label={"Amount"}
+                width="w-40"
+              />
+
+              <Input
+                key={"on_account_of"}
+                name={"on_account_of"}
+                value={onAccountOf || ""} // Ensure value is never null
+                handleChange={(e) => handleChangeOnAccountOf(e)}
+                label={"On account of"}
+                width="w-48"
+              />
+
+              <Input
+                key={"total_amount_in_words"}
+                name={"total_amount_in_words"}
+                value={totalAmountInWords || ""}
+                // handleChange={(e) => handleChangeOnAccountOf(e)}
+                label={"total amount in words"}
+                readOnly={true}
+                width="w-80"
+              />
+              <DropDown
+                options={currencies}
+                option={currencyReceiptVoucher}
+                handleChangeOption={(e) =>
+                  handleChangeCurrencyReceiptVoucher(e)
+                }
+                label={"Select item currency "}
+                width="w-40"
+              />
+              <Input
+                key={"note"}
+                name={"note"}
+                value={note || ""}
+                handleChange={(e) => handleChangeNote(e)}
+                label={"Note"}
+                width="w-full"
+                className="col-start-1 col-span-5"
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+      {(isCreatingCustomer || isCreatingCustomerReceiptVoucher) && (
+        <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-lg p-6 border w-full max-w-[60rem]">
             <div className="flex-center-v-space-between mb-[1.6rem]">
-              <h1 className="text-3xl font-bold ">Create Customer</h1>
+              <h1 className="text-3xl font-bold">Create Customer</h1>
               <button
                 onClick={() => {
-                  setCustomer({
-                    ...(customers.find((item) => item.id === null) ||
-                      customers[0]),
-                  });
-                  setIsCreatingCustomer(false);
+                  const resetCustomerData =
+                    customers.find((item) => item.id === null) || customers[0];
+
+                  if (isCreatingCustomer) {
+                    setCustomer(resetCustomerData);
+                    setIsCreatingCustomer(false);
+                  }
+                  if (isCreatingCustomerReceiptVoucher) {
+                    setCustomerReceiptVoucher(resetCustomerData);
+                    setIsCreatingCustomerReceiptVoucher(false);
+                  }
                 }}
                 className="text-3xl font-bold text-gray-600 hover:text-red-600"
               >

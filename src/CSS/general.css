@@ -55,11 +55,20 @@
 .grid-4-cols-center-vx {
   @apply grid grid-cols-4 items-center justify-items-center w-full;
 }
+.grid-5-cols-center-vx {
+  @apply grid grid-cols-5 items-center justify-items-center w-full;
+}
 
 .grid-7-cols-center-vx {
   @apply grid grid-cols-7 items-center justify-items-center w-full;
 }
 
+.grid-8-cols-center-vx {
+  @apply grid grid-cols-8 items-center justify-items-center w-full;
+}
+.grid-auto-fr-auto-cols {
+  @apply grid grid-cols-[auto_1fr_auto] place-items-center w-full;
+}
 /* login page */
 
 .input-login {
