@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 
-const FileInput = (props) => {
+const FileInput = ({ setFile, file, name, index }) => {
+  // ✅ Accept index as a prop
   const [selectedFile, setSelectedFile] = useState(null);
 
   // Handle file selection
@@ -13,26 +14,39 @@ const FileInput = (props) => {
         // Convert the image to Base64
         const reader = new FileReader();
         reader.onloadend = () => {
-          props.setFile((prevState) => ({
-            ...prevState, // Preserve all existing state properties
-            urlFile: reader.result, // Update only urlFile
-          }));
+          if (typeof index !== "undefined") {
+            // ✅ If index is provided, pass it
+            setFile(reader.result, index);
+          } else {
+            // ✅ If index is NOT provided, update only urlFile (global state)
+            setFile((prevState) => ({
+              ...prevState, // Preserve existing state properties
+              urlFile: reader.result, // Update only urlFile
+            }));
+          }
         };
-        reader.readAsDataURL(file); // Read the file as a data URL
+
+        reader.readAsDataURL(file);
       } else {
         alert("Please select a PNG file.");
-        setSelectedFile(null); // Clear the selected file
+        setSelectedFile(null);
       }
     }
   };
 
   // Handle clear button click
   const handleClear = () => {
-    setSelectedFile(null); // Clear the selected file
-    props.setFile((prevState) => ({
-      ...prevState, // Preserve all existing state properties
-      urlFile: null, // Clear only urlFile
-    }));
+    setSelectedFile(null);
+    if (typeof index !== "undefined") {
+      // ✅ If index is provided, pass it
+      setFile(null, index);
+    } else {
+      // ✅ If index is NOT provided, update only urlFile (global state)
+      setFile((prevState) => ({
+        ...prevState, // Preserve existing state properties
+        urlFile: null, // Update only urlFile
+      }));
+    }
 
     // Reset the file input value
     const fileInput = document.querySelector('input[type="file"]');
@@ -45,8 +59,23 @@ const FileInput = (props) => {
     <div>
       <div className="flex items-center gap-4">
         {/* File Input */}
-        <label className="cursor-pointer bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition duration-200">
-          {props.name}
+        <label className="cursor-pointer ">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            strokeWidth="3"
+            stroke="blue"
+            className="size-6"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5"
+            />
+          </svg>
+
+          {/* {name} */}
           <input
             type="file"
             className="hidden"

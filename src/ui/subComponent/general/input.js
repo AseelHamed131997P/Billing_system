@@ -32,6 +32,12 @@ const Input = ({
       ? "number"
       : name === "quantity"
       ? "number"
+      : name === "cheque_no"
+      ? "number"
+      : name === "bank_no"
+      ? "number"
+      : name === "date"
+      ? "date"
       : "text"; // Default to text
 
   return (

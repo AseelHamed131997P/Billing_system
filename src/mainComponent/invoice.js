@@ -5,6 +5,8 @@ import { useLocation } from "react-router-dom";
 import React, { useState, useEffect, useMemo } from "react";
 import { toWords } from "number-to-words";
 import AddIcon from "../svgs/addIcon.js";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 import "../index.css";
 import {
   InvoiceLangSelect,
@@ -22,6 +24,9 @@ import {
 } from "../ui/subComponent/general/index.js";
 import "../CSS/general.css";
 import DeleteIcon from "../svgs/deleteIcon.js";
+import * as yup from "yup";
+import { useFormik } from "formik";
+
 const Invoice = () => {
   const dispatch = useDispatch();
   const location = useLocation();
@@ -47,6 +52,7 @@ const Invoice = () => {
         city: "efrr",
         VAT_NO: "3434",
         customer_number: 2,
+        company_name: "company1",
       },
       items: [
         {
@@ -90,6 +96,7 @@ const Invoice = () => {
         city: "frrr",
         VAT_NO: "122122",
         customer_number: 3,
+        company_name: "company2",
       },
       items: [
         {
@@ -119,6 +126,7 @@ const Invoice = () => {
         city: "cvdf",
         VAT_NO: "4444",
         customer_number: 4,
+        company_name: "company3",
       },
       items: [
         {
@@ -148,6 +156,7 @@ const Invoice = () => {
         city: "ccc",
         VAT_NO: "4343",
         customer_number: 5,
+        company_name: "company4",
       },
       items: [
         {
@@ -177,6 +186,7 @@ const Invoice = () => {
         city: "sss",
         VAT_NO: "6666",
         customer_number: 6,
+        company_name: "company5",
       },
       items: [
         {
@@ -216,6 +226,7 @@ const Invoice = () => {
       city: "",
       VAT_NO: "",
       customer_number: null,
+      company_name: "",
     },
     {
       id: 1,
@@ -225,6 +236,7 @@ const Invoice = () => {
       city: "efrr",
       VAT_NO: "3434",
       customer_number: 2,
+      company_name: "company1",
     },
     {
       id: 2,
@@ -234,6 +246,7 @@ const Invoice = () => {
       city: "frrr",
       VAT_NO: "122122",
       customer_number: 3,
+      company_name: "company2",
     },
     {
       id: 3,
@@ -243,6 +256,7 @@ const Invoice = () => {
       city: "cvdf",
       VAT_NO: "4444",
       customer_number: 4,
+      company_name: "company3",
     },
     {
       id: 4,
@@ -252,6 +266,7 @@ const Invoice = () => {
       city: "ccc",
       VAT_NO: "4343",
       customer_number: 5,
+      company_name: "company4",
     },
     {
       id: 5,
@@ -261,6 +276,7 @@ const Invoice = () => {
       city: "sss",
       VAT_NO: "6666",
       customer_number: 6,
+      company_name: "company5",
     },
   ]);
 
@@ -282,6 +298,7 @@ const Invoice = () => {
     console.log(`print id of customer from database ${e.target.value}`);
     const selectedOption = customers.find((item) => item.id == e.target.value);
     setCustomer(selectedOption || customers[0]);
+    formik.setFieldValue("customer", selectedOption || customers[0]); // Update Formik state
   };
   console.log(`here after change on customer ${customer.name}`);
 
@@ -499,7 +516,7 @@ const Invoice = () => {
       0
     );
   }, [invoiceItems]);
-
+  console.log(`my total price is:${totalPrice}`);
   // //here will create state invoiceItems [{item_number:,name:,itemPrice:,currency:itemQuantity:,totalPriceItem},{}]
   // //useeffect based on invoiceItems if any change increase or change enter it do map on all invoiceItems and calculate totalPriceItem every item and sum totalPriceItem to set totapPrice
   // const [totalPriceItem, setTotalPriceItem] = useState();
@@ -810,8 +827,8 @@ const Invoice = () => {
   }, [selectedDeliveries]);
 
   const [paymentMethods, setPaymentMethods] = useState([
-    { id: 1, label: "Unpaid", isChecked: false },
-    { id: 2, label: "Cash", isChecked: true },
+    { id: 1, label: "Unpaid", isChecked: true },
+    { id: 2, label: "Cash", isChecked: false },
     { id: 3, label: "Cheque", isChecked: false },
     { id: 4, label: "Cash & Cheque", isChecked: false },
     { id: 5, label: "Bank Transfer", isChecked: false },
@@ -821,11 +838,10 @@ const Invoice = () => {
 
   const handlePaymentMethodsChange = (id) => {
     setPaymentMethods((prevPaymentMethods) =>
-      prevPaymentMethods.map((paymentMethod) =>
-        paymentMethod.id === id
-          ? { ...paymentMethod, isChecked: !paymentMethod.isChecked }
-          : paymentMethod
-      )
+      prevPaymentMethods.map((paymentMethod) => ({
+        ...paymentMethod,
+        isChecked: paymentMethod.id === id, // Set only the selected one to true, others false
+      }))
     );
   };
 
@@ -855,7 +871,7 @@ const Invoice = () => {
   };
   console.log(`amount : ${amount}`);
 
-  const [onAccountOf, setOnAccountOf] = useState();
+  const [onAccountOf, setOnAccountOf] = useState("On invoice no 0001");
 
   const handleChangeOnAccountOf = (e) => {
     setOnAccountOf(e.target.value);
@@ -876,8 +892,269 @@ const Invoice = () => {
   const handleChangeCurrencyReceiptVoucher = (e) => {
     setCurrencyReceiptVoucher(e.target.value);
   };
+
+  const [signatureReceiptVoucher, setSignatureReceiptVoucher] = useState({
+    urlSign: null,
+    urlFile: null,
+  }); // here save the signature value just when not null if null does not save
+  console.log(
+    `test receipt voucher urlSign ${signatureReceiptVoucher.urlSign}`
+  );
+  console.log(
+    `test receipt voucher urlFile ${signatureReceiptVoucher.urlFile}`
+  );
+
+  useEffect(() => {
+    const updatedCustomer =
+      customers.find((c) => c.id === customer.id) || customers[0];
+    setCustomerReceiptVoucher(updatedCustomer);
+  }, [customer]);
+
+  useEffect(() => {
+    isIncludeVAT || isIncludeItemVAT
+      ? setAmount(totalPriceWithVAT)
+      : setAmount(totalPriceWithoutVAT);
+  }, [totalPriceWithVAT, totalPriceWithoutVAT]);
+
+  useEffect(() => {
+    if (amount) {
+      setTotalAmountInWords(convertNumberToWords(amount));
+    } else {
+      setTotalAmountInWords("");
+    }
+  }, [amount]);
+
+  const [cheques, setCheques] = useState([
+    {
+      bank_name: "",
+      cheque_no: null,
+      bank_no: null,
+      branch_no: null,
+      cheque_amount: null,
+      date: new Date(),
+      cheque_image: "",
+    },
+  ]);
+  console.table(cheques);
+
+  const handleChangeBankName = (e, chequeIndex) => {
+    setCheques((prevCheques) =>
+      prevCheques.map((cheque, index) =>
+        index === chequeIndex
+          ? {
+              ...cheque,
+              bank_name: e.target.value,
+            }
+          : cheque
+      )
+    );
+  };
+
+  const handleChangeChequeNo = (e, chequeIndex) => {
+    setCheques((prevCheques) =>
+      prevCheques.map((cheque, index) =>
+        index === chequeIndex
+          ? {
+              ...cheque,
+              cheque_no: e.target.value,
+            }
+          : cheque
+      )
+    );
+  };
+  const handleChangeBankNo = (e, chequeIndex) => {
+    setCheques((prevCheques) =>
+      prevCheques.map((cheque, index) =>
+        index === chequeIndex
+          ? {
+              ...cheque,
+              bank_no: e.target.value,
+            }
+          : cheque
+      )
+    );
+  };
+  const handleChangeBranchNo = (e, chequeIndex) => {
+    setCheques((prevCheques) =>
+      prevCheques.map((cheque, index) =>
+        index === chequeIndex
+          ? {
+              ...cheque,
+              branch_no: e.target.value,
+            }
+          : cheque
+      )
+    );
+  };
+
+  const handleChangeChequeAmount = (e, chequeIndex) => {
+    setCheques((prevCheques) =>
+      prevCheques.map((cheque, index) =>
+        index === chequeIndex
+          ? {
+              ...cheque,
+              cheque_amount: e.target.value,
+            }
+          : cheque
+      )
+    );
+  };
+
+  const handleChangeChequeDate = (date, chequeIndex) => {
+    setCheques((prevCheques) =>
+      prevCheques.map((cheque, index) =>
+        index === chequeIndex
+          ? {
+              ...cheque,
+              date: date,
+            }
+          : cheque
+      )
+    );
+  };
+
+  // const [chequeImage, setChequeImage] = useState({
+  //   urlFile: null,
+  // });
+  // console.log(`cheque Image : ${chequeImage.urlFile}`);
+
+  const handleChequeImageChange = (file, index) => {
+    console.log(`Updating cheque at index: ${index} with file: ${file}`); // ✅ Debugging log
+
+    setCheques((prevCheques) =>
+      prevCheques.map((cheque, i) =>
+        i === index ? { ...cheque, cheque_image: file } : cheque
+      )
+    );
+  };
+  const deleteCheque = (index) => {
+    setCheques((prevCheques) => prevCheques.filter((_, i) => i !== index));
+  };
+
+  let addCheque = () => {
+    setCheques((prevCheques) => [
+      ...prevCheques,
+      {
+        bank_name: "",
+        cheque_no: null,
+        bank_no: null,
+        branch_no: null,
+        cheque_amount: null,
+        date: new Date(),
+        cheque_image: "",
+      },
+    ]);
+  };
+
+  const totalCheque = useMemo(() => {
+    return cheques.reduce(
+      (sum, cheque) => sum + (parseFloat(cheque.cheque_amount) || 0),
+      0
+    );
+  }, [cheques]);
+
+  const [cash, setCash] = useState(null);
+  const [messageIsPricePaid, setMessageIsPricePaid] = useState("");
+
+  useEffect(() => {
+    // Check if ALL items have a valid `totalPriceItem`
+    const allValid =
+      invoiceItems.length > 0 &&
+      invoiceItems.every(
+        (item) =>
+          item.totalPriceItem !== null &&
+          item.totalPriceItem !== undefined &&
+          !isNaN(item.totalPriceItem) // Ensure it's a number
+      );
+
+    console.log(`Check price validity: ${allValid}`); // Should return false initially
+    if (!allValid) {
+      setMessageIsPricePaid("");
+    }
+    if (allValid && totalPrice > 0) {
+      // Determine which payment method is checked
+      const isCashChecked = paymentMethods.find(
+        (method) => method.label === "Cash"
+      )?.isChecked;
+      const isChequeChecked = paymentMethods.find(
+        (method) => method.label === "Cheque"
+      )?.isChecked;
+      const isCashAndChequeChecked = paymentMethods.find(
+        (method) => method.label === "Cash & Cheque"
+      )?.isChecked;
+
+      let isPaid = false;
+
+      if (isCashChecked) {
+        isPaid = totalPrice === (cash || 0);
+      } else if (isChequeChecked) {
+        isPaid = totalPrice === (totalCheque || 0);
+      } else if (isCashAndChequeChecked) {
+        isPaid = totalPrice === (cash || 0) + (totalCheque || 0);
+      }
+
+      setMessageIsPricePaid(
+        isPaid ? "Thank you for paying" : "Please pay the full invoice amount"
+      );
+    }
+  }, [cash, totalCheque, invoiceItems, totalPrice, paymentMethods]); // ✅ Added paymentMethods as a dependency
+
+  const [fromBankName, setFromBankName] = useState("");
+  const [bankTransferNO, setBankTransferNO] = useState(null);
+
+  const validationSchema = yup.object().shape({
+    customer: yup.object().shape({
+      id: yup.number().required("Customer is required"),
+    }),
+    // invoiceItems: yup
+    //   .array()
+    //   .of(
+    //     yup.object().shape({
+    //       item: yup.object().shape({
+    //         id: yup.number().required("Item is required"),
+    //       }),
+    //       itemPrice: yup
+    //         .number()
+    //         .typeError("Price must be a number")
+    //         .positive("Price must be positive")
+    //         .required("Item price is required"),
+    //       itemQuantity: yup
+    //         .number()
+    //         .typeError("Quantity must be a number")
+    //         .positive("Quantity must be positive")
+    //         .required("Item quantity is required"),
+    //     })
+    //   )
+    //   .min(1, "At least one item is required"),
+    // isIncludeVAT: yup.boolean(),
+    // signatureInvoice: yup.object().shape({
+    //   urlSign: yup.string().nullable(),
+    // }),
+    // paymentMethod: yup.string().required("Payment method is required"),
+    // amount: yup
+    //   .number()
+    //   .typeError("Amount must be a number")
+    //   .positive("Amount must be positive")
+    //   .required("Amount is required"),
+  });
+  const formik = useFormik({
+    initialValues: {
+      customer: customers[0], // Default customer
+      // invoiceItems: [],
+      // isIncludeVAT: false,
+      // signatureInvoice: { urlSign: null },
+      // paymentMethod: "Unpaid",
+      // amount: "",
+    },
+    validationSchema,
+    onSubmit: (values) => {
+      console.log("Submitting Invoice Data:", values);
+      // Call API to submit invoice
+    },
+  });
+
   return (
-    <main className="p-10 border grid gap-10">
+    <form className="p-10 border grid gap-10">
       <section className="border rounded-[20px] p-10 grid gap-10 ">
         <div className="grid-auto-fr-auto-cols border ">
           <div className=" border w-80 ">
@@ -892,22 +1169,6 @@ const Invoice = () => {
             })}
           </div>
         </div>
-        {/* <div className=" border mx-auto grid-2-cols-center-vx max-w-[100rem]">
-          <DropDown
-            options={invoiceType}
-            option={invoiceTypeOption}
-            handleChangeOption={handleChangeInvoiceTypeOption}
-            label={"select invoice type"}
-            width="w-96"
-          />
-          <DropDown
-            options={currencyType}
-            option={currencyTypeOption}
-            handleChangeOption={handleChangeCurrencyTypeOption}
-            label={"select currency type"}
-            width="w-96"
-          />
-        </div> */}
       </section>
       <section className="border rounded-[20px] p-10 flex-center-v-space-between">
         <div className=" border   center-v  w-full max-w-[40rem] ">
@@ -1179,82 +1440,300 @@ const Invoice = () => {
             />
           ))}
         </div>
+        {!paymentMethods?.[0]?.isChecked && (
+          <div className="border grid gap-10">
+            <HeaderReceiptVoucher
+              name={customer.company_name}
+              title="Receipt Voucher"
+              invoiceNum="0001"
+              receiptVoucherNum="0002"
+            />
 
-        <div className=" border grid gap-10 ">
-          <HeaderReceiptVoucher
-            name={"company name"}
-            title={"Receipt Voucher"}
-            invoiceNum={"0001"}
-            receiptVoucherNum={"0002"}
-          />
-          <div className="px-10 grid gap-10 ">
-            <div className=" flex-center-v-end-x text-2xl">
-              {new Date().toLocaleDateString("en-GB", {
-                day: "2-digit",
-                month: "2-digit",
-                year: "numeric",
-              })}
-            </div>
+            <div className="px-10 grid gap-10">
+              <div className="flex-center-v-end-x text-2xl">
+                {new Date().toLocaleDateString("en-GB", {
+                  day: "2-digit",
+                  month: "2-digit",
+                  year: "numeric",
+                })}
+              </div>
 
-            <div className="grid-5-cols-center-vx gap-10">
-              <CreatableDropDown
-                options={customers}
-                option={customerReceiptVoucher}
-                handleChangeOption={handleChangeCustomerReceiptVoucher}
-                valueKey="id"
-                label="name"
-                // label={"select customer"}
-                width="w-64"
-              />
+              <div className="grid-5-cols-center-vx gap-10">
+                <CreatableDropDown
+                  options={customers}
+                  option={customerReceiptVoucher}
+                  handleChangeOption={handleChangeCustomerReceiptVoucher}
+                  valueKey="id"
+                  label="name"
+                  width="w-64"
+                />
 
+                <Input
+                  key="amount"
+                  name="Price"
+                  value={amount || ""}
+                  handleChange={handleChangeAmount}
+                  label="Amount"
+                  width="w-40"
+                />
+
+                <Input
+                  key="on_account_of"
+                  name="on_account_of"
+                  value={onAccountOf || ""}
+                  handleChange={handleChangeOnAccountOf}
+                  label="On account of"
+                  width="w-48"
+                />
+
+                <Input
+                  key="total_amount_in_words"
+                  name="total_amount_in_words"
+                  value={totalAmountInWords || ""}
+                  label="Total Amount in Words"
+                  readOnly
+                  width="w-80"
+                />
+
+                <DropDown
+                  options={currencies}
+                  option={currencyReceiptVoucher}
+                  handleChangeOption={handleChangeCurrencyReceiptVoucher}
+                  label="Select Item Currency"
+                  width="w-40"
+                />
+              </div>
+              {messageIsPricePaid && (
+                <div className=" ">
+                  <p
+                    className={` text-sm font-medium ${
+                      messageIsPricePaid === "Thank you for paying"
+                        ? "text-green-600 bg-green-100 p-2 rounded-md"
+                        : "text-yellow-600 bg-yellow-100 p-2 rounded-md"
+                    }`}
+                  >
+                    {messageIsPricePaid}
+                  </p>
+                </div>
+              )}
+
+              {(paymentMethods?.[1]?.isChecked ||
+                paymentMethods?.[3]?.isChecked) && (
+                <div className="border p-5 grid gap-5">
+                  <h1 className="text-2xl font-semibold ml-2">Cash</h1>
+                  <div className="center-v">
+                    <Input
+                      key={"cash"}
+                      name={"Price"}
+                      value={cash || ""} // Ensure value is never null
+                      handleChange={(e) =>
+                        setCash(parseFloat(e.target.value) || 0)
+                      }
+                      label={"Cash"}
+                      width="w-40"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {(paymentMethods?.[2]?.isChecked ||
+                paymentMethods?.[3]?.isChecked) && (
+                <div className=" p-5 border grid gap-5">
+                  <div className="flex-center-v-space-between">
+                    <h1 className="text-2xl font-semibold ml-2">Cheque</h1>
+                    <button
+                      className="bg-green-600 text-white w-10 h-10 rounded-full flex-vx-center relative group"
+                      type="button"
+                      onClick={addCheque}
+                    >
+                      <AddIcon />
+                      {/* Tooltip */}
+                      <span className="absolute -top-11 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-lg rounded-md px-4 py-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">
+                        Add Cheque
+                      </span>
+                    </button>
+                  </div>
+
+                  {cheques.map((cheque, index) => {
+                    return (
+                      <div className="grid grid-cols-8 items-center justify-items-center ">
+                        <Input
+                          key={"bank_name"}
+                          name={"bank_name"}
+                          value={cheque.bank_name || ""} // Ensure value is never null
+                          handleChange={(e) => handleChangeBankName(e, index)}
+                          label={"Bank name"}
+                          width="w-48"
+                        />
+                        <Input
+                          key={"cheque_no"}
+                          name={"cheque_no"}
+                          value={cheque.cheque_no || ""} // Ensure value is never null
+                          handleChange={(e) => handleChangeChequeNo(e, index)}
+                          label={"Cheque NO"}
+                          width="w-40"
+                        />
+                        <Input
+                          key={"bank_no"}
+                          name={"bank_no"}
+                          value={cheque.bank_no || ""} // Ensure value is never null
+                          handleChange={(e) => handleChangeBankNo(e, index)}
+                          label={"Bank NO"}
+                          width="w-40"
+                        />
+                        <Input
+                          key={"branch_no"}
+                          name={"branch_no"}
+                          value={cheque.branch_no || ""} // Ensure value is never null
+                          handleChange={(e) => handleChangeBranchNo(e, index)}
+                          label={"Branch NO"}
+                          width="w-40"
+                        />
+                        <Input
+                          key="cheque_amount"
+                          name="Price"
+                          value={cheque.cheque_amount || ""}
+                          handleChange={(e) =>
+                            handleChangeChequeAmount(e, index)
+                          }
+                          label="Cheque amount"
+                          width="w-40"
+                        />
+                        <div className="flex flex-col items-start ">
+                          <label className="text-gray-700 font-medium">
+                            Select Date:
+                          </label>
+                          <DatePicker
+                            id="custom-datepicker"
+                            selected={cheque.date}
+                            onChange={(date) =>
+                              handleChangeChequeDate(date, index)
+                            }
+                            className="w-40 border border-gray-300 rounded-lg px-4 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          />
+                        </div>
+                        <FileInput
+                          setFile={(file) =>
+                            handleChequeImageChange(file, index)
+                          } // ✅ Correctly pass index
+                          file={{ urlFile: cheque.cheque_image }}
+                          name="Choose Cheque Image"
+                          index={index} // ✅ Explicitly pass the index
+                        />
+
+                        <button
+                          className="relative group w-10 h-10 flex-vx-center"
+                          onClick={() => deleteCheque(index)}
+                        >
+                          <DeleteIcon />
+
+                          {/* Tooltip */}
+                          <span className="absolute -top-11 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-lg rounded-md px-4 py-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">
+                            Delete Cheque
+                          </span>
+                        </button>
+                      </div>
+                    );
+                  })}
+                  <div className="  flex-center-v-end-x">
+                    <Input
+                      key={"total_cheque"}
+                      name={"Price"}
+                      value={totalCheque || ""}
+                      label={"Total cheque "}
+                      width="w-40"
+                      readOnly={true}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {paymentMethods?.[4]?.isChecked && (
+                <div className="px-10 grid gap-5">
+                  <h1 className="text-2xl font-semibold ml-2">Bank</h1>
+                  <div className="grid-5-cols-center-vx gap-10 ">
+                    <Input
+                      key={"from_bank_name"}
+                      name={"from_bank_name"}
+                      value={fromBankName || ""} // Ensure value is never null
+                      handleChange={(e) =>
+                        setFromBankName(e.target.value || "")
+                      }
+                      label={"From bank name"}
+                      width="w-48"
+                    />
+
+                    <Input
+                      key={"bank_transfer_no"}
+                      name={"bank_no"}
+                      value={bankTransferNO || ""} // Ensure value is never null
+                      handleChange={(e) =>
+                        setBankTransferNO(parseFloat(e.target.value) || 0)
+                      }
+                      label={"Bank transfer NO"}
+                      width="w-40"
+                    />
+                  </div>
+                </div>
+              )}
               <Input
-                key={"amount"}
-                name={"Price"}
-                value={amount || ""} // Ensure value is never null
-                handleChange={(e) => handleChangeAmount(e)}
-                label={"Amount"}
-                width="w-40"
-              />
-
-              <Input
-                key={"on_account_of"}
-                name={"on_account_of"}
-                value={onAccountOf || ""} // Ensure value is never null
-                handleChange={(e) => handleChangeOnAccountOf(e)}
-                label={"On account of"}
-                width="w-48"
-              />
-
-              <Input
-                key={"total_amount_in_words"}
-                name={"total_amount_in_words"}
-                value={totalAmountInWords || ""}
-                // handleChange={(e) => handleChangeOnAccountOf(e)}
-                label={"total amount in words"}
-                readOnly={true}
-                width="w-80"
-              />
-              <DropDown
-                options={currencies}
-                option={currencyReceiptVoucher}
-                handleChangeOption={(e) =>
-                  handleChangeCurrencyReceiptVoucher(e)
-                }
-                label={"Select item currency "}
-                width="w-40"
-              />
-              <Input
-                key={"note"}
-                name={"note"}
+                key="note"
+                name="note"
                 value={note || ""}
-                handleChange={(e) => handleChangeNote(e)}
-                label={"Note"}
+                handleChange={handleChangeNote}
+                label="Note"
                 width="w-full"
-                className="col-start-1 col-span-5"
               />
+              <div className="grid-2-cols-center-vx">
+                <div className="w-50rem">
+                  <p className="text-lg font-medium center-x">
+                    Enter Your Signature
+                  </p>
+                  <Signature
+                    setSignature={setSignatureReceiptVoucher}
+                    signature={signatureReceiptVoucher}
+                  />
+                </div>
+
+                <div className="border">
+                  {signatureReceiptVoucher?.urlSign ||
+                  signatureReceiptVoucher?.urlFile ? (
+                    <img
+                      src={
+                        signatureReceiptVoucher?.urlFile ||
+                        signatureReceiptVoucher?.urlSign
+                      }
+                      alt="Signature"
+                      className="w-[18rem] h-[9rem]"
+                    />
+                  ) : (
+                    "Receipt Voucher Signature"
+                  )}
+                </div>
+
+                <div className="w-full flex-vx-center flex-col">
+                  <div className="font-semibold text-xl tracking-[0.2rem]">
+                    OR
+                  </div>
+                  <FileInput
+                    setFile={setSignatureReceiptVoucher}
+                    file={signatureReceiptVoucher}
+                    name="Choose Signature Image"
+                  />
+                </div>
+              </div>
             </div>
           </div>
-        </div>
+        )}
+      </section>
+
+      <section className="border rounded-[20px] p-10 grid gap-10">
+        <button
+          type="submit"
+          class="w-40 px-4 py-2 bg-green-600 text-white text-xl font-semibold rounded-md hover:bg-green-500 active:bg-green-700 focus:outline-none transition duration-300 ease-in-out"
+        >
+          Save First
+        </button>
       </section>
       {(isCreatingCustomer || isCreatingCustomerReceiptVoucher) && (
         <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center z-50">
@@ -1339,7 +1818,7 @@ const Invoice = () => {
           </div>
         </div>
       )}
-    </main>
+    </form>
   );
 };
 
