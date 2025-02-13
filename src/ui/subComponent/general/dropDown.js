@@ -43,7 +43,11 @@ const DropDown = (props) => {
         {props.label}
       </label>
       {/* Dropdown arrow icon */}
-      <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none">
+      <div
+        className={`absolute inset-y-0 right-3 ${
+          props.bottom ? `bottom-[${props.bottom}]` : ""
+        } flex items-center pointer-events-none`}
+      >
         <svg
           className="w-5 h-5 text-gray-400"
           fill="none"

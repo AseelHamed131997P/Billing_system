@@ -25,7 +25,13 @@ import {
 import "../CSS/general.css";
 import DeleteIcon from "../svgs/deleteIcon.js";
 import * as yup from "yup";
-import { useFormik } from "formik";
+import { useFormik, ErrorMessage, Formik } from "formik";
+
+// const ErrorText = ({ name }) => (
+//   <ErrorMessage name={name}>
+//     {(msg) => <p className="text-red-500 text-sm mt-1">{msg}</p>}
+//   </ErrorMessage>
+// );
 
 const Invoice = () => {
   const dispatch = useDispatch();
@@ -298,61 +304,11 @@ const Invoice = () => {
     console.log(`print id of customer from database ${e.target.value}`);
     const selectedOption = customers.find((item) => item.id == e.target.value);
     setCustomer(selectedOption || customers[0]);
-    formik.setFieldValue("customer", selectedOption || customers[0]); // Update Formik state
+    // formik.setFieldValue("customer", selectedOption || customers[0]); // Update Formik state
   };
   console.log(`here after change on customer ${customer.name}`);
   console.table(customer);
 
-  const validationSchema = yup.object().shape({
-    customer: yup.object().shape({
-      id: yup.number().required("Customer is required"),
-    }),
-    // invoiceItems: yup
-    //   .array()
-    //   .of(
-    //     yup.object().shape({
-    //       item: yup.object().shape({
-    //         id: yup.number().required("Item is required"),
-    //       }),
-    //       itemPrice: yup
-    //         .number()
-    //         .typeError("Price must be a number")
-    //         .positive("Price must be positive")
-    //         .required("Item price is required"),
-    //       itemQuantity: yup
-    //         .number()
-    //         .typeError("Quantity must be a number")
-    //         .positive("Quantity must be positive")
-    //         .required("Item quantity is required"),
-    //     })
-    //   )
-    //   .min(1, "At least one item is required"),
-    // isIncludeVAT: yup.boolean(),
-    // signatureInvoice: yup.object().shape({
-    //   urlSign: yup.string().nullable(),
-    // }),
-    // paymentMethod: yup.string().required("Payment method is required"),
-    // amount: yup
-    //   .number()
-    //   .typeError("Amount must be a number")
-    //   .positive("Amount must be positive")
-    //   .required("Amount is required"),
-  });
-  const formik = useFormik({
-    initialValues: {
-      customer: customers[0], // Default customer
-      // invoiceItems: [],
-      // isIncludeVAT: false,
-      // signatureInvoice: { urlSign: null },
-      // paymentMethod: "Unpaid",
-      // amount: "",
-    },
-    validationSchema,
-    onSubmit: (values) => {
-      console.log("Submitting Invoice Data:", values);
-      // Call API to submit invoice
-    },
-  });
   //here api to get all items
   const [items, setItems] = useState([
     {
@@ -534,7 +490,7 @@ const Invoice = () => {
         index === invoiceItemIndex
           ? {
               ...item,
-              itemQuantity: e.target.value,
+              itemQuantity: parseFloat(e.target.value || 0),
               totalPriceItem: e.target.value * (item.itemPrice || 0),
             }
           : item
@@ -633,9 +589,9 @@ const Invoice = () => {
 
   // Effect to update customer details
   useEffect(() => {
-    console.log(`Customer changed: ${formik.values.customer?.id || "None"}`);
-    setCustomerInfo(updateCustomerInfo(formik.values.customer));
-  }, [formik.values.customer]); // ✅ Dependency is now clear
+    console.log(`Customer changed: ${customer?.id || "None"}`);
+    setCustomerInfo(updateCustomerInfo(customer));
+  }, [customer]); // ✅ Dependency is now clear
   // useEffect(() => {
   //   console.log(`here run first time and when customer change`);
   //   if (customer.id) {
@@ -674,24 +630,24 @@ const Invoice = () => {
         setCustomer({
           ...selectedDeliveries[selectedDeliveries.length - 1].customer,
         });
-        formik.setFieldValue("customer", {
-          ...selectedDeliveries[selectedDeliveries.length - 1].customer,
-        });
+        // formik.setFieldValue("customer", {
+        //   ...selectedDeliveries[selectedDeliveries.length - 1].customer,
+        // });
       } else {
         setCustomer({
           ...(customers.find((item) => item.id === null) || customers[0]),
         });
-        formik.setFieldValue("customer", {
-          ...(customers.find((item) => item.id === null) || customers[0]),
-        });
+        // formik.setFieldValue("customer", {
+        //   ...(customers.find((item) => item.id === null) || customers[0]),
+        // });
       }
     } else {
       setCustomer({
         ...(customers.find((item) => item.id === null) || customers[0]),
       });
-      formik.setFieldValue("customer", {
-        ...(customers.find((item) => item.id === null) || customers[0]),
-      });
+      // formik.setFieldValue("customer", {
+      //   ...(customers.find((item) => item.id === null) || customers[0]),
+      // });
     }
   }, [selectedDeliveries]); // Dependency array: useEffect runs when `selectedDeliveries` changes
 
@@ -986,7 +942,7 @@ const Invoice = () => {
     const updatedCustomer =
       customers.find((c) => c.id === customer.id) || customers[0];
     setCustomerReceiptVoucher(updatedCustomer);
-  }, [formik.values.customer]);
+  }, [customer]);
 
   useEffect(() => {
     isIncludeVAT || isIncludeItemVAT
@@ -1216,6 +1172,96 @@ const Invoice = () => {
     setTotalAmountInWords(amountInWords);
   }, [cash, totalCheque, totalCashAndCheque, transferValue, paymentMethods]);
 
+  const validationSchema = yup.object().shape({
+    // Customer section
+    customer: yup.object().shape({
+      customer: yup.object().shape({
+        id: yup.number().required("Customer is required"),
+      }),
+      customerInfo: yup.object().shape({
+        Mobile_NO: yup.string().required("Mobile number is required"),
+        Full_Address: yup.string().required("Full address is required"),
+        City: yup.string().required("City is required"),
+        VAT_NO: yup.string().required("VAT number is required"),
+      }),
+    }),
+
+    // Items section
+    items: yup.array().of(
+      yup.object().shape({
+        item: yup.object().shape({
+          id: yup
+            .number()
+            .typeError("Item ID must be a number")
+            .when("anotherItem.exist", {
+              is: false, // ✅ Only require `id` when `anotherItem.exist` is false
+              then: (schema) => schema.required("Item is required"),
+              otherwise: (schema) => schema.notRequired(),
+            }),
+        }),
+
+        itemPrice: yup
+          .number()
+          .typeError("Item price must be a number")
+          .positive("Item price must be greater than 0")
+          .required("Item price is required"),
+
+        itemQuantity: yup
+          .number()
+          .typeError("Quantity must be a number")
+          .positive("Quantity must be greater than 0")
+          .integer("Quantity must be an integer")
+          .required("Item quantity is required"),
+
+        // ✅ Conditionally require `anotherItem.value` only if `exist: true`
+        anotherItem: yup.object().shape({
+          exist: yup.boolean(),
+          value: yup.string().when("exist", {
+            is: true,
+            then: (schema) => schema.required("Another item value is required"),
+            otherwise: (schema) => schema.notRequired(),
+          }),
+        }),
+      })
+    ),
+  });
+
+  const formik = useFormik({
+    initialValues: {
+      customer: {
+        customer: { ...customer },
+        customerInfo: { ...customerInfo },
+      },
+      items: [...invoiceItems],
+      // customer: customers[0], // Default customer
+      // invoiceItems: [],
+      // isIncludeVAT: false,
+      // signatureInvoice: { urlSign: null },
+      // paymentMethod: "Unpaid",
+      // amount: "",
+    },
+    validationSchema,
+    onSubmit: (values, { resetForm }) => {
+      console.log("Submitting Invoice Data:", values);
+      // Call API to submit invoice
+      // ✅ Reset Formik with updated initial values after successful submission
+      // resetForm({ values: { customer: customers[0] } });
+      // console.log("Sreset Data :", values);
+    },
+  });
+
+  console.log("before and after reset Data :", formik.values.customer);
+
+  // ✅ Sync Formik values when customer state changes
+  useEffect(() => {
+    formik.setFieldValue("customer", {
+      customer: { ...customer },
+      customerInfo: { ...customerInfo },
+    });
+
+    formik.setFieldValue("items", [...invoiceItems]);
+  }, [customer, customerInfo, invoiceItems]);
+
   return (
     <form onSubmit={formik.handleSubmit} className="p-10 border grid gap-10">
       <section className="border rounded-[20px] p-10 grid gap-10 ">
@@ -1247,41 +1293,53 @@ const Invoice = () => {
           <InvoiceLangSelect />
         </div> */}
       </section>
-      <section className="border rounded-[20px] p-10">
-        <div className=" border flex-center-v-space-between">
+      <section className="border rounded-[20px] p-10 pb-0">
+        <div className="  flex-center-v-space-between mb-5">
           <h1 className="text-2xl font-semibold">Customer</h1>
-          <NumberValue
-            label="Customer"
-            num={formik.values.customer.customer_number}
-          />
+          <NumberValue label="Customer" num={customer.customer_number} />
         </div>
-        <div className="border py-8 grid-5-cols-center-vx gap-y-10">
-          <CreatableDropDown
-            options={customers}
-            // option={customer}
-            option={formik.values.customer}
-            handleChangeOption={handleChangeCustomer}
-            valueKey="id"
-            label="name"
-            // label={"select customer"}
-            width="w-96"
-          />
-          {formik.touched.customer && formik.errors.customer ? (
-            <p className="text-red-500">{formik.errors.customer.id}</p>
-          ) : null}
+        <div className=" grid-5-cols-center-x gap-y-10 h-24">
+          <div className="">
+            <CreatableDropDown
+              options={customers}
+              option={customer}
+              // option={formik.values.customer}
+              handleChangeOption={handleChangeCustomer}
+              valueKey="id"
+              label="name"
+              // label={"select customer"}
+              width="w-96"
+            />
+
+            {formik.touched.customer?.customer &&
+            formik.errors.customer?.customer?.id ? (
+              <p className="text-red-500 text-sm mt-1">
+                {formik.errors.customer.customer.id}
+              </p>
+            ) : null}
+          </div>
           {Object.keys(customerInfo).map((key, index) => {
             console.log("assssssssl");
             console.log(customerInfo);
 
             return (
-              <Input
-                key={key}
-                name={key}
-                value={customerInfo[key] || ""} // Ensure value is never null
-                handleChange={handleChangeCustomerInfo}
-                label={labels[index]}
-                // width="w-80"
-              />
+              <div>
+                <Input
+                  key={key}
+                  name={key}
+                  value={customerInfo[key] || ""} // Ensure value is never null
+                  handleChange={handleChangeCustomerInfo}
+                  label={labels[index]}
+                  // width="w-80"
+                />
+
+                {formik.touched.customer?.customerInfo?.[key] &&
+                formik.errors.customer?.customerInfo?.[key] ? (
+                  <p className="text-red-500 text-sm mt-1">
+                    {formik.errors.customer.customerInfo[key]}
+                  </p>
+                ) : null}
+              </div>
             );
           })}
         </div>
@@ -1302,64 +1360,102 @@ const Invoice = () => {
             </span>
           </button>
         </div>
-        <div className="border grid gap-y-10">
+        <div className="border grid ">
           {invoiceItems.map((invoiceItem, index) => {
             return (
               <div
                 key={index}
                 className={`border ${
                   invoiceItem?.anotherItem?.exist
-                    ? "grid-8-cols-center-vx"
-                    : "grid-7-cols-center-vx"
-                } gap-y-10`}
+                    ? "grid-8-cols-center-x"
+                    : "grid-7-cols-center-x"
+                }  h-24`}
               >
                 <NumberValue
                   label="Item"
                   num={invoiceItem.item.item_number}
                   width="w-40"
                 />
-                <CreatableDropDown
-                  options={items}
-                  option={invoiceItem.item}
-                  handleChangeOption={(e) => handleChangeItem(e, index)}
-                  valueKey="id"
-                  label="name"
-                  width="w-48"
-                  item={"anotherItem"} // Ensure another item is included
-                />
-                {invoiceItem.anotherItem?.exist ? (
-                  <Input
-                    key={`another_item_${index}`}
-                    name="another_item"
-                    value={invoiceItem.anotherItem.value || ""} // Ensure value is never null
-                    handleChange={(e) => handleChangeAnotherItem(e, index)}
-                    label="Another item"
+                <div>
+                  <CreatableDropDown
+                    options={items}
+                    option={invoiceItem.item}
+                    handleChangeOption={(e) => handleChangeItem(e, index)}
+                    valueKey="id"
+                    label="name"
                     width="w-48"
+                    item={"anotherItem"} // Ensure another item is included
                   />
+
+                  {formik.touched.items?.[index]?.item &&
+                  formik.errors.items?.[index]?.item?.id ? (
+                    <p className="text-red-500 text-sm mt-1">
+                      {formik.errors.items[index].item.id}
+                    </p>
+                  ) : null}
+                </div>
+                {invoiceItem.anotherItem?.exist ? (
+                  <div>
+                    <Input
+                      key={`another_item_${index}`}
+                      name="another_item"
+                      value={invoiceItem.anotherItem.value || ""} // Ensure value is never null
+                      handleChange={(e) => handleChangeAnotherItem(e, index)}
+                      label="Another item"
+                      width="w-48"
+                    />
+                    {formik.touched.items?.[index]?.anotherItem?.value &&
+                    formik.errors.items?.[index]?.anotherItem?.value ? (
+                      <p className="text-red-500 text-sm mt-1">
+                        {formik.errors.items[index].anotherItem.value}
+                      </p>
+                    ) : null}
+                  </div>
                 ) : null}
-                <Input
-                  key={"item_price"}
-                  name={"Price"}
-                  value={invoiceItem.itemPrice || ""} // Ensure value is never null
-                  handleChange={(e) => handleChangeItemPrice(e, index)}
-                  label={"Item price"}
-                  width="w-40"
-                />
+                <div>
+                  <Input
+                    key={"item_price"}
+                    name={"Price"}
+                    value={invoiceItem.itemPrice || ""} // Ensure value is never null
+                    handleChange={(e) => handleChangeItemPrice(e, index)}
+                    label={"Item price"}
+                    width="w-40"
+                  />
+
+                  {formik.touched.items?.[index]?.itemPrice &&
+                  formik.errors.items?.[index]?.itemPrice ? (
+                    <p className="text-red-500 text-sm mt-1">
+                      {formik.errors.items[index].itemPrice}
+                    </p>
+                  ) : null}
+                </div>
+
                 <DropDown
                   options={currencies}
                   option={invoiceItem.itemCurrency}
                   handleChangeOption={(e) => handleChangeItemCurrency(e, index)}
                   label={"Select item currency "}
                   width="w-40"
+                  bottom={"35%"}
                 />
-                <Input
-                  key={"item_quantity"}
-                  name={"quantity"}
-                  value={invoiceItem.itemQuantity || ""}
-                  handleChange={(e) => handleChangeItemQuantity(e, index)}
-                  label={"Item quantity"}
-                  width="w-40"
-                />
+                <div>
+                  <Input
+                    key={"item_quantity"}
+                    name={"quantity"}
+                    value={invoiceItem.itemQuantity || ""}
+                    handleChange={(e) => handleChangeItemQuantity(e, index)}
+                    label={"Item quantity"}
+                    width="w-40"
+                  />
+
+                  {formik.touched.items?.[index]?.itemQuantity &&
+                  formik.errors.items?.[index]?.itemQuantity ? (
+                    <p className="text-red-500 text-sm mt-1">
+                      {formik.errors.items[index].itemQuantity}
+                    </p>
+                  ) : null}
+                </div>
+
                 <Input
                   key={"total_price_item"}
                   name={"Price"}
@@ -1513,7 +1609,7 @@ const Invoice = () => {
         {!paymentMethods?.[0]?.isChecked && (
           <div className="border grid gap-10">
             <HeaderReceiptVoucher
-              name={formik.values.customer.company_name}
+              name={customer.company_name}
               title="Receipt Voucher"
               invoiceNum="0001"
               receiptVoucherNum="0002"
@@ -1846,10 +1942,10 @@ const Invoice = () => {
 
                   if (isCreatingCustomer) {
                     setCustomer(resetCustomerData);
-                    formik.setFieldValue(
-                      "customer",
-                      resetCustomerData || customers[0]
-                    );
+                    // formik.setFieldValue(
+                    //   "customer",
+                    //   resetCustomerData || customers[0]
+                    // );
                     setIsCreatingCustomer(false);
                   }
                   if (isCreatingCustomerReceiptVoucher) {
