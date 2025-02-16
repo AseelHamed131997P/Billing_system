@@ -1,5 +1,5 @@
 import "./App.css";
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { PrivateRoute, PublicRoute } from "./componentsRoutes/index";
 import {
   AdminAndCompany,
@@ -13,34 +13,49 @@ import {
 } from "./mainComponent/index";
 import { useNavigate } from "react-router-dom";
 import React, { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux"; // ✅ Correct
 
 function App() {
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const { isLoggedIn } = useSelector((state) => state.auth);
 
   useEffect(() => {
     // Store navigate in a global window object for access outside React
     window.myNavigate = navigate;
   }, [navigate]);
+
   return (
     <>
-      <Header />
-      <Invoice />
-      {/* <Routes>
+      {/* {(isLoggedIn || location.pathname !== "/adminAndCompany") && <Header />} */}
+
+      <Routes>
         <Route path="/" element={<Navigate to="/login" replace />} />
+
         <Route path="/login" element={<PublicRoute element={Login} />} />
-        <Route path="/home" element={<PublicRoute element={Home} />} />
-        <Route
+        {/* <Route
           path="/signUpWithGoogle"
           element={<PublicRoute element={SignUpWithGoogle} />}
+        /> */}
+        <Route
+          path="/signUp"
+          element={<PublicRoute element={SignUpWithGoogle} />}
         />
-
         <Route
           path="/adminAndCompany"
-          element={<PublicRoute element={AdminAndCompany} />}
+          element={<PrivateRoute element={AdminAndCompany} />}
         />
-        <Route path="/customer" element={<PublicRoute element={Customer} />} />
-        <Route path="/item" element={<PublicRoute element={Item} />} />
-      </Routes> */}
+        <>
+          <Route path="/home" element={<PrivateRoute element={Home} />} />
+          <Route
+            path="/customer"
+            element={<PrivateRoute element={Customer} />}
+          />
+          <Route path="/item" element={<PrivateRoute element={Item} />} />
+          <Route path="/invoice" element={<PrivateRoute element={Invoice} />} />
+        </>
+      </Routes>
     </>
   );
 }

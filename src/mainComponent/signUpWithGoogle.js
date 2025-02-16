@@ -5,6 +5,10 @@ import { login } from "../actions/auth";
 import "./signUpWithGoogle.css";
 import "../CSS/general.css";
 import React, { useState } from "react";
+import { LOGIN_SUCCESS } from "../actions/types.js";
+import { useNavigate } from "react-router-dom"; // Import navigate hook
+import { useEffect } from "react";
+
 import {
   InputRegister,
   HeaderRegister,
@@ -12,6 +16,9 @@ import {
 } from "../ui/subComponent/general/index.js";
 
 const SignUpWithGoogle = () => {
+  const dispatch = useDispatch();
+  const navigate = useNavigate(); // Initialize navigate function
+
   const [googleValues, setGoogleValues] = useState({
     Username: "",
     Email: "",
@@ -35,7 +42,26 @@ const SignUpWithGoogle = () => {
   };
 
   const handleSubmit = () => {
-    console.log("googleValues:", googleValues); // Handle form submission (e.g., log the username)
+    // Check if all fields are filled (none should be empty)
+    const allFieldsFilled = Object.values(googleValues).every(
+      (value) => value.trim() !== ""
+    );
+
+    if (allFieldsFilled) {
+      dispatch({
+        type: LOGIN_SUCCESS,
+        payload: {
+          user: {
+            registerCompany: "false",
+            username: googleValues.Username,
+            password: googleValues.Password,
+          },
+        },
+      });
+      // navigate("/adminAndCompany");
+    } else {
+      console.log("googleValues:", googleValues); // Handle form submission (e.g., log the username)
+    }
   };
 
   return (

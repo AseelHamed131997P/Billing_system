@@ -4,6 +4,7 @@ import "./login.css"; // Import your CSS
 import "../CSS/general.css";
 import { LangSelect, Number } from "../ui/subComponent/general";
 import { useTranslation } from "react-i18next";
+import { Header } from "./index.js";
 
 import {
   Routes,
@@ -53,50 +54,53 @@ const Item = () => {
   const [data, setData] = useState(initialData);
 
   return (
-    <main className="bg-[#f1f3f6] pt-[3.2rem] pb-[3.2rem]">
-      <div className="overflow-hidden bg-white rounded-[2rem] shadow-[rgba(17,17,26,0.05)_0px_1px_0px,_rgba(17,17,26,0.1)_0px_0px_8px] margin-auto max-w-[100rem]">
-        <HeaderRegister />
-        <section className="box-section center-x">
-          <form className="register-form border p-10 rounded-[20px]">
-            <div className="flex-center-v-end-x">
-              <NumberValue label="Item" num="001" />
-            </div>
-            <h1 className="text-2xl font-semibold">Item</h1>
-            <section className=" grid-3-cols-center-v gap-10 ">
-              {Object.keys(itemInfo).map((key, index) => (
-                <Input
-                  key={key}
-                  name={key}
-                  value={itemInfo[key]}
-                  handleChange={handleChangeItemInfo}
-                  label={labels[index]}
-                  width="w-full"
-                />
-              ))}
-
-              <DropDown
-                options={currencyType}
-                option={option}
-                setOption={setOption}
-                handleChangeOption={handleChangeOption}
-                label={"select currency"}
-              />
-              <div className="col-start-1 col-span-full place-self-center">
-                {" "}
-                <button className="btn py-2 px-4 w-64" type="button">
-                  Create Item
-                </button>
+    <>
+      <Header />
+      <main className="bg-[#f1f3f6] pt-[3.2rem] pb-[3.2rem]">
+        <div className="overflow-hidden bg-white rounded-[2rem] shadow-[rgba(17,17,26,0.05)_0px_1px_0px,_rgba(17,17,26,0.1)_0px_0px_8px] margin-auto max-w-[100rem]">
+          <HeaderRegister />
+          <section className="box-section center-x">
+            <form className="register-form border p-10 rounded-[20px]">
+              <div className="flex-center-v-end-x">
+                <NumberValue label="Item" num="001" />
               </div>
-            </section>
-          </form>
-        </section>
-        <section className="box-section">
-          <div>
-            <Table data={data} setData={setData} />
-          </div>
-        </section>
-      </div>
-    </main>
+              <h1 className="text-2xl font-semibold">Item</h1>
+              <section className=" grid-3-cols-center-v gap-10 ">
+                {Object.keys(itemInfo).map((key, index) => (
+                  <Input
+                    key={key}
+                    name={key}
+                    value={itemInfo[key]}
+                    handleChange={handleChangeItemInfo}
+                    label={labels[index]}
+                    width="w-full"
+                  />
+                ))}
+
+                <DropDown
+                  options={currencyType}
+                  option={option}
+                  setOption={setOption}
+                  handleChangeOption={handleChangeOption}
+                  label={"select currency"}
+                />
+                <div className="col-start-1 col-span-full place-self-center">
+                  {" "}
+                  <button className="btn py-2 px-4 w-64" type="button">
+                    Create Item
+                  </button>
+                </div>
+              </section>
+            </form>
+          </section>
+          <section className="box-section">
+            <div>
+              <Table data={data} setData={setData} />
+            </div>
+          </section>
+        </div>
+      </main>
+    </>
   );
 };
 

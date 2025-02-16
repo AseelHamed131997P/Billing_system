@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
-const FileInput = ({ setFile, file, name, index }) => {
+const FileInput = ({ setFile, file, name, index, clearButt, setClearButt }) => {
   // ✅ Accept index as a prop
   const [selectedFile, setSelectedFile] = useState(null);
 
@@ -54,6 +54,13 @@ const FileInput = ({ setFile, file, name, index }) => {
       fileInput.value = ""; // Reset the file input
     }
   };
+
+  useEffect(() => {
+    if (clearButt !== undefined && clearButt) {
+      handleClear();
+      setClearButt(!clearButt);
+    }
+  }, [clearButt]);
 
   return (
     <div>

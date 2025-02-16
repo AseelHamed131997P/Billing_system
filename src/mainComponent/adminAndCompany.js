@@ -5,6 +5,10 @@ import { login } from "../actions/auth";
 import "./signUpWithGoogle.css";
 import "../CSS/general.css";
 import React, { useState } from "react";
+import { LOGOUT } from "../actions/types.js";
+import { LOGIN_SUCCESS } from "../actions/types.js";
+import QuestionIcon from "../svgs/questionIcon.js";
+
 import {
   InputRegister,
   HeaderRegister,
@@ -14,10 +18,15 @@ import {
   Signature,
   FileInput,
 } from "../ui/subComponent/general/index.js";
+import { useNavigate } from "react-router-dom"; // Import navigate hook
 import image_name from "../img/image_name.png";
 import { Fi } from "react-flags-select";
 import UserModal from "./userModal.js";
 const AdminAndCompany = () => {
+  const dispatch = useDispatch();
+  const navigate = useNavigate(); // Initialize navigate function
+  const user = useSelector((state) => state.auth.user); // Get current user state
+
   const [signatureComp, setSignatureComp] = useState({
     urlSign: null,
     urlFile: null,
@@ -150,7 +159,25 @@ const AdminAndCompany = () => {
   const toggleModal = () => {
     setIsModalOpen(!isModalOpen);
   };
+  const logoutSubmit = () => {
+    dispatch({
+      type: LOGOUT,
+    });
+  };
 
+  const submit = () => {
+    dispatch({
+      type: LOGIN_SUCCESS,
+      payload: {
+        user: {
+          ...user, // Keep existing user data
+          registerCompany: "true", // Update only this field
+        },
+      },
+    });
+
+    navigate("/home"); // Navigate after updating state
+  };
   return (
     <main className="bg-[#f1f3f6] pt-[3.2rem] pb-[3.2rem]">
       <div className="overflow-hidden bg-white rounded-[2rem] shadow-[rgba(17,17,26,0.05)_0px_1px_0px,_rgba(17,17,26,0.1)_0px_0px_8px] margin-auto max-w-[100rem]">
@@ -221,7 +248,19 @@ const AdminAndCompany = () => {
                 />
               </div>
             </section>
-            <h1 className="text-2xl font-semibold">Company</h1>
+            <div className="relative group inline-flex items-center">
+              <h1 className="text-2xl font-semibold">
+                Company{" "}
+                <span className="inline-flex relative">
+                  <QuestionIcon className="cursor-pointer" />
+                  {/* Tooltip Label */}
+                  <span className="absolute bottom-full mb-1 left-1/2 transform -translate-x-1/2 bg-gray-300 text-black text-lg px-3 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
+                    Admin must be qualified to create company information
+                  </span>
+                </span>
+              </h1>
+            </div>
+
             <section className="layout">
               {Object.keys(companyInfo).map(
                 (key, index) =>
@@ -279,17 +318,26 @@ const AdminAndCompany = () => {
               </div>
 
               <div className=" col-start-1 col-span-full flex-vx-center gap-[4.8rem]">
-                <FileInput
-                  setFile={setCompanyLicense}
-                  file={CompanyLicense}
-                  name={"Choose Company License"}
-                />
-
-                <FileInput
-                  setFile={setCompanyLogo}
-                  file={companyLogo}
-                  name={"Choose Company Logo"}
-                />
+                <div className="center-v ">
+                  <label className="text-lg font-medium mr-5">
+                    Upload your company logo:
+                  </label>
+                  <FileInput
+                    setFile={setCompanyLicense}
+                    file={CompanyLicense}
+                    name={"Choose Company License"}
+                  />
+                </div>
+                <div className="center-v">
+                  <label className="text-lg font-medium mr-5">
+                    Upload your company license paper:
+                  </label>
+                  <FileInput
+                    setFile={setCompanyLogo}
+                    file={companyLogo}
+                    name={"Choose Company Logo"}
+                  />
+                </div>
               </div>
               <div className="w-50rem  col-start-1 col-span-2 mx-auto ">
                 <p className="text-lg	font-medium	 center-x">
@@ -329,6 +377,22 @@ const AdminAndCompany = () => {
                 />
               </div>
             </section>
+            <div className="flex-vx-center">
+              <button
+                className="btn py-2 px-4 w-64 mr-10"
+                type="button"
+                onClick={logoutSubmit}
+              >
+                Logout
+              </button>
+              <button
+                className="btn py-2 px-4 w-64"
+                type="button"
+                onClick={submit}
+              >
+                Submit
+              </button>
+            </div>
           </form>
         </section>
       </div>

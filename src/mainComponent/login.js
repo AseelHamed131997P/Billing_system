@@ -4,6 +4,8 @@ import "./login.css"; // Import your CSS
 import "../CSS/general.css";
 import { LangSelect } from "../ui/subComponent/general";
 import { useTranslation } from "react-i18next";
+import { LOGIN_SUCCESS } from "../actions/types.js";
+import { Navigate } from "react-router-dom";
 
 import {
   Routes,
@@ -12,19 +14,37 @@ import {
   useNavigate,
   useLocation,
 } from "react-router-dom"; // React Router for navigation
-
+import { useDispatch, useSelector } from "react-redux"; // ✅ Correct
 import { ShowHiddenIcon, PasswordIcon, UsernameIcon } from "../svgs/index.js";
-
+import background from "../img/background.jpg";
 const Login = () => {
+  const dispatch = useDispatch();
   const [lang, setLang] = useState("US");
   const [showPassword, setShowPassword] = useState(false); // State to toggle password visibility
+  const navigate = useNavigate();
 
   // Toggle password visibility
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
   };
   const { t } = useTranslation();
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
 
+  const loginSubmit = () => {
+    if (username && password) {
+      dispatch({
+        type: LOGIN_SUCCESS,
+        payload: {
+          user: {
+            registerCompany: "true",
+            username,
+            password,
+          },
+        },
+      });
+    }
+  };
   return (
     <main className=" h-screen grid-2-cols">
       <section className="grid-2-rows-auto-1fr">
@@ -49,6 +69,8 @@ const Login = () => {
                   type="text"
                   className=" pr-3 input-login"
                   placeholder="Enter your email or Phone number"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
                 />
               </div>
             </div>
@@ -60,6 +82,8 @@ const Login = () => {
                   type={showPassword ? "text" : "password"} // Toggle type based on showPassword state
                   className=" pr-12 input-login"
                   placeholder="Enter your password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                 />
 
                 <ShowHiddenIcon
@@ -69,7 +93,11 @@ const Login = () => {
               </div>
             </div>
 
-            <button className=" btn py-2 px-4 w-96  " type="button">
+            <button
+              className=" btn py-2 px-4 w-96  "
+              type="button"
+              onClick={loginSubmit}
+            >
               Login
             </button>
           </form>
@@ -79,6 +107,20 @@ const Login = () => {
               OR
             </div>
           </div>
+          <button
+            className=" py-2 px-4 w-[40rem]  btn"
+            type="button"
+            onClick={() => navigate("/signUp")} // ✅ Correct way to navigate
+          >
+            Sign up
+          </button>
+          {/* <button
+            className=" py-2 px-4 w-[40rem]  btn"
+            type="button"
+            onClick={() => navigate("/signUpWithGoogle")} // ✅ Correct way to navigate
+          >
+            Sign up
+          </button> */}
           <button className=" py-2 px-4 w-[40rem]  btn" type="button">
             Google
           </button>
@@ -97,7 +139,13 @@ const Login = () => {
           </a>
         </div>
       </section>
-      <section className="login-img"></section>
+      <section className="login-img">
+        <img
+          src={background}
+          alt="background"
+          className="w-full h-full object-cover"
+        />
+      </section>
     </main>
   );
 };

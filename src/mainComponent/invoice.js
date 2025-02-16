@@ -8,6 +8,8 @@ import AddIcon from "../svgs/addIcon.js";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import "../index.css";
+import { Header } from "./index.js";
+
 import {
   InvoiceLangSelect,
   MultiSelectInput,
@@ -704,7 +706,7 @@ const Invoice = () => {
   console.log(`include item vat : ${isIncludeItemVAT}`);
   //here adding useeffect based on isIncludeVAT or isIncludeItemVAT codition inside useeffect isIncludeVAT when true  get vat from DB ans setState on VAT
 
-  const [VAT, setVAT] = useState(".17");
+  const [VAT, setVAT] = useState(0.17);
   console.log(`VAT : ${VAT}`);
 
   const [totalVAT, setTotalVAT] = useState(null);
@@ -1172,6 +1174,56 @@ const Invoice = () => {
     setTotalAmountInWords(amountInWords);
   }, [cash, totalCheque, totalCashAndCheque, transferValue, paymentMethods]);
 
+  const [clearButt, setClearButt] = useState(false);
+  const defaultValues = {
+    customer: {
+      customer: customers[0], // Reset customer to the first one
+      customerInfo: {
+        Mobile_NO: "",
+        Full_Address: "",
+        City: "",
+        VAT_NO: "",
+      },
+    },
+    items: [
+      {
+        item: items[0], // Default first item
+        itemPrice: null,
+        itemCurrency: currencies[0], // Default currency
+        itemQuantity: null,
+        totalPriceItem: null,
+      },
+    ],
+    invoiceSummary: {
+      isIncludeVAT: false,
+      isIncludeItemVAT: false,
+      totalPrice: 0,
+      totalPriceWithoutVAT: 0,
+      VAT: 0.17,
+      totalVAT: 0,
+      totalPriceWithVAT: 0,
+      totalPriceInWords: "",
+      signatureInvoice: {
+        urlSign: null,
+        urlFile: null,
+      },
+    },
+  };
+  const resetAllStates = () => {
+    // ✅ Reset all state values at once
+    setCustomer(defaultValues.customer.customer);
+    setCustomerInfo(defaultValues.customer.customerInfo);
+    setInvoiceItems(defaultValues.items);
+    setIsIncludeVAT(defaultValues.invoiceSummary.isIncludeVAT);
+    setIsIncludeItemVAT(defaultValues.invoiceSummary.isIncludeItemVAT);
+    setTotalPriceWithoutVAT(defaultValues.invoiceSummary.totalPriceWithoutVAT);
+    setVAT(defaultValues.invoiceSummary.VAT);
+    setTotalVAT(defaultValues.invoiceSummary.totalVAT);
+    setTotalPriceWithVAT(defaultValues.invoiceSummary.totalPriceWithVAT);
+    setTotalPriceInWords(defaultValues.invoiceSummary.totalPriceInWords);
+    setSignatureInvoice(defaultValues.invoiceSummary.signatureInvoice);
+  };
+
   const validationSchema = yup.object().shape({
     // Customer section
     customer: yup.object().shape({
@@ -1190,16 +1242,9 @@ const Invoice = () => {
     items: yup.array().of(
       yup.object().shape({
         item: yup.object().shape({
-          id: yup
-            .number()
-            .typeError("Item ID must be a number")
-            .when("anotherItem.exist", {
-              is: false, // ✅ Only require `id` when `anotherItem.exist` is false
-              then: (schema) => schema.required("Item is required"),
-              otherwise: (schema) => schema.notRequired(),
-            }),
+          id: yup.number(),
+          // id: yup.number().required("Item is required"),
         }),
-
         itemPrice: yup
           .number()
           .typeError("Item price must be a number")
@@ -1224,6 +1269,21 @@ const Invoice = () => {
         }),
       })
     ),
+
+    // Invoice summary section
+    invoiceSummary: yup.object().shape({
+      signatureInvoice: yup
+        .object()
+        .shape({
+          urlSign: yup.string().nullable(),
+          urlFile: yup.string().nullable(),
+        })
+        .test(
+          "signature-required",
+          "At least one signature (drawn or uploaded) is required",
+          (value) => value?.urlSign || value?.urlFile // ✅ At least one must be provided
+        ),
+    }),
   });
 
   const formik = useFormik({
@@ -1233,327 +1293,380 @@ const Invoice = () => {
         customerInfo: { ...customerInfo },
       },
       items: [...invoiceItems],
-      // customer: customers[0], // Default customer
-      // invoiceItems: [],
-      // isIncludeVAT: false,
-      // signatureInvoice: { urlSign: null },
-      // paymentMethod: "Unpaid",
-      // amount: "",
+      invoiceSummary: {
+        isIncludeVAT,
+        isIncludeItemVAT,
+        totalPrice,
+        totalPriceWithoutVAT,
+        VAT,
+        totalVAT,
+        totalPriceWithVAT,
+        totalPriceInWords,
+        signatureInvoice,
+      },
     },
     validationSchema,
     onSubmit: (values, { resetForm }) => {
       console.log("Submitting Invoice Data:", values);
-      // Call API to submit invoice
-      // ✅ Reset Formik with updated initial values after successful submission
-      // resetForm({ values: { customer: customers[0] } });
-      // console.log("Sreset Data :", values);
+      resetAllStates();
+      resetForm({ values: defaultValues });
+      setClearButt(!clearButt);
     },
+    // context: {
+    //   anotherItemExist: formik.values.items[index]?.anotherItem?.exist, // Pass the `exist` value as context
+    // },
   });
 
-  console.log("before and after reset Data :", formik.values.customer);
+  console.log("before and after reset Data :", formik.values);
 
   // ✅ Sync Formik values when customer state changes
   useEffect(() => {
-    formik.setFieldValue("customer", {
-      customer: { ...customer },
-      customerInfo: { ...customerInfo },
-    });
+    const updatedInvoiceSummary = {
+      isIncludeVAT,
+      isIncludeItemVAT,
+      totalPrice,
+      totalPriceWithoutVAT,
+      VAT,
+      totalVAT,
+      totalPriceWithVAT,
+      totalPriceInWords,
+      signatureInvoice,
+    };
 
-    formik.setFieldValue("items", [...invoiceItems]);
-  }, [customer, customerInfo, invoiceItems]);
+    formik.setValues((prevValues) => ({
+      ...prevValues,
+      customer: {
+        customer: { ...customer },
+        customerInfo: { ...customerInfo },
+      },
+      items: [...invoiceItems],
+      invoiceSummary: updatedInvoiceSummary,
+    }));
+  }, [
+    customer,
+    customerInfo,
+    invoiceItems,
+    isIncludeVAT,
+    isIncludeItemVAT,
+    totalPrice,
+    totalPriceWithoutVAT,
+    VAT,
+    totalVAT,
+    totalPriceWithVAT,
+    totalPriceInWords,
+    signatureInvoice,
+  ]);
 
+  // useEffect(() => {
+  //   invoiceItems.forEach((invoiceItem, index) => {
+  //     if (invoiceItem?.anotherItem?.exist) {
+  //       formik.setFieldError(`items.${index}.item.id`, "");
+  //     }
+  //   });
+  // }, [invoiceItems]);
   return (
-    <form onSubmit={formik.handleSubmit} className="p-10 border grid gap-10">
-      <section className="border rounded-[20px] p-10 grid gap-10 ">
-        <div className="grid-auto-fr-auto-cols border ">
-          <div className=" border w-80 ">
-            <InvoiceLangSelect />
+    <>
+      <Header />
+      <form onSubmit={formik.handleSubmit} className="p-10 border grid gap-10">
+        <section className="border rounded-[20px] p-10 grid gap-10 ">
+          <div className="grid-auto-fr-auto-cols border ">
+            <div className=" border w-80 ">
+              <InvoiceLangSelect />
+            </div>
+            <h1 className="  font-medium text-2xl">Invoice 0001</h1>
+            <div className="text-2xl">
+              {new Date().toLocaleDateString("en-GB", {
+                day: "2-digit",
+                month: "2-digit",
+                year: "numeric",
+              })}
+            </div>
           </div>
-          <h1 className="  font-medium text-2xl">Invoice 0001</h1>
-          <div className="text-2xl">
-            {new Date().toLocaleDateString("en-GB", {
-              day: "2-digit",
-              month: "2-digit",
-              year: "numeric",
-            })}
+        </section>
+        <section className="border rounded-[20px] p-10 flex-center-v-space-between">
+          <div className=" border   center-v  w-full max-w-[40rem] ">
+            <label className="text-xl">Delivery Numbers: &nbsp; </label>
+            <MultiSelectInput
+              options={deliveries}
+              selectedOptions={selectedDeliveries} // Pass the full selected object ✅ Correct
+              setSelectedOptions={setSelectedDeliveries}
+              placeholder="Select Your Delivery Number"
+            />
           </div>
-        </div>
-      </section>
-      <section className="border rounded-[20px] p-10 flex-center-v-space-between">
-        <div className=" border   center-v  w-full max-w-[40rem] ">
-          <label className="text-xl">Delivery Numbers: &nbsp; </label>
-          <MultiSelectInput
-            options={deliveries}
-            selectedOptions={selectedDeliveries} // Pass the full selected object ✅ Correct
-            setSelectedOptions={setSelectedDeliveries}
-            placeholder="Select Your Delivery Number"
-          />
-        </div>
-        {/* <div className=" border w-80 ">
+          {/* <div className=" border w-80 ">
           <InvoiceLangSelect />
         </div> */}
-      </section>
-      <section className="border rounded-[20px] p-10 pb-0">
-        <div className="  flex-center-v-space-between mb-5">
-          <h1 className="text-2xl font-semibold">Customer</h1>
-          <NumberValue label="Customer" num={customer.customer_number} />
-        </div>
-        <div className=" grid-5-cols-center-x gap-y-10 h-24">
-          <div className="">
-            <CreatableDropDown
-              options={customers}
-              option={customer}
-              // option={formik.values.customer}
-              handleChangeOption={handleChangeCustomer}
-              valueKey="id"
-              label="name"
-              // label={"select customer"}
-              width="w-96"
-            />
-
-            {formik.touched.customer?.customer &&
-            formik.errors.customer?.customer?.id ? (
-              <p className="text-red-500 text-sm mt-1">
-                {formik.errors.customer.customer.id}
-              </p>
-            ) : null}
+        </section>
+        <section className="border rounded-[20px] p-10 pb-0">
+          <div className="  flex-center-v-space-between mb-5">
+            <h1 className="text-2xl font-semibold">Customer</h1>
+            <NumberValue label="Customer" num={customer.customer_number} />
           </div>
-          {Object.keys(customerInfo).map((key, index) => {
-            console.log("assssssssl");
-            console.log(customerInfo);
+          <div className=" grid-5-cols-center-x gap-y-10 h-24">
+            <div className="">
+              <CreatableDropDown
+                options={customers}
+                option={customer}
+                // option={formik.values.customer}
+                handleChangeOption={handleChangeCustomer}
+                valueKey="id"
+                label="name"
+                // label={"select customer"}
+                width="w-96"
+              />
 
-            return (
-              <div>
-                <Input
-                  key={key}
-                  name={key}
-                  value={customerInfo[key] || ""} // Ensure value is never null
-                  handleChange={handleChangeCustomerInfo}
-                  label={labels[index]}
-                  // width="w-80"
-                />
+              {formik.touched.customer?.customer &&
+              formik.errors.customer?.customer?.id ? (
+                <p className="text-red-500 text-sm mt-1">
+                  {formik.errors.customer.customer.id}
+                </p>
+              ) : null}
+            </div>
+            {Object.keys(customerInfo).map((key, index) => {
+              console.log("assssssssl");
+              console.log(customerInfo);
 
-                {formik.touched.customer?.customerInfo?.[key] &&
-                formik.errors.customer?.customerInfo?.[key] ? (
-                  <p className="text-red-500 text-sm mt-1">
-                    {formik.errors.customer.customerInfo[key]}
-                  </p>
-                ) : null}
-              </div>
-            );
-          })}
-        </div>
-      </section>
-
-      <section className="border rounded-[20px] p-10">
-        <div className=" border flex-center-v-space-between">
-          <h1 className="text-2xl font-semibold">Item</h1>
-          <button
-            className="bg-green-600 text-white w-10 h-10 rounded-full flex-vx-center relative group"
-            type="button"
-            onClick={addItem}
-          >
-            <AddIcon />
-            {/* Tooltip */}
-            <span className="absolute -top-11 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-lg rounded-md px-4 py-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">
-              Add Item
-            </span>
-          </button>
-        </div>
-        <div className="border grid ">
-          {invoiceItems.map((invoiceItem, index) => {
-            return (
-              <div
-                key={index}
-                className={`border ${
-                  invoiceItem?.anotherItem?.exist
-                    ? "grid-8-cols-center-x"
-                    : "grid-7-cols-center-x"
-                }  h-24`}
-              >
-                <NumberValue
-                  label="Item"
-                  num={invoiceItem.item.item_number}
-                  width="w-40"
-                />
+              return (
                 <div>
-                  <CreatableDropDown
-                    options={items}
-                    option={invoiceItem.item}
-                    handleChangeOption={(e) => handleChangeItem(e, index)}
-                    valueKey="id"
-                    label="name"
-                    width="w-48"
-                    item={"anotherItem"} // Ensure another item is included
+                  <Input
+                    key={key}
+                    name={key}
+                    value={customerInfo[key] || ""} // Ensure value is never null
+                    handleChange={handleChangeCustomerInfo}
+                    label={labels[index]}
+                    // width="w-80"
                   />
 
-                  {formik.touched.items?.[index]?.item &&
-                  formik.errors.items?.[index]?.item?.id ? (
+                  {formik.touched.customer?.customerInfo?.[key] &&
+                  formik.errors.customer?.customerInfo?.[key] ? (
                     <p className="text-red-500 text-sm mt-1">
-                      {formik.errors.items[index].item.id}
+                      {formik.errors.customer.customerInfo[key]}
                     </p>
                   ) : null}
                 </div>
-                {invoiceItem.anotherItem?.exist ? (
+              );
+            })}
+          </div>
+        </section>
+
+        <section className="border rounded-[20px] p-10">
+          <div className=" border flex-center-v-space-between">
+            <h1 className="text-2xl font-semibold">Item</h1>
+            <button
+              className="bg-green-600 text-white w-10 h-10 rounded-full flex-vx-center relative group"
+              type="button"
+              onClick={addItem}
+            >
+              <AddIcon />
+              {/* Tooltip */}
+              <span className="absolute -top-11 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-lg rounded-md px-4 py-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">
+                Add Item
+              </span>
+            </button>
+          </div>
+          <div className="border grid ">
+            {invoiceItems.map((invoiceItem, index) => {
+              return (
+                <div
+                  key={index}
+                  className={`border ${
+                    invoiceItem?.anotherItem?.exist
+                      ? "grid-8-cols-center-x"
+                      : "grid-7-cols-center-x"
+                  }  h-24`}
+                >
+                  <NumberValue
+                    label="Item"
+                    num={invoiceItem.item.item_number}
+                    width="w-40"
+                  />
                   <div>
-                    <Input
-                      key={`another_item_${index}`}
-                      name="another_item"
-                      value={invoiceItem.anotherItem.value || ""} // Ensure value is never null
-                      handleChange={(e) => handleChangeAnotherItem(e, index)}
-                      label="Another item"
+                    <CreatableDropDown
+                      options={items}
+                      option={invoiceItem.item}
+                      handleChangeOption={(e) => handleChangeItem(e, index)}
+                      valueKey="id"
+                      label="name"
                       width="w-48"
+                      item={"anotherItem"} // Ensure another item is included
                     />
-                    {formik.touched.items?.[index]?.anotherItem?.value &&
-                    formik.errors.items?.[index]?.anotherItem?.value ? (
+                    {/* {!invoiceItem.anotherItem?.exist &&
+                    formik.touched.items?.[index]?.item &&
+                    formik.errors.items?.[index]?.item?.id && (
                       <p className="text-red-500 text-sm mt-1">
-                        {formik.errors.items[index].anotherItem.value}
+                        {formik.errors.items[index].item.id}
+                      </p>
+                    )} */}
+                    {formik.touched.items?.[index]?.item &&
+                    formik.errors.items?.[index]?.item?.id ? (
+                      <p className="text-red-500 text-sm mt-1">
+                        {formik.errors.items[index].item.id}
                       </p>
                     ) : null}
                   </div>
-                ) : null}
-                <div>
+                  {invoiceItem.anotherItem?.exist ? (
+                    <div>
+                      <Input
+                        key={`another_item_${index}`}
+                        name="another_item"
+                        value={invoiceItem.anotherItem.value || ""} // Ensure value is never null
+                        handleChange={(e) => handleChangeAnotherItem(e, index)}
+                        label="Another item"
+                        width="w-48"
+                      />
+                      {formik.touched.items?.[index]?.anotherItem?.value &&
+                      formik.errors.items?.[index]?.anotherItem?.value ? (
+                        <p className="text-red-500 text-sm mt-1">
+                          {formik.errors.items[index].anotherItem.value}
+                        </p>
+                      ) : null}
+                    </div>
+                  ) : null}
+                  <div>
+                    <Input
+                      key={"item_price"}
+                      name={"Price"}
+                      value={invoiceItem.itemPrice || ""} // Ensure value is never null
+                      handleChange={(e) => handleChangeItemPrice(e, index)}
+                      label={"Item price"}
+                      width="w-40"
+                    />
+
+                    {formik.touched.items?.[index]?.itemPrice &&
+                    formik.errors.items?.[index]?.itemPrice ? (
+                      <p className="text-red-500 text-sm mt-1">
+                        {formik.errors.items[index].itemPrice}
+                      </p>
+                    ) : null}
+                  </div>
+                  <div>
+                    <DropDown
+                      options={currencies}
+                      option={invoiceItem.itemCurrency}
+                      handleChangeOption={(e) =>
+                        handleChangeItemCurrency(e, index)
+                      }
+                      label={"Select item currency "}
+                      width="w-40"
+                      // bottom={"35%"}
+                    />
+                  </div>
+                  <div>
+                    <Input
+                      key={"item_quantity"}
+                      name={"quantity"}
+                      value={invoiceItem.itemQuantity || ""}
+                      handleChange={(e) => handleChangeItemQuantity(e, index)}
+                      label={"Item quantity"}
+                      width="w-40"
+                    />
+
+                    {formik.touched.items?.[index]?.itemQuantity &&
+                    formik.errors.items?.[index]?.itemQuantity ? (
+                      <p className="text-red-500 text-sm mt-1">
+                        {formik.errors.items[index].itemQuantity}
+                      </p>
+                    ) : null}
+                  </div>
+
                   <Input
-                    key={"item_price"}
+                    key={"total_price_item"}
                     name={"Price"}
-                    value={invoiceItem.itemPrice || ""} // Ensure value is never null
-                    handleChange={(e) => handleChangeItemPrice(e, index)}
-                    label={"Item price"}
+                    value={invoiceItem.totalPriceItem || ""}
+                    label={"Total price item"}
                     width="w-40"
+                    readOnly={true}
                   />
 
-                  {formik.touched.items?.[index]?.itemPrice &&
-                  formik.errors.items?.[index]?.itemPrice ? (
-                    <p className="text-red-500 text-sm mt-1">
-                      {formik.errors.items[index].itemPrice}
-                    </p>
-                  ) : null}
+                  <button
+                    className="relative group w-10 h-10 flex-vx-center"
+                    onClick={() => deleteItem(index)}
+                  >
+                    <DeleteIcon />
+
+                    {/* Tooltip */}
+                    <span className="absolute -top-11 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-lg rounded-md px-4 py-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">
+                      Delete Item
+                    </span>
+                  </button>
                 </div>
+              );
+            })}
+          </div>
+          <div className=" border flex-center-v-end-x gap-10">
+            <Input
+              key={"total_price"}
+              name={"Price"}
+              value={totalPrice || ""}
+              label={"Total price "}
+              width="w-40"
+              readOnly={true}
+            />
+            <CheckBox
+              isChecked={isIncludeItemVAT}
+              handleChange={handleIsIncludeItemVATChange}
+              label="Include Item VAT"
+              style={isIncludeVAT}
+            />
+          </div>
+        </section>
 
-                <DropDown
-                  options={currencies}
-                  option={invoiceItem.itemCurrency}
-                  handleChangeOption={(e) => handleChangeItemCurrency(e, index)}
-                  label={"Select item currency "}
-                  width="w-40"
-                  bottom={"35%"}
-                />
-                <div>
-                  <Input
-                    key={"item_quantity"}
-                    name={"quantity"}
-                    value={invoiceItem.itemQuantity || ""}
-                    handleChange={(e) => handleChangeItemQuantity(e, index)}
-                    label={"Item quantity"}
-                    width="w-40"
-                  />
-
-                  {formik.touched.items?.[index]?.itemQuantity &&
-                  formik.errors.items?.[index]?.itemQuantity ? (
-                    <p className="text-red-500 text-sm mt-1">
-                      {formik.errors.items[index].itemQuantity}
-                    </p>
-                  ) : null}
-                </div>
-
-                <Input
-                  key={"total_price_item"}
-                  name={"Price"}
-                  value={invoiceItem.totalPriceItem || ""}
-                  label={"Total price item"}
-                  width="w-40"
-                  readOnly={true}
-                />
-
-                <button
-                  className="relative group w-10 h-10 flex-vx-center"
-                  onClick={() => deleteItem(index)}
-                >
-                  <DeleteIcon />
-
-                  {/* Tooltip */}
-                  <span className="absolute -top-11 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-lg rounded-md px-4 py-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">
-                    Delete Item
-                  </span>
-                </button>
-              </div>
-            );
-          })}
-        </div>
-        <div className=" border flex-center-v-end-x gap-10">
-          <Input
-            key={"total_price"}
-            name={"Price"}
-            value={totalPrice || ""}
-            label={"Total price "}
-            width="w-40"
-            readOnly={true}
-          />
-          <CheckBox
-            isChecked={isIncludeItemVAT}
-            handleChange={handleIsIncludeItemVATChange}
-            label="Include Item VAT"
-            style={isIncludeVAT}
-          />
-        </div>
-      </section>
-
-      <section className="border rounded-[20px] p-10 grid gap-10 ">
-        <h1 className="text-2xl font-semibold">Invoice Summary</h1>
-        <div className="flex gap-10">
-          <Input
-            key={"Total_Price_without_VAT"}
-            name={"Price"}
-            value={totalPriceWithoutVAT || ""}
-            label={"Total Price Without VAT"}
-            readOnly={true}
-          />
-          <CheckBox
-            isChecked={isIncludeVAT}
-            handleChange={handleIsIncludeVATChange}
-            label="Include VAT"
-            style={isIncludeItemVAT}
-          />
-        </div>
-        {isIncludeVAT || isIncludeItemVAT ? (
+        <section className="border rounded-[20px] p-10 grid gap-10 ">
+          <h1 className="text-2xl font-semibold">Invoice Summary</h1>
           <div className="flex gap-10">
             <Input
-              key={"VAT"}
+              key={"Total_Price_without_VAT"}
               name={"Price"}
-              value={VAT}
-              label={"VAT"}
+              value={totalPriceWithoutVAT || ""}
+              label={"Total Price Without VAT"}
               readOnly={true}
             />
+            <CheckBox
+              isChecked={isIncludeVAT}
+              handleChange={handleIsIncludeVATChange}
+              label="Include VAT"
+              style={isIncludeItemVAT}
+            />
+          </div>
+          {isIncludeVAT || isIncludeItemVAT ? (
+            <div className="flex gap-10">
+              <Input
+                key={"VAT"}
+                name={"Price"}
+                value={VAT}
+                label={"VAT"}
+                readOnly={true}
+              />
 
+              <Input
+                key={"Total_VAT"}
+                name={"Price"}
+                value={totalVAT || ""}
+                label={"Total VAT"}
+                readOnly={true}
+              />
+              <Input
+                key={"Total_Price_With_VAT"}
+                name={"Price"}
+                value={totalPriceWithVAT || ""}
+                label={"Total Price With VAT"}
+                readOnly={true}
+              />
+            </div>
+          ) : (
+            ""
+          )}
+          <div>
+            {" "}
             <Input
-              key={"Total_VAT"}
-              name={"Price"}
-              value={totalVAT || ""}
-              label={"Total VAT"}
-              readOnly={true}
-            />
-            <Input
-              key={"Total_Price_With_VAT"}
-              name={"Price"}
-              value={totalPriceWithVAT || ""}
-              label={"Total Price With VAT"}
+              key={"total_Price_IN_Words"}
+              name={"total_Price_IN_Words"}
+              value={totalPriceInWords}
+              label={"Total Price In Words"}
               readOnly={true}
             />
           </div>
-        ) : (
-          ""
-        )}
-        <div>
-          {" "}
-          <Input
-            key={"total_Price_IN_Words"}
-            name={"total_Price_IN_Words"}
-            value={totalPriceInWords}
-            label={"Total Price In Words"}
-            readOnly={true}
-          />
-        </div>
-        <div>
+          {/* <div> */}
           <div className="grid-2-cols-center-vx">
             <div className="w-50rem ">
               <p className="text-lg	font-medium	 center-x">
@@ -1562,6 +1675,8 @@ const Invoice = () => {
               <Signature
                 setSignature={setSignatureInvoice}
                 signature={signatureInvoice}
+                clearButt={clearButt}
+                setClearButt={setClearButt}
               />
             </div>
 
@@ -1589,70 +1704,82 @@ const Invoice = () => {
                 setFile={setSignatureInvoice}
                 file={signatureInvoice}
                 name={"Choose Signature Image"}
+                clearButt={clearButt}
+                setClearButt={setClearButt}
               />
+              <div className="h-[.1rem]">
+                {formik.touched.invoiceSummary?.signatureInvoice &&
+                formik.errors.invoiceSummary?.signatureInvoice ? (
+                  <p className="text-red-500 text-sm mt-1 ">
+                    {formik.errors.invoiceSummary.signatureInvoice}
+                  </p>
+                ) : null}
+              </div>
             </div>
           </div>
-        </div>
-      </section>
-      <section className="border rounded-[20px] p-10 grid gap-10 ">
-        <h1 className="text-2xl font-semibold">Payment Method</h1>
-        <div className="center-v gap-10">
-          {paymentMethods.map((paymentMethod) => (
-            <CheckBox
-              key={paymentMethod.id}
-              isChecked={paymentMethod.isChecked}
-              handleChange={() => handlePaymentMethodsChange(paymentMethod.id)}
-              label={paymentMethod.label}
-            />
-          ))}
-        </div>
-        {!paymentMethods?.[0]?.isChecked && (
-          <div className="border grid gap-10">
-            <HeaderReceiptVoucher
-              name={customer.company_name}
-              title="Receipt Voucher"
-              invoiceNum="0001"
-              receiptVoucherNum="0002"
-            />
+          {/* </div> */}
+        </section>
+        <section className="border rounded-[20px] p-10 grid gap-10 ">
+          <h1 className="text-2xl font-semibold">Payment Method</h1>
+          <div className="center-v gap-10">
+            {paymentMethods.map((paymentMethod) => (
+              <CheckBox
+                key={paymentMethod.id}
+                isChecked={paymentMethod.isChecked}
+                handleChange={() =>
+                  handlePaymentMethodsChange(paymentMethod.id)
+                }
+                label={paymentMethod.label}
+              />
+            ))}
+          </div>
+          {!paymentMethods?.[0]?.isChecked && (
+            <div className="border grid gap-10">
+              <HeaderReceiptVoucher
+                name={customer.company_name}
+                title="Receipt Voucher"
+                invoiceNum="0001"
+                receiptVoucherNum="0002"
+              />
 
-            <div className="px-10 grid gap-10">
-              <div className="flex-center-v-end-x text-2xl">
-                {new Date().toLocaleDateString("en-GB", {
-                  day: "2-digit",
-                  month: "2-digit",
-                  year: "numeric",
-                })}
-              </div>
+              <div className="px-10 grid gap-10">
+                <div className="flex-center-v-end-x text-2xl">
+                  {new Date().toLocaleDateString("en-GB", {
+                    day: "2-digit",
+                    month: "2-digit",
+                    year: "numeric",
+                  })}
+                </div>
 
-              <div className="grid-5-cols-center-vx gap-10">
-                <CreatableDropDown
-                  options={customers}
-                  option={customerReceiptVoucher}
-                  handleChangeOption={handleChangeCustomerReceiptVoucher}
-                  valueKey="id"
-                  label="name"
-                  width="w-64"
-                />
+                <div className="grid-5-cols-center-vx gap-10">
+                  <CreatableDropDown
+                    options={customers}
+                    option={customerReceiptVoucher}
+                    handleChangeOption={handleChangeCustomerReceiptVoucher}
+                    valueKey="id"
+                    label="name"
+                    width="w-64"
+                  />
 
-                <Input
-                  key="amount"
-                  name="Price"
-                  value={amount || ""}
-                  handleChange={handleChangeAmount}
-                  label="Amount to be paid"
-                  width="w-48"
-                />
+                  <Input
+                    key="amount"
+                    name="Price"
+                    value={amount || ""}
+                    handleChange={handleChangeAmount}
+                    label="Amount to be paid"
+                    width="w-48"
+                  />
 
-                <Input
-                  key="on_account_of"
-                  name="on_account_of"
-                  value={onAccountOf || ""}
-                  handleChange={handleChangeOnAccountOf}
-                  label="On account of"
-                  width="w-48"
-                />
+                  <Input
+                    key="on_account_of"
+                    name="on_account_of"
+                    value={onAccountOf || ""}
+                    handleChange={handleChangeOnAccountOf}
+                    label="On account of"
+                    width="w-48"
+                  />
 
-                {/* <Input
+                  {/* <Input
                   key="total_price_in_words"
                   name="total_price_in_words"
                   value={totalAmountInWords || ""}
@@ -1661,363 +1788,366 @@ const Invoice = () => {
                   width="w-80"
                 /> */}
 
-                <DropDown
-                  options={currencies}
-                  option={currencyReceiptVoucher}
-                  handleChangeOption={handleChangeCurrencyReceiptVoucher}
-                  label="Select Item Currency"
-                  width="w-40"
-                />
-              </div>
-              {messageIsPricePaid && (
-                <div className=" ">
-                  <p
-                    className={` text-sm font-medium ${
-                      messageIsPricePaid === "Thank you for paying"
-                        ? "text-green-600 bg-green-100 p-2 rounded-md"
-                        : "text-yellow-600 bg-yellow-100 p-2 rounded-md"
-                    }`}
-                  >
-                    {messageIsPricePaid}
-                  </p>
+                  <DropDown
+                    options={currencies}
+                    option={currencyReceiptVoucher}
+                    handleChangeOption={handleChangeCurrencyReceiptVoucher}
+                    label="Select Item Currency"
+                    width="w-40"
+                  />
                 </div>
-              )}
-
-              {(paymentMethods?.[1]?.isChecked ||
-                paymentMethods?.[3]?.isChecked) && (
-                <div className="border p-5 grid gap-5">
-                  <h1 className="text-2xl font-semibold ml-2">Cash</h1>
-                  <div className="center-v">
-                    <Input
-                      key={"cash"}
-                      name={"Price"}
-                      value={cash || ""} // Ensure value is never null
-                      handleChange={(e) =>
-                        setCash(parseFloat(e.target.value) || 0)
-                      }
-                      label={"Cash"}
-                      width="w-40"
-                    />
-                  </div>
-                </div>
-              )}
-
-              {(paymentMethods?.[2]?.isChecked ||
-                paymentMethods?.[3]?.isChecked) && (
-                <div className=" p-5 border grid gap-5">
-                  <div className="flex-center-v-space-between">
-                    <h1 className="text-2xl font-semibold ml-2">Cheque</h1>
-                    <button
-                      className="bg-green-600 text-white w-10 h-10 rounded-full flex-vx-center relative group"
-                      type="button"
-                      onClick={addCheque}
+                {messageIsPricePaid && (
+                  <div className=" ">
+                    <p
+                      className={` text-sm font-medium ${
+                        messageIsPricePaid === "Thank you for paying"
+                          ? "text-green-600 bg-green-100 p-2 rounded-md"
+                          : "text-yellow-600 bg-yellow-100 p-2 rounded-md"
+                      }`}
                     >
-                      <AddIcon />
-                      {/* Tooltip */}
-                      <span className="absolute -top-11 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-lg rounded-md px-4 py-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">
-                        Add Cheque
-                      </span>
-                    </button>
+                      {messageIsPricePaid}
+                    </p>
                   </div>
+                )}
 
-                  {cheques.map((cheque, index) => {
-                    return (
-                      <div className="grid grid-cols-8 items-center justify-items-center ">
-                        <Input
-                          key={"bank_name"}
-                          name={"bank_name"}
-                          value={cheque.bank_name || ""} // Ensure value is never null
-                          handleChange={(e) => handleChangeBankName(e, index)}
-                          label={"Bank name"}
-                          width="w-48"
-                        />
-                        <Input
-                          key={"cheque_no"}
-                          name={"cheque_no"}
-                          value={cheque.cheque_no || ""} // Ensure value is never null
-                          handleChange={(e) => handleChangeChequeNo(e, index)}
-                          label={"Cheque NO"}
-                          width="w-40"
-                        />
-                        <Input
-                          key={"bank_no"}
-                          name={"bank_no"}
-                          value={cheque.bank_no || ""} // Ensure value is never null
-                          handleChange={(e) => handleChangeBankNo(e, index)}
-                          label={"Bank NO"}
-                          width="w-40"
-                        />
-                        <Input
-                          key={"branch_no"}
-                          name={"branch_no"}
-                          value={cheque.branch_no || ""} // Ensure value is never null
-                          handleChange={(e) => handleChangeBranchNo(e, index)}
-                          label={"Branch NO"}
-                          width="w-40"
-                        />
-                        <Input
-                          key="cheque_amount"
-                          name="Price"
-                          value={cheque.cheque_amount || ""}
-                          handleChange={(e) =>
-                            handleChangeChequeAmount(e, index)
-                          }
-                          label="Cheque amount"
-                          width="w-40"
-                        />
-                        <div className="flex flex-col items-start ">
-                          <label className="text-gray-700 font-medium">
-                            Select Date:
-                          </label>
-                          <DatePicker
-                            id="custom-datepicker"
-                            selected={cheque.date}
-                            onChange={(date) =>
-                              handleChangeChequeDate(date, index)
-                            }
-                            className="w-40 border border-gray-300 rounded-lg px-4 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                {(paymentMethods?.[1]?.isChecked ||
+                  paymentMethods?.[3]?.isChecked) && (
+                  <div className="border p-5 grid gap-5">
+                    <h1 className="text-2xl font-semibold ml-2">Cash</h1>
+                    <div className="center-v">
+                      <Input
+                        key={"cash"}
+                        name={"Price"}
+                        value={cash || ""} // Ensure value is never null
+                        handleChange={(e) =>
+                          setCash(parseFloat(e.target.value) || 0)
+                        }
+                        label={"Cash"}
+                        width="w-40"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {(paymentMethods?.[2]?.isChecked ||
+                  paymentMethods?.[3]?.isChecked) && (
+                  <div className=" p-5 border grid gap-5">
+                    <div className="flex-center-v-space-between">
+                      <h1 className="text-2xl font-semibold ml-2">Cheque</h1>
+                      <button
+                        className="bg-green-600 text-white w-10 h-10 rounded-full flex-vx-center relative group"
+                        type="button"
+                        onClick={addCheque}
+                      >
+                        <AddIcon />
+                        {/* Tooltip */}
+                        <span className="absolute -top-11 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-lg rounded-md px-4 py-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">
+                          Add Cheque
+                        </span>
+                      </button>
+                    </div>
+
+                    {cheques.map((cheque, index) => {
+                      return (
+                        <div className="grid grid-cols-8 items-center justify-items-center ">
+                          <Input
+                            key={"bank_name"}
+                            name={"bank_name"}
+                            value={cheque.bank_name || ""} // Ensure value is never null
+                            handleChange={(e) => handleChangeBankName(e, index)}
+                            label={"Bank name"}
+                            width="w-48"
                           />
+                          <Input
+                            key={"cheque_no"}
+                            name={"cheque_no"}
+                            value={cheque.cheque_no || ""} // Ensure value is never null
+                            handleChange={(e) => handleChangeChequeNo(e, index)}
+                            label={"Cheque NO"}
+                            width="w-40"
+                          />
+                          <Input
+                            key={"bank_no"}
+                            name={"bank_no"}
+                            value={cheque.bank_no || ""} // Ensure value is never null
+                            handleChange={(e) => handleChangeBankNo(e, index)}
+                            label={"Bank NO"}
+                            width="w-40"
+                          />
+                          <Input
+                            key={"branch_no"}
+                            name={"branch_no"}
+                            value={cheque.branch_no || ""} // Ensure value is never null
+                            handleChange={(e) => handleChangeBranchNo(e, index)}
+                            label={"Branch NO"}
+                            width="w-40"
+                          />
+                          <Input
+                            key="cheque_amount"
+                            name="Price"
+                            value={cheque.cheque_amount || ""}
+                            handleChange={(e) =>
+                              handleChangeChequeAmount(e, index)
+                            }
+                            label="Cheque amount"
+                            width="w-40"
+                          />
+                          <div className="flex flex-col items-start ">
+                            <label className="text-gray-700 font-medium">
+                              Select Date:
+                            </label>
+                            <DatePicker
+                              id="custom-datepicker"
+                              selected={cheque.date}
+                              onChange={(date) =>
+                                handleChangeChequeDate(date, index)
+                              }
+                              className="w-40 border border-gray-300 rounded-lg px-4 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                          </div>
+                          <FileInput
+                            setFile={(file) =>
+                              handleChequeImageChange(file, index)
+                            } // ✅ Correctly pass index
+                            file={{ urlFile: cheque.cheque_image }}
+                            name="Choose Cheque Image"
+                            index={index} // ✅ Explicitly pass the index
+                          />
+
+                          <button
+                            className="relative group w-10 h-10 flex-vx-center"
+                            onClick={() => deleteCheque(index)}
+                          >
+                            <DeleteIcon />
+
+                            {/* Tooltip */}
+                            <span className="absolute -top-11 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-lg rounded-md px-4 py-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">
+                              Delete Cheque
+                            </span>
+                          </button>
                         </div>
-                        <FileInput
-                          setFile={(file) =>
-                            handleChequeImageChange(file, index)
-                          } // ✅ Correctly pass index
-                          file={{ urlFile: cheque.cheque_image }}
-                          name="Choose Cheque Image"
-                          index={index} // ✅ Explicitly pass the index
-                        />
-
-                        <button
-                          className="relative group w-10 h-10 flex-vx-center"
-                          onClick={() => deleteCheque(index)}
-                        >
-                          <DeleteIcon />
-
-                          {/* Tooltip */}
-                          <span className="absolute -top-11 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-lg rounded-md px-4 py-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">
-                            Delete Cheque
-                          </span>
-                        </button>
-                      </div>
-                    );
-                  })}
-                  <div className="  flex-center-v-end-x">
-                    <Input
-                      key={"total_cheque"}
-                      name={"Price"}
-                      value={totalCheque || ""}
-                      label={"Total cheque "}
-                      width="w-40"
-                      readOnly={true}
-                    />
+                      );
+                    })}
+                    <div className="  flex-center-v-end-x">
+                      <Input
+                        key={"total_cheque"}
+                        name={"Price"}
+                        value={totalCheque || ""}
+                        label={"Total cheque "}
+                        width="w-40"
+                        readOnly={true}
+                      />
+                    </div>
                   </div>
-                </div>
-              )}
-              {paymentMethods?.[3]?.isChecked && (
-                <Input
-                  key={"total_cash_cheque"}
-                  name={"Price"}
-                  value={totalCashAndCheque || ""}
-                  label={"Total cash and cheque "}
-                  width="w-48"
-                  readOnly={true}
-                />
-              )}
-              {paymentMethods?.[4]?.isChecked && (
-                <div className="px-10 grid gap-5">
-                  <h1 className="text-2xl font-semibold ml-2">Bank</h1>
-                  <div className="grid-5-cols-center-vx gap-10 ">
-                    <Input
-                      key={"from_bank_name"}
-                      name={"from_bank_name"}
-                      value={fromBankName || ""} // Ensure value is never null
-                      handleChange={(e) =>
-                        setFromBankName(e.target.value || "")
-                      }
-                      label={"From bank name"}
-                      width="w-48"
-                    />
+                )}
+                {paymentMethods?.[3]?.isChecked && (
+                  <Input
+                    key={"total_cash_cheque"}
+                    name={"Price"}
+                    value={totalCashAndCheque || ""}
+                    label={"Total cash and cheque "}
+                    width="w-48"
+                    readOnly={true}
+                  />
+                )}
+                {paymentMethods?.[4]?.isChecked && (
+                  <div className="px-10 grid gap-5">
+                    <h1 className="text-2xl font-semibold ml-2">Bank</h1>
+                    <div className="grid-5-cols-center-vx gap-10 ">
+                      <Input
+                        key={"from_bank_name"}
+                        name={"from_bank_name"}
+                        value={fromBankName || ""} // Ensure value is never null
+                        handleChange={(e) =>
+                          setFromBankName(e.target.value || "")
+                        }
+                        label={"From bank name"}
+                        width="w-48"
+                      />
 
-                    <Input
-                      key={"bank_transfer_no"}
-                      name={"bank_no"}
-                      value={bankTransferNO || ""} // Ensure value is never null
-                      handleChange={(e) =>
-                        setBankTransferNO(parseFloat(e.target.value) || 0)
-                      }
-                      label={"Bank transfer NO"}
-                      width="w-40"
-                    />
-                    <Input
-                      key={"transfer value"}
-                      name={"Price"}
-                      value={transferValue || ""} // Ensure value is never null
-                      handleChange={(e) =>
-                        setTransferValue(parseFloat(e.target.value) || 0)
-                      }
-                      label={"Transfer value"}
-                      width="w-40"
-                    />
+                      <Input
+                        key={"bank_transfer_no"}
+                        name={"bank_no"}
+                        value={bankTransferNO || ""} // Ensure value is never null
+                        handleChange={(e) =>
+                          setBankTransferNO(parseFloat(e.target.value) || 0)
+                        }
+                        label={"Bank transfer NO"}
+                        width="w-40"
+                      />
+                      <Input
+                        key={"transfer value"}
+                        name={"Price"}
+                        value={transferValue || ""} // Ensure value is never null
+                        handleChange={(e) =>
+                          setTransferValue(parseFloat(e.target.value) || 0)
+                        }
+                        label={"Transfer value"}
+                        width="w-40"
+                      />
+                    </div>
                   </div>
-                </div>
-              )}
-              <div className=" ">
-                <Input
-                  key="total_price_in_words"
-                  name="total_price_in_words"
-                  value={totalAmountInWords || ""}
-                  label="Total Amount in Words"
-                  readOnly
-                  width="w-80"
-                />
-              </div>
-              <Input
-                key="note"
-                name="note"
-                value={note || ""}
-                handleChange={handleChangeNote}
-                label="Note"
-                width="w-full"
-              />
-              <div className="grid-2-cols-center-vx">
-                <div className="w-50rem">
-                  <p className="text-lg font-medium center-x">
-                    Enter Your Signature
-                  </p>
-                  <Signature
-                    setSignature={setSignatureReceiptVoucher}
-                    signature={signatureReceiptVoucher}
+                )}
+                <div className=" ">
+                  <Input
+                    key="total_price_in_words"
+                    name="total_price_in_words"
+                    value={totalAmountInWords || ""}
+                    label="Total Amount in Words"
+                    readOnly
+                    width="w-80"
                   />
                 </div>
-
-                <div className="border">
-                  {signatureReceiptVoucher?.urlSign ||
-                  signatureReceiptVoucher?.urlFile ? (
-                    <img
-                      src={
-                        signatureReceiptVoucher?.urlFile ||
-                        signatureReceiptVoucher?.urlSign
-                      }
-                      alt="Signature"
-                      className="w-[18rem] h-[9rem]"
+                <Input
+                  key="note"
+                  name="note"
+                  value={note || ""}
+                  handleChange={handleChangeNote}
+                  label="Note"
+                  width="w-full"
+                />
+                <div className="grid-2-cols-center-vx">
+                  <div className="w-50rem">
+                    <p className="text-lg font-medium center-x">
+                      Enter Your Signature
+                    </p>
+                    <Signature
+                      setSignature={setSignatureReceiptVoucher}
+                      signature={signatureReceiptVoucher}
                     />
-                  ) : (
-                    "Receipt Voucher Signature"
-                  )}
-                </div>
-
-                <div className="w-full flex-vx-center flex-col">
-                  <div className="font-semibold text-xl tracking-[0.2rem]">
-                    OR
                   </div>
-                  <FileInput
-                    setFile={setSignatureReceiptVoucher}
-                    file={signatureReceiptVoucher}
-                    name="Choose Signature Image"
-                  />
+
+                  <div className="border">
+                    {signatureReceiptVoucher?.urlSign ||
+                    signatureReceiptVoucher?.urlFile ? (
+                      <img
+                        src={
+                          signatureReceiptVoucher?.urlFile ||
+                          signatureReceiptVoucher?.urlSign
+                        }
+                        alt="Signature"
+                        className="w-[18rem] h-[9rem]"
+                      />
+                    ) : (
+                      "Receipt Voucher Signature"
+                    )}
+                  </div>
+
+                  <div className="w-full flex-vx-center flex-col">
+                    <div className="font-semibold text-xl tracking-[0.2rem]">
+                      OR
+                    </div>
+                    <FileInput
+                      setFile={setSignatureReceiptVoucher}
+                      file={signatureReceiptVoucher}
+                      name="Choose Signature Image"
+                    />
+                  </div>
                 </div>
               </div>
+            </div>
+          )}
+        </section>
+
+        <section className="border rounded-[20px] p-10 grid gap-10">
+          <button
+            type="submit"
+            class="w-40 px-4 py-2 bg-green-600 text-white text-xl font-semibold rounded-md hover:bg-green-500 active:bg-green-700 focus:outline-none transition duration-300 ease-in-out"
+          >
+            Save First
+          </button>
+        </section>
+        {(isCreatingCustomer || isCreatingCustomerReceiptVoucher) && (
+          <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg shadow-lg p-6 border w-full max-w-[60rem]">
+              <div className="flex-center-v-space-between mb-[1.6rem]">
+                <h1 className="text-3xl font-bold">Create Customer</h1>
+                <button
+                  onClick={() => {
+                    const resetCustomerData =
+                      customers.find((item) => item.id === null) ||
+                      customers[0];
+
+                    if (isCreatingCustomer) {
+                      setCustomer(resetCustomerData);
+                      // formik.setFieldValue(
+                      //   "customer",
+                      //   resetCustomerData || customers[0]
+                      // );
+                      setIsCreatingCustomer(false);
+                    }
+                    if (isCreatingCustomerReceiptVoucher) {
+                      setCustomerReceiptVoucher(resetCustomerData);
+                      setIsCreatingCustomerReceiptVoucher(false);
+                    }
+                  }}
+                  className="text-3xl font-bold text-gray-600 hover:text-red-600"
+                >
+                  &times;
+                </button>
+              </div>
+
+              <CreateCustomer />
             </div>
           </div>
         )}
-      </section>
 
-      <section className="border rounded-[20px] p-10 grid gap-10">
-        <button
-          type="submit"
-          class="w-40 px-4 py-2 bg-green-600 text-white text-xl font-semibold rounded-md hover:bg-green-500 active:bg-green-700 focus:outline-none transition duration-300 ease-in-out"
-        >
-          Save First
-        </button>
-      </section>
-      {(isCreatingCustomer || isCreatingCustomerReceiptVoucher) && (
-        <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-lg p-6 border w-full max-w-[60rem]">
-            <div className="flex-center-v-space-between mb-[1.6rem]">
-              <h1 className="text-3xl font-bold">Create Customer</h1>
-              <button
-                onClick={() => {
-                  const resetCustomerData =
-                    customers.find((item) => item.id === null) || customers[0];
+        {isCreatingItem && (
+          <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center z-50 ">
+            <div className=" bg-white rounded-lg shadow-lg py-10 px-6 border w-full max-w-[60rem]">
+              <div className="flex-center-v-space-between mb-[1.6rem]">
+                <h1 className="text-3xl font-bold ">Create Item</h1>
 
-                  if (isCreatingCustomer) {
-                    setCustomer(resetCustomerData);
-                    // formik.setFieldValue(
-                    //   "customer",
-                    //   resetCustomerData || customers[0]
-                    // );
-                    setIsCreatingCustomer(false);
-                  }
-                  if (isCreatingCustomerReceiptVoucher) {
-                    setCustomerReceiptVoucher(resetCustomerData);
-                    setIsCreatingCustomerReceiptVoucher(false);
-                  }
-                }}
-                className="text-3xl font-bold text-gray-600 hover:text-red-600"
-              >
-                &times;
-              </button>
-            </div>
+                <button
+                  onClick={() => {
+                    if (selectedItemIndex !== null) {
+                      setInvoiceItems((prevInvoiceItems) => {
+                        // Create a completely new array to trigger re-render
+                        const updatedInvoiceItems = prevInvoiceItems.map(
+                          (item, index) =>
+                            index === selectedItemIndex
+                              ? {
+                                  ...item,
+                                  item: {
+                                    ...(items.find(
+                                      (item) => item.id === null
+                                    ) || items[0]),
+                                  }, // Create a new object reference
 
-            <CreateCustomer />
-          </div>
-        </div>
-      )}
-
-      {isCreatingItem && (
-        <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center z-50 ">
-          <div className=" bg-white rounded-lg shadow-lg py-10 px-6 border w-full max-w-[60rem]">
-            <div className="flex-center-v-space-between mb-[1.6rem]">
-              <h1 className="text-3xl font-bold ">Create Item</h1>
-
-              <button
-                onClick={() => {
-                  if (selectedItemIndex !== null) {
-                    setInvoiceItems((prevInvoiceItems) => {
-                      // Create a completely new array to trigger re-render
-                      const updatedInvoiceItems = prevInvoiceItems.map(
-                        (item, index) =>
-                          index === selectedItemIndex
-                            ? {
-                                ...item,
-                                item: {
-                                  ...(items.find((item) => item.id === null) ||
-                                    items[0]),
-                                }, // Create a new object reference
-
-                                itemPrice: (
-                                  items.find((item) => item.id === null) ||
-                                  items[0]
-                                ).price,
-                                itemCurrency: (
-                                  items.find((item) => item.id === null) ||
-                                  items[0]
-                                ).currency,
-                                totalPriceItem:
-                                  ((
+                                  itemPrice: (
                                     items.find((item) => item.id === null) ||
                                     items[0]
-                                  ).price || 0) * (item.itemQuantity || 0), // Use selectedOption.price
-                              }
-                            : item
-                      );
-                      return [...updatedInvoiceItems]; // Ensures React detects the change
-                    });
-                  }
-                  setIsCreatingItem(false);
-                  setSelectedItemIndex(null);
-                }}
-                className="text-3xl font-bold text-gray-600 hover:text-red-600"
-              >
-                &times;
-              </button>
-            </div>
+                                  ).price,
+                                  itemCurrency: (
+                                    items.find((item) => item.id === null) ||
+                                    items[0]
+                                  ).currency,
+                                  totalPriceItem:
+                                    ((
+                                      items.find((item) => item.id === null) ||
+                                      items[0]
+                                    ).price || 0) * (item.itemQuantity || 0), // Use selectedOption.price
+                                }
+                              : item
+                        );
+                        return [...updatedInvoiceItems]; // Ensures React detects the change
+                      });
+                    }
+                    setIsCreatingItem(false);
+                    setSelectedItemIndex(null);
+                  }}
+                  className="text-3xl font-bold text-gray-600 hover:text-red-600"
+                >
+                  &times;
+                </button>
+              </div>
 
-            <CreateItem />
+              <CreateItem />
+            </div>
           </div>
-        </div>
-      )}
-    </form>
+        )}
+      </form>
+    </>
   );
 };
 

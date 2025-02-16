@@ -134,6 +134,13 @@ const Signature = (props) => {
     }));
   };
 
+  useEffect(() => {
+    if (props?.clearButt) {
+      handleClear();
+      props.setClearButt(!props.clearButt);
+    }
+  }, [props?.clearButt]);
+
   return (
     <>
       <canvas
