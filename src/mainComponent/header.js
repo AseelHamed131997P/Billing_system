@@ -44,7 +44,8 @@ const Header = () => {
   };
 
   return (
-    <header className=" bg-[#f5f5f5] h-24 flex-center-v-space-between px-10">
+    // <header className=" bg-[#f5f5f5] h-24 flex-center-v-space-between px-10">
+    <header className="bg-white h-24 flex-center-v-space-between px-10 ">
       <img src={Agile} alt="logo" className="h-24  " />
       <ul className="center-v gap-10 [&>li>a]:text-2xl [&>li>a]:font-medium [&>li>a:hover]:text-blue-700 [&>li>a]:transition-colors [&>li>a]:text-black">
         <li>

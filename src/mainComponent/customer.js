@@ -108,6 +108,140 @@ const Customer = () => {
   ];
 
   const [data, setData] = useState(initialData);
+  const [globalFilter, setGlobalFilter] = useState("");
+  const [editingRowId, setEditingRowId] = useState(null);
+  const [editingValues, setEditingValues] = useState({});
+
+  function RowActions({ isEditing, onEdit, onCancel, onSave, onDelete }) {
+    return (
+      <div className="flex gap-2">
+        {isEditing ? (
+          <>
+            <button
+              onClick={onSave}
+              className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+            >
+              Save
+            </button>
+            <button
+              onClick={onCancel}
+              className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
+            >
+              Cancel
+            </button>
+          </>
+        ) : (
+          <>
+            <button
+              onClick={onEdit}
+              className="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600"
+            >
+              Edit
+            </button>
+            <button
+              onClick={onDelete}
+              className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+            >
+              Delete
+            </button>
+          </>
+        )}
+      </div>
+    );
+  }
+  const columns = [
+    {
+      header: "Actions",
+      cell: ({ row }) => {
+        const isEditing = editingRowId === row.original.id;
+        return (
+          <RowActions
+            isEditing={isEditing}
+            onEdit={() => {
+              setEditingRowId(row.original.id);
+              setEditingValues({ ...row.original });
+            }}
+            onCancel={() => {
+              setEditingRowId(null);
+              setEditingValues({});
+            }}
+            onSave={() => {
+              const updatedData = data.map((item) =>
+                item.id === editingRowId ? { ...item, ...editingValues } : item
+              );
+              setData(updatedData);
+              setEditingRowId(null);
+              setEditingValues({});
+            }}
+            onDelete={() => {
+              setData((prevData) =>
+                prevData.filter((item) => item.id !== row.original.id)
+              );
+            }}
+          />
+        );
+      },
+      id: "actions",
+      enableColumnFilter: false,
+      enableSorting: false,
+    },
+    {
+      accessorKey: "name_en",
+      header: "Name in english ",
+      cell: (info) => info.getValue(),
+      enableColumnFilter: true,
+      enableSorting: true,
+    },
+    {
+      accessorKey: "name_he",
+      header: "Name in hebrew",
+      cell: (info) => info.getValue(),
+      enableColumnFilter: true,
+      enableSorting: true,
+    },
+    {
+      accessorKey: "name_ar",
+      header: "Name in arabic",
+      cell: (info) => info.getValue(),
+      enableColumnFilter: true,
+      enableSorting: true,
+    },
+    {
+      accessorKey: "email",
+      header: "Email",
+      cell: (info) => info.getValue(),
+      enableColumnFilter: true,
+      enableSorting: true,
+    },
+    {
+      accessorKey: "mobile_no",
+      header: "Mobile NO",
+      cell: (info) => info.getValue(),
+      enableColumnFilter: true,
+      enableSorting: true,
+    },
+    {
+      accessorKey: "city",
+      header: "City",
+      cell: (info) => info.getValue(),
+      enableColumnFilter: true,
+      enableSorting: true,
+    },
+    {
+      accessorKey: "full_address",
+      header: "Full address",
+      cell: (info) => info.getValue(),
+      enableColumnFilter: true,
+      enableSorting: true,
+    },
+    {
+      accessorKey: "VAT_NO",
+      header: "VAT NO",
+      cell: (info) => info.getValue(),
+      enableColumnFilter: true,
+      enableSorting: true,
+    },
+  ];
 
   return (
     <>
@@ -125,7 +259,7 @@ const Customer = () => {
                   handleChangeOption={handleChangeOption}
                   label={"select customer company type"}
                 />
-                <NumberValue label="Customer" num="001" />
+                <NumberValue label="Customer" num="00001" />
               </div>
               <h1 className="text-2xl font-semibold">Customer</h1>
               <section className=" grid-3-cols-center-v gap-10 ">
@@ -152,16 +286,33 @@ const Customer = () => {
                     className="btn py-2 px-4 w-64"
                     type="button"
                     onClick={(e) => {
-                      // e.preventDefault();
+                      // Update the data state
                       setData((prevData) => [
                         ...prevData,
                         {
                           id: prevData.length + 1,
-                          name: "New",
-                          age: 0,
-                          city: "Unknown",
+                          name_en: customerInfo.Name_In_English,
+                          name_he: customerInfo.Name_In_Hebrew,
+                          name_ar: customerInfo.Name_In_Arabic,
+                          email: customerInfo.Email,
+                          mobile_no: customerInfo.Mobile_NO,
+                          city: customerInfo.City,
+                          full_address: customerInfo.Full_Address,
+                          VAT_NO: customerInfo.VAT_NO,
                         },
                       ]);
+
+                      // Reset the customerInfo state
+                      setCustomerInfo({
+                        Name_In_Arabic: "",
+                        Name_In_English: "",
+                        Name_In_Hebrew: "",
+                        Email: "",
+                        Mobile_NO: "",
+                        Full_Address: "",
+                        City: "",
+                        VAT_NO: "",
+                      });
                     }}
                   >
                     Create Customer
@@ -172,7 +323,17 @@ const Customer = () => {
           </section>
           <section className="box-section">
             <div>
-              <Table data={data} setData={setData} />
+              <Table
+                data={data}
+                setData={setData}
+                columns={columns}
+                globalFilter={globalFilter}
+                setGlobalFilter={setGlobalFilter}
+                editingRowId={editingRowId}
+                setEditingRowId={setEditingRowId}
+                editingValues={editingValues}
+                setEditingValues={setEditingValues}
+              />
             </div>
           </section>
         </div>

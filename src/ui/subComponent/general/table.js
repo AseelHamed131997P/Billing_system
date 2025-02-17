@@ -8,46 +8,19 @@ import {
   flexRender,
 } from "@tanstack/react-table";
 import "./table.css";
+import SearchIcon from "../../../svgs/searchIcon.js";
 
-function RowActions({ isEditing, onEdit, onCancel, onSave, onDelete }) {
-  return (
-    <div className="flex gap-2">
-      {isEditing ? (
-        <>
-          <button
-            onClick={onSave}
-            className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
-          >
-            Save
-          </button>
-          <button
-            onClick={onCancel}
-            className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
-          >
-            Cancel
-          </button>
-        </>
-      ) : (
-        <>
-          <button
-            onClick={onEdit}
-            className="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600"
-          >
-            Edit
-          </button>
-          <button
-            onClick={onDelete}
-            className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
-          >
-            Delete
-          </button>
-        </>
-      )}
-    </div>
-  );
-}
-
-function Table({ data, setData }) {
+function Table({
+  data,
+  setData,
+  columns,
+  globalFilter,
+  setGlobalFilter,
+  editingRowId,
+  setEditingRowId,
+  editingValues,
+  setEditingValues,
+}) {
   // const initialData = [
   //   { id: 1, name: "Alice", age: 25, city: "New York" },
   //   { id: 2, name: "Bob", age: 30, city: "Los Angeles" },
@@ -55,110 +28,6 @@ function Table({ data, setData }) {
   // ];
 
   // const [data, setData] = useState(initialData);
-  const [globalFilter, setGlobalFilter] = useState("");
-  const [editingRowId, setEditingRowId] = useState(null);
-  const [editingValues, setEditingValues] = useState({});
-
-  const columns = [
-    {
-      header: "Actions",
-      cell: ({ row }) => {
-        const isEditing = editingRowId === row.original.id;
-        return (
-          <RowActions
-            isEditing={isEditing}
-            onEdit={() => {
-              setEditingRowId(row.original.id);
-              setEditingValues({ ...row.original });
-            }}
-            onCancel={() => {
-              setEditingRowId(null);
-              setEditingValues({});
-            }}
-            onSave={() => {
-              const updatedData = data.map((item) =>
-                item.id === editingRowId ? { ...item, ...editingValues } : item
-              );
-              setData(updatedData);
-              setEditingRowId(null);
-              setEditingValues({});
-            }}
-            onDelete={() => {
-              setData((prevData) =>
-                prevData.filter((item) => item.id !== row.original.id)
-              );
-            }}
-          />
-        );
-      },
-      id: "actions",
-      enableColumnFilter: false,
-      enableSorting: false,
-    },
-    {
-      accessorKey: "name_en",
-      header: "Name in english ",
-      cell: (info) => info.getValue(),
-      enableColumnFilter: true,
-      enableSorting: true,
-    },
-    {
-      accessorKey: "name_he",
-      header: "Name in hebrew",
-      cell: (info) => info.getValue(),
-      enableColumnFilter: true,
-      enableSorting: true,
-    },
-    {
-      accessorKey: "name_ar",
-      header: "Name in arabic",
-      cell: (info) => info.getValue(),
-      enableColumnFilter: true,
-      enableSorting: true,
-    },
-    {
-      accessorKey: "email",
-      header: "Email",
-      cell: (info) => info.getValue(),
-      enableColumnFilter: true,
-      enableSorting: true,
-    },
-    {
-      accessorKey: "mobile_no",
-      header: "Mobile NO",
-      cell: (info) => info.getValue(),
-      enableColumnFilter: true,
-      enableSorting: true,
-    },
-    {
-      accessorKey: "city",
-      header: "City",
-      cell: (info) => info.getValue(),
-      enableColumnFilter: true,
-      enableSorting: true,
-    },
-    {
-      accessorKey: "full_address",
-      header: "Full address",
-      cell: (info) => info.getValue(),
-      enableColumnFilter: true,
-      enableSorting: true,
-    },
-    {
-      accessorKey: "VAT_NO",
-      header: "VAT NO",
-      cell: (info) => info.getValue(),
-      enableColumnFilter: true,
-      enableSorting: true,
-    },
-    {
-      accessorKey: "ID_NO",
-      header: "ID NO",
-      cell: (info) => info.getValue(),
-      enableColumnFilter: true,
-      enableSorting: true,
-    },
-  ];
 
   const table = useReactTable({
     data,
@@ -175,24 +44,19 @@ function Table({ data, setData }) {
 
   return (
     <div className="p-10 ">
-      <div className="flex justify-between mb-4">
-        {/* <button
-          onClick={() =>
-            setData((prevData) => [
-              ...prevData,
-              { id: prevData.length + 1, name: "New", age: 0, city: "Unknown" },
-            ])
-          }
-          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-        >
-          Add Row
-        </button> */}
-        <input
-          value={globalFilter || ""}
-          onChange={(e) => setGlobalFilter(e.target.value)}
-          placeholder="Search..."
-          className="border p-2 rounded"
-        />
+      {/* Search Input with Icon */}
+      <div className="flex justify-end mb-4">
+        <div className="relative">
+          <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
+            <SearchIcon />
+          </span>
+          <input
+            value={globalFilter || ""}
+            onChange={(e) => setGlobalFilter(e.target.value)}
+            placeholder="Search customers..."
+            className="border-2 p-4 pl-10 rounded border-gray-500 focus:outline-none focus:border-2  focus:border-blue-400"
+          />
+        </div>
       </div>
       <div className="overflow-x-auto">
         <table className="table-fixed min-w-full border-collapse">
