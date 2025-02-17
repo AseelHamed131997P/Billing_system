@@ -61,27 +61,6 @@ function Table({ data, setData }) {
 
   const columns = [
     {
-      accessorKey: "name",
-      header: "Name",
-      cell: (info) => info.getValue(),
-      enableColumnFilter: true,
-      enableSorting: true,
-    },
-    {
-      accessorKey: "age",
-      header: "Age",
-      cell: (info) => info.getValue(),
-      enableColumnFilter: true,
-      enableSorting: true,
-    },
-    {
-      accessorKey: "city",
-      header: "City",
-      cell: (info) => info.getValue(),
-      enableColumnFilter: true,
-      enableSorting: true,
-    },
-    {
       header: "Actions",
       cell: ({ row }) => {
         const isEditing = editingRowId === row.original.id;
@@ -116,6 +95,69 @@ function Table({ data, setData }) {
       enableColumnFilter: false,
       enableSorting: false,
     },
+    {
+      accessorKey: "name_en",
+      header: "Name in english ",
+      cell: (info) => info.getValue(),
+      enableColumnFilter: true,
+      enableSorting: true,
+    },
+    {
+      accessorKey: "name_he",
+      header: "Name in hebrew",
+      cell: (info) => info.getValue(),
+      enableColumnFilter: true,
+      enableSorting: true,
+    },
+    {
+      accessorKey: "name_ar",
+      header: "Name in arabic",
+      cell: (info) => info.getValue(),
+      enableColumnFilter: true,
+      enableSorting: true,
+    },
+    {
+      accessorKey: "email",
+      header: "Email",
+      cell: (info) => info.getValue(),
+      enableColumnFilter: true,
+      enableSorting: true,
+    },
+    {
+      accessorKey: "mobile_no",
+      header: "Mobile NO",
+      cell: (info) => info.getValue(),
+      enableColumnFilter: true,
+      enableSorting: true,
+    },
+    {
+      accessorKey: "city",
+      header: "City",
+      cell: (info) => info.getValue(),
+      enableColumnFilter: true,
+      enableSorting: true,
+    },
+    {
+      accessorKey: "full_address",
+      header: "Full address",
+      cell: (info) => info.getValue(),
+      enableColumnFilter: true,
+      enableSorting: true,
+    },
+    {
+      accessorKey: "VAT_NO",
+      header: "VAT NO",
+      cell: (info) => info.getValue(),
+      enableColumnFilter: true,
+      enableSorting: true,
+    },
+    {
+      accessorKey: "ID_NO",
+      header: "ID NO",
+      cell: (info) => info.getValue(),
+      enableColumnFilter: true,
+      enableSorting: true,
+    },
   ];
 
   const table = useReactTable({
@@ -132,9 +174,9 @@ function Table({ data, setData }) {
   });
 
   return (
-    <div className="p-10">
+    <div className="p-10 ">
       <div className="flex justify-between mb-4">
-        <button
+        {/* <button
           onClick={() =>
             setData((prevData) => [
               ...prevData,
@@ -144,7 +186,7 @@ function Table({ data, setData }) {
           className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
         >
           Add Row
-        </button>
+        </button> */}
         <input
           value={globalFilter || ""}
           onChange={(e) => setGlobalFilter(e.target.value)}
@@ -152,8 +194,8 @@ function Table({ data, setData }) {
           className="border p-2 rounded"
         />
       </div>
-      <div>
-        <table className="fixed-width-table">
+      <div className="overflow-x-auto">
+        <table className="table-fixed min-w-full border-collapse">
           <thead>
             {table.getHeaderGroups().map((headerGroup) => (
               <React.Fragment key={headerGroup.id}>
@@ -161,7 +203,8 @@ function Table({ data, setData }) {
                   {headerGroup.headers.map((header) => (
                     <th
                       key={header.id}
-                      className="border p-2 text-left cursor-pointer"
+                      className="border p-3 text-left cursor-pointer"
+                      style={{ width: `150px` }} // Set fixed width
                       onClick={header.column.getToggleSortingHandler()}
                     >
                       <div className="flex items-center">
@@ -186,7 +229,11 @@ function Table({ data, setData }) {
                 {/* Filter Row */}
                 <tr className="bg-gray-100">
                   {headerGroup.headers.map((header) => (
-                    <th key={header.id} className="border p-2 text-left">
+                    <th
+                      key={header.id}
+                      className="border p-3 text-left"
+                      style={{ width: `150px` }} // Set fixed width
+                    >
                       {header.column.getCanFilter() ? (
                         <input
                           value={header.column.getFilterValue() || ""}
@@ -208,7 +255,11 @@ function Table({ data, setData }) {
             {table.getRowModel().rows.map((row) => (
               <tr key={row.id}>
                 {row.getVisibleCells().map((cell) => (
-                  <td key={cell.id}>
+                  <td
+                    key={cell.id}
+                    className="border p-3 whitespace-normal break-words"
+                    style={{ width: `150px` }}
+                  >
                     {editingRowId === row.original.id &&
                     cell.column.id !== "actions" ? (
                       <input

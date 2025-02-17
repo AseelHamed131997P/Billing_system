@@ -1,36 +1,46 @@
 import React, { useState, useEffect } from "react";
 
-const FileInput = ({ setFile, file, name, index, clearButt, setClearButt }) => {
+const FileInput = ({
+  setFile,
+  file,
+  name,
+  label,
+  index,
+  clearButt,
+  setClearButt,
+  type,
+}) => {
   // ✅ Accept index as a prop
   const [selectedFile, setSelectedFile] = useState(null);
 
   // Handle file selection
   const handleFileChange = (event) => {
     const file = event.target.files[0];
+
     if (file) {
-      if (file.type === "image/png") {
-        setSelectedFile(file);
-
-        // Convert the image to Base64
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          if (typeof index !== "undefined") {
-            // ✅ If index is provided, pass it
-            setFile(reader.result, index);
-          } else {
-            // ✅ If index is NOT provided, update only urlFile (global state)
-            setFile((prevState) => ({
-              ...prevState, // Preserve existing state properties
-              urlFile: reader.result, // Update only urlFile
-            }));
-          }
-        };
-
-        reader.readAsDataURL(file);
-      } else {
+      // If type is `true`, restrict to PNG files only
+      if (type && file.type !== "image/png") {
         alert("Please select a PNG file.");
         setSelectedFile(null);
+        return;
       }
+
+      setSelectedFile(file);
+
+      // Convert the image to Base64
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        if (typeof index !== "undefined") {
+          setFile(reader.result, index);
+        } else {
+          setFile((prevState) => ({
+            ...prevState,
+            urlFile: reader.result, // Update only urlFile
+          }));
+        }
+      };
+
+      reader.readAsDataURL(file);
     }
   };
 
@@ -94,17 +104,10 @@ const FileInput = ({ setFile, file, name, index, clearButt, setClearButt }) => {
         {/* Display selected file name */}
 
         <span
-          className="text-gray-700 w-32 truncate block"
-          style={{
-            display: "inline-block",
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            whiteSpace: "nowrap",
-            cursor: "default", // Ensures the mouse pointer is an arrow
-          }}
-          title={selectedFile ? selectedFile.name : "No file chosen"}
+          className="text-gray-700 w-32 truncate inline-block overflow-hidden text-ellipsis whitespace-nowrap cursor-default"
+          title={selectedFile?.name || label || "No file chosen"}
         >
-          {selectedFile ? selectedFile.name : "No file chosen"}
+          {selectedFile?.name || label || "No file chosen"}
         </span>
 
         {/* Clear Button */}

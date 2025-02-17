@@ -63,10 +63,48 @@ const Customer = () => {
     "VAT NO",
   ];
 
+  // const initialData = [
+  //   { id: 1, name: "Alice", age: 25, city: "New York" },
+  //   { id: 2, name: "Bob", age: 30, city: "Los Angeles" },
+  //   { id: 3, name: "Charlie", age: 35, city: "Chicago" },
+  // ];
   const initialData = [
-    { id: 1, name: "Alice", age: 25, city: "New York" },
-    { id: 2, name: "Bob", age: 30, city: "Los Angeles" },
-    { id: 3, name: "Charlie", age: 35, city: "Chicago" },
+    {
+      id: 1,
+      name_en: "fadi",
+      name_he: "Agile",
+      name_ar: "Alice",
+      email: "a.hamed123@gmail.com",
+      mobile_no: "0567854321",
+      city: "New York",
+      full_address: "betunia_alhatu",
+      VAT_NO: 123343333,
+      ID_NO: 998764537,
+    },
+    {
+      id: 2,
+      name_en: "Agile",
+      name_he: "Agile",
+      name_ar: "Alice",
+      email: "a.hamed123@gmail.com",
+      mobile_no: "0567854321",
+      city: "Los Angeles",
+      full_address: "betunia_alhatu",
+      VAT_NO: 123343333,
+      ID_NO: 998764537,
+    },
+    {
+      id: 3,
+      name_en: "Agile",
+      name_he: "Agile",
+      name_ar: "Alice",
+      email: "a.hamed123@gmail.com",
+      mobile_no: "0567854321",
+      city: "Chicago",
+      full_address: "betunia_alhatu",
+      VAT_NO: 123343333,
+      ID_NO: 998764537,
+    },
   ];
 
   const [data, setData] = useState(initialData);
@@ -75,7 +113,7 @@ const Customer = () => {
     <>
       <Header />
       <main className="bg-[#f1f3f6] pt-[3.2rem] pb-[3.2rem]">
-        <div className="overflow-hidden bg-white rounded-[2rem] shadow-[rgba(17,17,26,0.05)_0px_1px_0px,_rgba(17,17,26,0.1)_0px_0px_8px] margin-auto max-w-[100rem]">
+        <div className="overflow-hidden bg-white rounded-[2rem] shadow-[rgba(17,17,26,0.05)_0px_1px_0px,_rgba(17,17,26,0.1)_0px_0px_8px] margin-auto max-w-[110rem]">
           <HeaderRegister />
           <section className="box-section center-x">
             <form className="register-form border p-10 rounded-[20px]">
@@ -107,7 +145,25 @@ const Customer = () => {
                 ))}
                 <div className="col-start-1 col-span-full place-self-center">
                   {" "}
-                  <button className="btn py-2 px-4 w-64" type="button">
+                  {/* <button className="btn py-2 px-4 w-64" type="button">
+                    Create Customer
+                  </button> */}
+                  <button
+                    className="btn py-2 px-4 w-64"
+                    type="button"
+                    onClick={(e) => {
+                      // e.preventDefault();
+                      setData((prevData) => [
+                        ...prevData,
+                        {
+                          id: prevData.length + 1,
+                          name: "New",
+                          age: 0,
+                          city: "Unknown",
+                        },
+                      ]);
+                    }}
+                  >
                     Create Customer
                   </button>
                 </div>

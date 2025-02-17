@@ -159,6 +159,10 @@ const AdminAndCompany = () => {
   const toggleModal = () => {
     setIsModalOpen(!isModalOpen);
   };
+
+  const [hasInvoicesPrintingPermission, setHasInvoicesPrintingPermission] =
+    useState(true);
+  const [agreed, setAgreed] = useState(false);
   const logoutSubmit = () => {
     dispatch({
       type: LOGOUT,
@@ -178,6 +182,7 @@ const AdminAndCompany = () => {
 
     navigate("/home"); // Navigate after updating state
   };
+
   return (
     <main className="bg-[#f1f3f6] pt-[3.2rem] pb-[3.2rem]">
       <div className="overflow-hidden bg-white rounded-[2rem] shadow-[rgba(17,17,26,0.05)_0px_1px_0px,_rgba(17,17,26,0.1)_0px_0px_8px] margin-auto max-w-[100rem]">
@@ -201,7 +206,7 @@ const AdminAndCompany = () => {
               </button>
             </div>
             <h1 className="text-2xl font-semibold">Admin</h1>
-            <section className="layout">
+            <section className="layout ">
               {Object.keys(adminInfo).map((key, index) => (
                 <Input
                   key={key}
@@ -245,23 +250,24 @@ const AdminAndCompany = () => {
                   setFile={setSignatureAdmin}
                   file={signatureAdmin}
                   name={"Choose Signature Image"}
+                  type={"PNG"}
                 />
               </div>
             </section>
             <div className="relative group inline-flex items-center">
-              <h1 className="text-2xl font-semibold">
-                Company{" "}
-                <span className="inline-flex relative">
+              <h1 className="text-2xl font-semibold flex items-center">
+                Company
+                <span className="inline-flex relative ml-2">
                   <QuestionIcon className="cursor-pointer" />
-                  {/* Tooltip Label */}
-                  <span className="absolute bottom-full mb-1 left-1/2 transform -translate-x-1/2 bg-gray-300 text-black text-lg px-3 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
+                  {/* Tooltip beside `?` */}
+                  <span className="absolute left-full ml-2 top-1/2 transform -translate-y-1/2 bg-gray-200 text-black text-lg px-3 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
                     Admin must be qualified to create company information
                   </span>
                 </span>
               </h1>
             </div>
 
-            <section className="layout">
+            <section className="layout max-w-[85rem] ">
               {Object.keys(companyInfo).map(
                 (key, index) =>
                   !(key === "VAT_NO" && option === "Simple User") && (
@@ -279,42 +285,79 @@ const AdminAndCompany = () => {
                   )
               )}
 
-              <div className=" col-start-1 col-span-full flex-vx-center gap-[1.2rem] px-[1.2rem]">
+              <div className=" center-v  space-x-5">
                 <Input
                   name="start"
                   value={deliveryNumber["start"]}
                   handleChange={handleChangeDeliveryNumber}
                   label={"Delivery NO start"}
                   width="w-40"
-                />{" "}
-                <span>_</span>
+                />
+                <span className=""> _ </span>
                 <Input
                   name="end"
                   value={deliveryNumber["end"]}
                   handleChange={handleChangeDeliveryNumber}
                   label={"Delivery NO end"}
-                  width="w-40 mr-[3.2rem]"
+                  width="w-40"
                 />
+              </div>
+              <div className="">
+                <CheckBox
+                  isChecked={hasInvoicesPrintingPermission}
+                  handleChange={(e) =>
+                    setHasInvoicesPrintingPermission(e.target.checked)
+                  }
+                  label="Has invoices printing permission"
+                />
+              </div>
+              <label className="text-lg col-start-2 col-span-2 max-w-[50rem] text-amber-600">
+                {hasInvoicesPrintingPermission
+                  ? "Please upload a photo of the invoice printing permission."
+                  : "Please attach the first image of the number that follows your most recent invoice, as well as the last image of the number from your most recent invoice book."}
+              </label>
+
+              <div className="col-start-1 col-span-full flex-vx-center  gap-[1.2rem]">
                 <Input
                   name="start"
                   value={invoiceNumber["start"]}
                   handleChange={handleChangeInvoiceNumber}
                   label={"Invoice NO start"}
                   width="w-40"
-                />{" "}
+                />
                 <span>_</span>
                 <Input
                   name="end"
                   value={invoiceNumber["end"]}
                   handleChange={handleChangeInvoiceNumber}
                   label={"Invoice NO end"}
-                  width="w-40 mr-[3.2rem]"
+                  width="w-40 "
                 />
-                <FileInput
-                  setFile={setInvoicePhoto}
-                  file={invoicePhoto}
-                  name={"upload invoice photo"}
-                />
+
+                {/* Conditional Rendering for File Inputs */}
+                {hasInvoicesPrintingPermission ? (
+                  <FileInput
+                    setFile={setInvoicePhoto}
+                    file={invoicePhoto}
+                    name={"Upload Invoice Photo"}
+                    label={"permission image"}
+                  />
+                ) : (
+                  <>
+                    <FileInput
+                      setFile={setInvoicePhoto}
+                      file={invoicePhoto}
+                      name={"Upload Invoice Photo"}
+                      label={"upload start number"}
+                    />
+                    <FileInput
+                      setFile={setInvoicePhoto}
+                      file={invoicePhoto}
+                      name={"Upload Invoice Photo"}
+                      label={"upload end number"}
+                    />
+                  </>
+                )}
               </div>
 
               <div className=" col-start-1 col-span-full flex-vx-center gap-[4.8rem]">
@@ -326,6 +369,7 @@ const AdminAndCompany = () => {
                     setFile={setCompanyLicense}
                     file={CompanyLicense}
                     name={"Choose Company License"}
+                    label={" upload logo"}
                   />
                 </div>
                 <div className="center-v">
@@ -336,6 +380,7 @@ const AdminAndCompany = () => {
                     setFile={setCompanyLogo}
                     file={companyLogo}
                     name={"Choose Company Logo"}
+                    label={" upload license paper"}
                   />
                 </div>
               </div>
@@ -374,10 +419,18 @@ const AdminAndCompany = () => {
                   setFile={setSignatureComp}
                   file={signatureComp}
                   name={"Choose Signature Image"}
+                  type={"PNG"}
                 />
               </div>
             </section>
-            <div className="flex-vx-center">
+
+            <CheckBox
+              isChecked={agreed}
+              handleChange={(e) => setAgreed(e.target.checked)}
+              label="I confirm that all the information entered is correct."
+            />
+
+            <div className="flex-vx-center mt-5">
               <button
                 className="btn py-2 px-4 w-64 mr-10"
                 type="button"

@@ -117,8 +117,11 @@
 }
 
 /* admin and company page */
+/* .layout {
+  @apply border rounded-[20px] grid grid-cols-3 gap-10 place-items-center w-full p-[1.8rem];
+} */
 .layout {
-  @apply border rounded-[20px] grid grid-cols-3 gap-10 place-items-center w-full py-[1.8rem];
+  @apply border rounded-[20px] grid grid-cols-3 gap-10 justify-items-start items-center w-full p-[1.8rem];
 }
 
 /* .signature-butt1 {

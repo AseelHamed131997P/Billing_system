@@ -40,3 +40,15 @@
 tr {
   height: 50px; /* Equal row height */
 }
+
+.table-fixed {
+  table-layout: fixed;
+  width: 100%;
+}
+
+.table-fixed th,
+.table-fixed td {
+  word-wrap: break-word;
+  white-space: normal;
+  overflow-wrap: break-word;
+}
