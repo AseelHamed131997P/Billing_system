@@ -182,63 +182,63 @@ const Customer = () => {
         );
       },
       id: "actions",
-      enableColumnFilter: false,
+
       enableSorting: false,
     },
     {
       accessorKey: "name_en",
       header: "Name in english ",
       cell: (info) => info.getValue(),
-      enableColumnFilter: true,
+
       enableSorting: true,
     },
     {
       accessorKey: "name_he",
       header: "Name in hebrew",
       cell: (info) => info.getValue(),
-      enableColumnFilter: true,
+
       enableSorting: true,
     },
     {
       accessorKey: "name_ar",
       header: "Name in arabic",
       cell: (info) => info.getValue(),
-      enableColumnFilter: true,
+
       enableSorting: true,
     },
     {
       accessorKey: "email",
       header: "Email",
       cell: (info) => info.getValue(),
-      enableColumnFilter: true,
+
       enableSorting: true,
     },
     {
       accessorKey: "mobile_no",
       header: "Mobile NO",
       cell: (info) => info.getValue(),
-      enableColumnFilter: true,
+
       enableSorting: true,
     },
     {
       accessorKey: "city",
       header: "City",
       cell: (info) => info.getValue(),
-      enableColumnFilter: true,
+
       enableSorting: true,
     },
     {
       accessorKey: "full_address",
       header: "Full address",
       cell: (info) => info.getValue(),
-      enableColumnFilter: true,
+
       enableSorting: true,
     },
     {
       accessorKey: "VAT_NO",
       header: "VAT NO",
       cell: (info) => info.getValue(),
-      enableColumnFilter: true,
+
       enableSorting: true,
     },
   ];
@@ -322,7 +322,7 @@ const Customer = () => {
             </form>
           </section>
           <section className="box-section">
-            <div>
+            <div className="p-10">
               <Table
                 data={data}
                 setData={setData}
@@ -333,6 +333,7 @@ const Customer = () => {
                 setEditingRowId={setEditingRowId}
                 editingValues={editingValues}
                 setEditingValues={setEditingValues}
+                placeholder={"Search customers..."}
               />
             </div>
           </section>

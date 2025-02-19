@@ -155,42 +155,42 @@ const Item = () => {
         );
       },
       id: "actions",
-      enableColumnFilter: false,
+
       enableSorting: false,
     },
     {
       accessorKey: "name_en",
       header: "Name in english ",
       cell: (info) => info.getValue(),
-      enableColumnFilter: true,
+
       enableSorting: true,
     },
     {
       accessorKey: "name_he",
       header: "Name in hebrew",
       cell: (info) => info.getValue(),
-      enableColumnFilter: true,
+
       enableSorting: true,
     },
     {
       accessorKey: "name_ar",
       header: "Name in arabic",
       cell: (info) => info.getValue(),
-      enableColumnFilter: true,
+
       enableSorting: true,
     },
     {
       accessorKey: "price",
       header: "Price",
       cell: (info) => info.getValue(),
-      enableColumnFilter: true,
+
       enableSorting: true,
     },
     {
       accessorKey: "currency",
       header: "Currency",
       cell: (info) => info.getValue(),
-      enableColumnFilter: true,
+
       enableSorting: true,
     },
   ];
@@ -198,7 +198,7 @@ const Item = () => {
     <>
       <Header />
       <main className="bg-[#f1f3f6] pt-[3.2rem] pb-[3.2rem]">
-        <div className="overflow-hidden bg-white rounded-[2rem] shadow-[rgba(17,17,26,0.05)_0px_1px_0px,_rgba(17,17,26,0.1)_0px_0px_8px] margin-auto max-w-[100rem]">
+        <div className="overflow-hidden bg-white rounded-[2rem] shadow-[rgba(17,17,26,0.05)_0px_1px_0px,_rgba(17,17,26,0.1)_0px_0px_8px] margin-auto max-w-[110rem]">
           <HeaderRegister />
           <section className="box-section center-x">
             <form className="register-form border p-10 rounded-[20px]">
@@ -263,7 +263,7 @@ const Item = () => {
             </form>
           </section>
           <section className="box-section">
-            <div>
+            <div className="p-10">
               <Table
                 data={data}
                 setData={setData}
@@ -274,6 +274,7 @@ const Item = () => {
                 setEditingRowId={setEditingRowId}
                 editingValues={editingValues}
                 setEditingValues={setEditingValues}
+                placeholder={"Search items..."}
               />
             </div>
           </section>

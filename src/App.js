@@ -10,6 +10,7 @@ import {
   SignUpWithGoogle,
   Header,
   Invoice,
+  ReceiptVoucher,
 } from "./mainComponent/index";
 import { useNavigate } from "react-router-dom";
 import React, { useEffect } from "react";
@@ -54,6 +55,10 @@ function App() {
           />
           <Route path="/item" element={<PrivateRoute element={Item} />} />
           <Route path="/invoice" element={<PrivateRoute element={Invoice} />} />
+          <Route
+            path="/recieptVoucher"
+            element={<PrivateRoute element={ReceiptVoucher} />}
+          />
         </>
       </Routes>
     </>

@@ -9,3 +9,4 @@ export { default as Customer } from "./customer";
 export { default as Item } from "./item";
 export { default as Header } from "./header";
 export { default as Invoice } from "./invoice";
+export { default as ReceiptVoucher } from "./receiptVoucher";

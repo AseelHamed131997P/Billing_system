@@ -238,7 +238,7 @@ const AdminAndCompany = () => {
                     className="w-[18rem] h-[9rem]"
                   />
                 ) : (
-                  "Company Signature"
+                  "Admin Signature"
                 )}
               </div>
 
@@ -406,7 +406,7 @@ const AdminAndCompany = () => {
                     className="w-[18rem] h-[9rem]"
                   />
                 ) : (
-                  "Admin Signature"
+                  "Company Signature"
                 )}
               </div>
 

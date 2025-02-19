@@ -73,7 +73,9 @@ const Header = () => {
           </a>
         </li>
         <li>
-          <a href="#">Receipt voucher</a>
+          <a href="#" onClick={(e) => handleChangePath(e, "/recieptVoucher")}>
+            Receipt voucher
+          </a>
         </li>
         <li>
           <a href="#">Return invoices</a>

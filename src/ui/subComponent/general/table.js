@@ -20,6 +20,7 @@ function Table({
   setEditingRowId,
   editingValues,
   setEditingValues,
+  placeholder,
 }) {
   // const initialData = [
   //   { id: 1, name: "Alice", age: 25, city: "New York" },
@@ -43,7 +44,7 @@ function Table({
   });
 
   return (
-    <div className="p-10 ">
+    <div className=" ">
       {/* Search Input with Icon */}
       <div className="flex justify-end mb-4">
         <div className="relative">
@@ -53,7 +54,7 @@ function Table({
           <input
             value={globalFilter || ""}
             onChange={(e) => setGlobalFilter(e.target.value)}
-            placeholder="Search customers..."
+            placeholder={placeholder}
             className="border-2 p-4 pl-10 rounded border-gray-500 focus:outline-none focus:border-2  focus:border-blue-400"
           />
         </div>
@@ -91,7 +92,7 @@ function Table({
                 </tr>
 
                 {/* Filter Row */}
-                <tr className="bg-gray-100">
+                {/* <tr className="bg-gray-100">
                   {headerGroup.headers.map((header) => (
                     <th
                       key={header.id}
@@ -110,7 +111,7 @@ function Table({
                       ) : null}
                     </th>
                   ))}
-                </tr>
+                </tr> */}
               </React.Fragment>
             ))}
           </thead>
