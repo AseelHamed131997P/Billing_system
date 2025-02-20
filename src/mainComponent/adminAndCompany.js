@@ -226,7 +226,7 @@ const AdminAndCompany = () => {
                 />
               </div>
 
-              <div className="border col-start-3 row-span-2 center-x">
+              <div className="border p-2 col-start-3 row-span-2 center-x">
                 {signatureAdmin.urlSign || signatureAdmin.urlFile ? (
                   <img
                     src={
@@ -394,7 +394,7 @@ const AdminAndCompany = () => {
                 />
               </div>
 
-              <div className="border col-start-3 row-span-2 center-x">
+              <div className="border p-2 col-start-3 row-span-2 center-x">
                 {signatureComp.urlSign || signatureComp.urlFile ? (
                   <img
                     src={

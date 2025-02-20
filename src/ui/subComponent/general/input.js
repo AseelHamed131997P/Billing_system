@@ -36,6 +36,8 @@ const Input = ({
       ? "number"
       : name === "bank_no"
       ? "number"
+      : name === "branch_no"
+      ? "number"
       : name === "date"
       ? "date"
       : "text"; // Default to text

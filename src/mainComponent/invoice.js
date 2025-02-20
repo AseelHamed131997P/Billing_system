@@ -986,7 +986,7 @@ const Invoice = () => {
         index === chequeIndex
           ? {
               ...cheque,
-              cheque_no: e.target.value,
+              cheque_no: parseFloat(e.target.value) || 0,
             }
           : cheque
       )
@@ -998,7 +998,7 @@ const Invoice = () => {
         index === chequeIndex
           ? {
               ...cheque,
-              bank_no: e.target.value,
+              bank_no: parseFloat(e.target.value) || 0,
             }
           : cheque
       )
@@ -1010,7 +1010,7 @@ const Invoice = () => {
         index === chequeIndex
           ? {
               ...cheque,
-              branch_no: e.target.value,
+              branch_no: parseFloat(e.target.value) || 0,
             }
           : cheque
       )
@@ -1023,7 +1023,7 @@ const Invoice = () => {
         index === chequeIndex
           ? {
               ...cheque,
-              cheque_amount: e.target.value,
+              cheque_amount: parseFloat(e.target.value) || 0,
             }
           : cheque
       )
@@ -1238,7 +1238,14 @@ const Invoice = () => {
       case "Cheque":
         return { ...basePaidData, amountPaid: { cheques, totalCheque } };
       case "Cash & Cheque":
-        return { ...basePaidData, amountPaid: { cheques, totalCheque, cash } };
+        return {
+          ...basePaidData,
+          amountPaid: {
+            cashAndCheques: { cheques, cash },
+            totalCheque,
+            totalCashAndCheque,
+          },
+        };
       case "Bank Transfer":
         return {
           ...basePaidData,
@@ -1362,6 +1369,96 @@ const Invoice = () => {
           (value) => value?.urlSign || value?.urlFile // ✅ At least one must be provided
         ),
     }),
+
+    // ✅ Add validation for `paid`
+    paid: yup
+      .mixed()
+      .test("validate-paid", "Invalid payment details", function (value) {
+        if (!value || value === false) {
+          return true; // No payment method selected, allow form submission
+        }
+
+        const { type, amountPaid } = value;
+
+        if (!type) {
+          return true;
+        } // Payment type is required
+
+        switch (type) {
+          case "Cash":
+            return (
+              (typeof amountPaid?.cash === "number" && amountPaid.cash > 0) ||
+              this.createError({
+                path: "paid.amountPaid.cash",
+                message: "Cash is required and must be greater than 0",
+              })
+            );
+
+          case "Cheque":
+            return (
+              (Array.isArray(amountPaid?.cheques) &&
+                amountPaid.cheques.length > 0 &&
+                amountPaid.cheques.every(
+                  (cheque) =>
+                    cheque.bank_name &&
+                    cheque.cheque_no &&
+                    cheque.bank_no &&
+                    cheque.branch_no &&
+                    cheque.cheque_amount &&
+                    cheque.date &&
+                    cheque.cheque_image
+                ) &&
+                amountPaid.totalCheque) ||
+              this.createError({
+                path: "paid.amountPaid.cheques",
+                message: "All cheque fields are required",
+              })
+            );
+
+          case "Cash & Cheque":
+            return (
+              (Array.isArray(amountPaid?.cashAndCheques?.cheques) &&
+                amountPaid.cashAndCheques.cheques.length > 0 &&
+                amountPaid.cashAndCheques.cheques.every(
+                  (cheque) =>
+                    cheque.bank_name &&
+                    cheque.cheque_no &&
+                    cheque.bank_no &&
+                    cheque.branch_no &&
+                    cheque.cheque_amount &&
+                    cheque.date &&
+                    cheque.cheque_image
+                ) &&
+                amountPaid.totalCheque > 0 &&
+                amountPaid.cashAndCheques.cash > 0 &&
+                amountPaid.totalCashAndCheque > 0) ||
+              this.createError({
+                path: "paid.amountPaid.cashAndCheques",
+                message: "Both cash and cheque details are required",
+              })
+            );
+
+          // case "Bank Transfer":
+          //   return (
+          //     (typeof amountPaid?.fromBankName === "string" &&
+          //       amountPaid.fromBankName.trim() !== "" &&
+          //       typeof amountPaid?.bankTransferNO === "string" &&
+          //       amountPaid.bankTransferNO.trim() !== "" &&
+          //       typeof amountPaid?.transferValue === "number" &&
+          //       amountPaid.transferValue > 0) ||
+          //     this.createError({
+          //       path: "paid",
+          //       message: "Bank transfer details are required",
+          //     })
+          //   );
+
+          // default:
+          //   return this.createError({
+          //     path: "paid",
+          //     message: "Invalid payment type",
+          //   });
+        }
+      }),
   });
 
   const formik = useFormik({
@@ -1924,6 +2021,13 @@ const Invoice = () => {
                         label={"Cash"}
                         width="w-40"
                       />
+
+                      {formik.touched.paid?.amountPaid?.cash &&
+                      formik.errors.paid?.amountPaid?.cash ? (
+                        <p className="text-red-500 text-sm mt-1">
+                          {formik.errors.paid.amountPaid.cash}
+                        </p>
+                      ) : null}
                     </div>
                   </div>
                 )}
@@ -2024,6 +2128,13 @@ const Invoice = () => {
                               Delete Cheque
                             </span>
                           </button>
+
+                          {formik.touched.paid?.amountPaid?.cheques &&
+                          formik.errors.paid?.amountPaid?.cheques ? (
+                            <p className="text-red-500 text-sm mt-1">
+                              {formik.errors.paid.amountPaid.cheques}
+                            </p>
+                          ) : null}
                         </div>
                       );
                     })}
@@ -2040,14 +2151,23 @@ const Invoice = () => {
                   </div>
                 )}
                 {paymentMethods?.[3]?.isChecked && (
-                  <Input
-                    key={"total_cash_cheque"}
-                    name={"Price"}
-                    value={totalCashAndCheque || ""}
-                    label={"Total cash and cheque "}
-                    width="w-48"
-                    readOnly={true}
-                  />
+                  <div>
+                    <Input
+                      key={"total_cash_cheque"}
+                      name={"Price"}
+                      value={totalCashAndCheque || ""}
+                      label={"Total cash and cheque "}
+                      width="w-48"
+                      readOnly={true}
+                    />
+
+                    {formik.touched.paid?.amountPaid?.cashAndCheques &&
+                    formik.errors.paid?.amountPaid?.cashAndCheques ? (
+                      <p className="text-red-500 text-sm mt-1">
+                        {formik.errors.paid.amountPaid.cashAndCheques}
+                      </p>
+                    ) : null}
+                  </div>
                 )}
                 {paymentMethods?.[4]?.isChecked && (
                   <div className="px-10 grid gap-5">
