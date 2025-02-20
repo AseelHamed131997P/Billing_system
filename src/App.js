@@ -11,6 +11,10 @@ import {
   Header,
   Invoice,
   ReceiptVoucher,
+  ReturnInvoices,
+  TaxCopy,
+  Reports,
+  Support,
 } from "./mainComponent/index";
 import { useNavigate } from "react-router-dom";
 import React, { useEffect } from "react";
@@ -59,6 +63,13 @@ function App() {
             path="/recieptVoucher"
             element={<PrivateRoute element={ReceiptVoucher} />}
           />
+          <Route
+            path="/returnInvoices"
+            element={<PrivateRoute element={ReturnInvoices} />}
+          />
+          <Route path="/taxCopy" element={<PrivateRoute element={TaxCopy} />} />
+          <Route path="/reports" element={<PrivateRoute element={Reports} />} />
+          <Route path="/support" element={<PrivateRoute element={Support} />} />
         </>
       </Routes>
     </>

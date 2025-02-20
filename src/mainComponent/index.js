@@ -10,3 +10,7 @@ export { default as Item } from "./item";
 export { default as Header } from "./header";
 export { default as Invoice } from "./invoice";
 export { default as ReceiptVoucher } from "./receiptVoucher";
+export { default as ReturnInvoices } from "./returnInvoices";
+export { default as TaxCopy } from "./taxCopy";
+export { default as Reports } from "./reports";
+export { default as Support } from "./support";

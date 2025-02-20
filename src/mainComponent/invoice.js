@@ -1320,7 +1320,7 @@ const Invoice = () => {
     items: yup.array().of(
       yup.object().shape({
         item: yup.object().shape({
-          id: yup.number(),
+          // id: yup.number(),
           // id: yup.number().required("Item is required"),
         }),
         itemPrice: yup
@@ -1464,7 +1464,7 @@ const Invoice = () => {
   return (
     <>
       <Header />
-      <form onSubmit={formik.handleSubmit} className="p-10 border grid gap-10">
+      <form onSubmit={formik.handleSubmit} className="p-10 grid gap-10">
         <section className="border rounded-[20px] p-10 grid gap-10 ">
           <div className="grid-auto-fr-auto-cols  ">
             <div className="  w-80 ">
