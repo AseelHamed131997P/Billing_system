@@ -1178,6 +1178,7 @@ const Invoice = () => {
   const [receiptVoucherNO, setReceiptVoucherNO] = useState("1".padStart(5, 0));
 
   const [clearButt, setClearButt] = useState(false);
+
   const defaultValues = {
     customer: {
       customer: customers[0], // Reset customer to the first one
@@ -1900,6 +1901,8 @@ const Invoice = () => {
                 setFile={setSignatureInvoice}
                 file={signatureInvoice}
                 name={"Choose Signature Image"}
+                label={"upload signature"}
+                type={"PNG"}
                 clearButt={clearButt}
                 setClearButt={setClearButt}
               />
@@ -2114,6 +2117,7 @@ const Invoice = () => {
                             } // ✅ Correctly pass index
                             file={{ urlFile: cheque.cheque_image }}
                             name="Choose Cheque Image"
+                            label={"upload cheque image"}
                             index={index} // ✅ Explicitly pass the index
                           />
 
@@ -2260,6 +2264,8 @@ const Invoice = () => {
                       setFile={setSignatureReceiptVoucher}
                       file={signatureReceiptVoucher}
                       name="Choose Signature Image"
+                      label={"upload signature"}
+                      type={"PNG"}
                     />
                   </div>
                 </div>
