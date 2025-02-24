@@ -217,16 +217,6 @@ const Invoice = () => {
     },
   ];
 
-  const [selectedDeliveries, setSelectedDeliveries] = useState([]);
-  console.log(`selected delivery items:${selectedDeliveries}`);
-  // const [customers, setCustomers] = useState([
-  //   { label: "", value: "Select a customer" },
-  //   { label: "customer 1", value: "aseel" },
-  //   { label: "customer 2", value: "alaa" },
-  //   { label: "customer 3", value: "fadi" },
-  //   { label: "customer 4", value: "sara" },
-  //   { label: "customer 5", value: "lara" },
-  // ]);
   const [customers, setCustomers] = useState([
     {
       id: null,
@@ -290,29 +280,6 @@ const Invoice = () => {
     },
   ]);
 
-  const [customer, setCustomer] = useState(customers[0]);
-
-  const [isCreatingCustomer, setIsCreatingCustomer] = useState(false); // Toggle modal visibility
-  const [
-    isCreatingCustomerReceiptVoucher,
-    setIsCreatingCustomerReceiptVoucher,
-  ] = useState(false); // Toggle modal visibility
-
-  const [newCustomer, setNewCustomer] = useState(""); // Store new customer name
-
-  const handleChangeCustomer = (e) => {
-    if (e.target.value === "create_new") {
-      setIsCreatingCustomer(true); // Show popup to create a new customer
-      return;
-    }
-    console.log(`print id of customer from database ${e.target.value}`);
-    const selectedOption = customers.find((item) => item.id == e.target.value);
-    setCustomer(selectedOption || customers[0]);
-    // formik.setFieldValue("customer", selectedOption || customers[0]); // Update Formik state
-  };
-  console.log(`here after change on customer ${customer.name}`);
-  console.table(customer);
-
   //here api to get all items
   const [items, setItems] = useState([
     {
@@ -359,27 +326,356 @@ const Invoice = () => {
     },
   ]);
 
-  // const [item, setItem] = useState(items[0]);
+  const [paymentMethods, setPaymentMethods] = useState([
+    { id: 1, label: "Unpaid", isChecked: true },
+    { id: 2, label: "Cash", isChecked: false },
+    { id: 3, label: "Cheque", isChecked: false },
+    { id: 4, label: "Cash & Cheque", isChecked: false },
+    { id: 5, label: "Bank Transfer", isChecked: false },
+  ]);
+  //req get invoice no , receipt voucher no =>set formik values invoice no , receipt voucher, onAccountOf
+  //req get customers
+  //req get items
+  //req get delivery invoices
+  //req get vat
 
+  const basePaidSchema = yup.object().shape({
+    type: yup.string().required("Payment type is required"),
+    customerReceiptVoucher: yup
+      .object()
+      .shape({ id: yup.number().required("Customer is required") }),
+    amount: yup
+      .number()
+      .required("Amount is required")
+      .positive("Amount must be greater than 0"),
+    onAccountOf: yup.string().required("On account of is required"),
+    currencyReceiptVoucher: yup.string().required("Currency is required"),
+    signatureReceiptVoucher: yup.string().required("Signature is required"),
+  });
+
+  // Schema for "Cash" type
+  const cashSchema = yup.object().shape({
+    amountPaid: yup.object().shape({
+      cash: yup
+        .number()
+        .required("Cash amount is required")
+        .positive("Cash must be greater than 0"),
+    }),
+  });
+
+  // Schema for "Cheque" type
+  const chequeSchema = yup.object().shape({
+    amountPaid: yup.object().shape({
+      cheques: yup
+        .array()
+        .of(
+          yup.object().shape({
+            bank_name: yup.string().required("Bank name is required"),
+            cheque_no: yup.string().required("Cheque number is required"),
+            bank_no: yup.string().required("Bank number is required"),
+            branch_no: yup.string().required("Branch number is required"),
+            cheque_amount: yup.number().required("Cheque amount is required"),
+            date: yup.date().required("Date is required"),
+            cheque_image: yup.string().required("Cheque image is required"),
+          })
+        )
+        .required("At least one cheque is required"),
+    }),
+  });
+
+  // Schema for "Cash & Cheque" type
+  const cashAndChequeSchema = yup.object().shape({
+    amountPaid: yup.object().shape({
+      cash: yup
+        .number()
+        .required("Cash amount is required")
+        .positive("Cash must be greater than 0"),
+      cheques: yup
+        .array()
+        .of(
+          yup.object().shape({
+            bank_name: yup.string().required("Bank name is required"),
+            cheque_no: yup.string().required("Cheque number is required"),
+            bank_no: yup.string().required("Bank number is required"),
+            branch_no: yup.string().required("Branch number is required"),
+            cheque_amount: yup.number().required("Cheque amount is required"),
+            date: yup.date().required("Date is required"),
+            cheque_image: yup.string().required("Cheque image is required"),
+          })
+        )
+        .required("At least one cheque is required"),
+    }),
+  });
+
+  // Schema for "Bank Transfer" type
+  const bankTransferSchema = yup.object().shape({
+    amountPaid: yup.object().shape({
+      fromBankName: yup.string().required("From bank name is required"),
+      bankTransferNO: yup
+        .number()
+        .required("Bank transfer number is required")
+        .positive("bank transfer NO must be greater than 0"),
+      transferValue: yup
+        .number()
+        .required("Transfer value is required")
+        .positive("Transfer value must be greater than 0"),
+    }),
+  });
+
+  // Schema for "Unpaid" type
+  const unpaidSchema = yup.object().shape({
+    amountPaid: yup.object().notRequired(), // Skip validation for amountPaid
+  });
+
+  // Function to dynamically build the schema based on the type
+  const getPaidSchema = (type) => {
+    switch (type) {
+      case "Cash":
+        return basePaidSchema.concat(cashSchema);
+      case "Cheque":
+        return basePaidSchema.concat(chequeSchema);
+      case "Cash & Cheque":
+        return basePaidSchema.concat(cashAndChequeSchema);
+      case "Bank Transfer":
+        return basePaidSchema.concat(bankTransferSchema);
+      case "Unpaid":
+        return basePaidSchema.concat(unpaidSchema);
+      default:
+        return basePaidSchema; // Fallback to base schema
+    }
+  };
+
+  const validationSchema = yup.object({
+    // Customer section
+    customer: yup.object().shape({
+      customer: yup.object().shape({
+        id: yup.number().required("Customer is required"),
+      }),
+      customerInfo: yup.object().shape({
+        Mobile_NO: yup.string().required("Mobile number is required"),
+        Full_Address: yup.string().required("Full address is required"),
+        City: yup.string().required("City is required"),
+        VAT_NO: yup.string().required("VAT number is required"),
+      }),
+    }),
+
+    // Items section
+    invoiceItems: yup.array().of(
+      yup.object().shape({
+        item: yup.object().shape({
+          id: yup.number().required("Item is required"), // Ensure an item is selected
+        }),
+        itemPrice: yup
+          .number()
+          .typeError("Item price must be a number")
+          .positive("Item price must be greater than 0")
+          .required("Item price is required"),
+
+        itemQuantity: yup
+          .number()
+          .typeError("Quantity must be a number")
+          .positive("Quantity must be greater than 0")
+          .integer("Quantity must be an integer")
+          .required("Item quantity is required"),
+      })
+    ),
+
+    // Invoice summary section
+    invoiceSummary: yup.object().shape({
+      signatureInvoice: yup.string().required("Invoice signature is required"),
+    }),
+
+    // Paid section (dynamically built based on type)
+    paid: yup.lazy((values) => getPaidSchema(values.type)),
+  });
+
+  const formik = useFormik({
+    initialValues: {
+      invoiceNO: "1".padStart(5, 0),
+      selectedDeliveries: [],
+      customer: {
+        customer: customers[0],
+        customerInfo: {
+          Mobile_NO: "",
+          Full_Address: "",
+          City: "",
+          VAT_NO: "",
+        },
+      },
+      invoiceItems: [],
+      invoiceSummary: {
+        isIncludeVAT: false,
+        isIncludeItemVAT: false,
+        totalPrice: 0,
+        totalPriceWithoutVAT: null,
+        VAT: 0.17,
+        totalVAT: null,
+        totalPriceWithVAT: null,
+        totalPriceInWords: "",
+        signatureInvoice: "",
+      },
+      paid: {
+        type: paymentMethods.find((m) => m.isChecked)?.label || "",
+        customerReceiptVoucher: customers[0],
+        amount: null,
+        onAccountOf: "On invoice no 00001",
+        currencyReceiptVoucher: "NIS",
+        totalAmountInWords: "",
+        note: "",
+        signatureReceiptVoucher: "",
+        receiptVoucherNO: "1".padStart(5, 0),
+        // For each payment type, define nested fields:
+        amountPaid: {
+          cash: null,
+          cheques: [
+            {
+              bank_name: "",
+              cheque_no: null,
+              bank_no: null,
+              branch_no: null,
+              cheque_amount: null,
+              date: new Date(),
+              cheque_image: "",
+            },
+          ], // you might sync this if needed
+          totalCheque: 0,
+          totalCashAndCheque: null,
+          fromBankName: "",
+          bankTransferNO: null,
+          transferValue: null,
+        },
+      },
+    },
+
+    validationSchema,
+    validate: (values) => {
+      const errors = {};
+
+      try {
+        // Validate the entire schema
+        validationSchema.validateSync(values, { abortEarly: false });
+      } catch (err) {
+        // Check if the error has the expected structure
+        if (err.inner && Array.isArray(err.inner)) {
+          // Check if there are any errors in the invoiceItems section
+          const hasInvoiceItemsErrors = err.inner.some((error) =>
+            error.path.startsWith("invoiceItems")
+          );
+
+          if (hasInvoiceItemsErrors) {
+            // Set a single error message for the invoiceItems section
+            errors.invoiceItems =
+              "All the values are required, and item price and quantity must be > 0";
+          }
+
+          // Handle errors for the invoiceSummary section
+          const hasInvoiceSummaryErrors = err.inner.some((error) =>
+            error.path.startsWith("invoiceSummary.signatureInvoice")
+          );
+
+          if (hasInvoiceSummaryErrors) {
+            // Set a specific error message for the invoiceSummary section
+            errors.invoiceSummary = "Signature is required";
+          }
+
+          // Check if there are any errors in the customer section
+          const hasCustomerErrors = err.inner.some((error) =>
+            error.path.startsWith("customer")
+          );
+
+          if (hasCustomerErrors) {
+            // Set a specific error message for the customer section
+            errors.customer = "All fields in the customer section are required";
+          }
+
+          // Handle paid errors
+          const hasPaidErrors = err.inner.some((error) =>
+            error.path.startsWith("paid")
+          );
+          if (hasPaidErrors) {
+            errors.paid = "Payment details are invalid or incomplete";
+          }
+        } else {
+          // Handle unexpected errors (e.g., schema configuration errors)
+          console.error("Unexpected validation error:", err);
+          errors.general = "An unexpected error occurred during validation.";
+        }
+      }
+
+      return errors;
+    },
+    onSubmit: (values, { resetForm }) => {
+      console.log("Submitting Invoice Data:", values);
+      // dispatch(saveInHistory(values));
+
+      // resetForm({ values: defaultValues });
+      // setClearButt(!clearButt);
+    },
+  });
+
+  console.log("before and after reset Data :", formik.values);
+
+  console.log(`selected delivery items:${formik.values.selectedDeliveries}`);
+  console.dir(formik.values.selectedDeliveries);
+  //section customer
+  const [isCreatingCustomer, setIsCreatingCustomer] = useState(false); // Toggle modal visibility
+
+  const updateCustomerInfo = (customer) => ({
+    Mobile_NO: customer?.mobile_NO || "",
+    Full_Address: customer?.full_address || "",
+    City: customer?.city || "",
+    VAT_NO: customer?.VAT_NO || "",
+  });
+
+  const handleChangeCustomer = (e) => {
+    if (e.target.value === "create_new") {
+      setIsCreatingCustomer(true); // Assuming this modal state remains local
+      return;
+    }
+    const selectedOption = customers.find((item) => item.id == e.target.value);
+    formik.setFieldValue("customer", {
+      customer: selectedOption || customers[0],
+      customerInfo: updateCustomerInfo(selectedOption || customers[0]),
+    });
+  };
+  const handleChangeCustomerInfo = (e) => {
+    const { name, value } = e.target;
+    formik.setFieldValue("customer", {
+      ...formik.values.customer,
+      customerInfo: {
+        ...formik.values.customer.customerInfo,
+        [name]: value,
+      },
+    });
+  };
+
+  useEffect(() => {
+    if (formik.values.selectedDeliveries.length > 0) {
+      const lastDelivery =
+        formik.values.selectedDeliveries[
+          formik.values.selectedDeliveries.length - 1
+        ];
+      const selectedOption = customers.find(
+        (item) => item.id === lastDelivery.customer.id
+      );
+      formik.setFieldValue("customer", {
+        customer: selectedOption || customers[0],
+        customerInfo: updateCustomerInfo(selectedOption || customers[0]),
+      });
+    } else {
+      formik.setFieldValue("customer", {
+        customer: customers[0],
+        customerInfo: updateCustomerInfo(customers[0]),
+      });
+    }
+  }, [formik.values.selectedDeliveries]);
+
+  //section item
+  let currencies = ["NIS", "USD", "ERO"];
   const [isCreatingItem, setIsCreatingItem] = useState(false);
   const [selectedItemIndex, setSelectedItemIndex] = useState(null);
 
-  // const [newItem, setNewItem] = useState(""); // Store new customer name
-
-  let currencies = ["NIS", "USD", "ERO"];
-
-  //here for invoice items
-  const [invoiceItems, setInvoiceItems] = useState([
-    // {
-    //   item: items[0],
-    //   itemPrice: null,
-    //   itemCurrency: currencies[0],
-    //   itemQuantity: null,
-    //   totalPriceItem: null,
-    // },
-  ]);
-
-  const [anotherItem, setAnotherItem] = useState({ exist: false, name: "" });
+  // 2. Functions to update invoiceItems using formik.setFieldValue
 
   const handleChangeItem = (e, invoiceItemIndex) => {
     const selectedValue = e.target.value;
@@ -392,287 +688,196 @@ const Invoice = () => {
 
     if (selectedValue === "another") {
       // If user selects "another", enable input field
-      setInvoiceItems((prevInvoiceItems) =>
-        prevInvoiceItems.map((item, index) =>
-          index === invoiceItemIndex
-            ? {
-                ...item,
-                itemPrice: null,
-                itemCurrency: "NIS",
-                // item: {
-                //   id: "custom_item", // Custom item has no ID
-                //   name: "Another Item", // Store user input as item name
-                //   price: null,
-                //   currency: "NIS",
-                //   item_number: null,
-                // },
-                anotherItem: { exist: true, value: "" }, // Initialize another item
-              }
-            : item
-        )
+      const updatedItems = formik.values.invoiceItems.map((item, index) =>
+        index === invoiceItemIndex
+          ? {
+              ...item,
+              itemPrice: null,
+              itemCurrency: "NIS",
+              anotherItem: { exist: true, value: "" },
+            }
+          : item
       );
+      formik.setFieldValue("invoiceItems", updatedItems);
       return;
     }
 
     console.log(`Selected item ID: ${selectedValue}`);
-
-    // Find the selected item from the list
     const selectedOption =
       items.find((item) => item.id == selectedValue) || items[0];
 
-    // Update the invoiceItems array correctly
-    setInvoiceItems((prevInvoiceItems) =>
-      prevInvoiceItems.map((item, index) =>
-        index === invoiceItemIndex
-          ? {
-              ...item,
-              item: selectedOption,
-              itemPrice: selectedOption.price,
-              itemCurrency: selectedOption.currency,
-              totalPriceItem:
-                (selectedOption.price || 0) * (item.itemQuantity || 0),
-              anotherItem: { exist: false, value: "" }, // Reset anotherItem if selecting from list
-            }
-          : item
-      )
+    const updatedItems = formik.values.invoiceItems.map((item, index) =>
+      index === invoiceItemIndex
+        ? {
+            ...item,
+            item: selectedOption,
+            itemPrice: selectedOption.price,
+            itemCurrency: selectedOption.currency,
+            totalPriceItem:
+              (selectedOption.price || 0) * (item.itemQuantity || 0),
+            anotherItem: { exist: false, value: "" },
+          }
+        : item
     );
+    formik.setFieldValue("invoiceItems", updatedItems);
   };
 
   const handleChangeAnotherItem = (e, invoiceItemIndex) => {
     const newValue = e.target.value;
-
-    setInvoiceItems((prevInvoiceItems) =>
-      prevInvoiceItems.map((item, index) =>
-        index === invoiceItemIndex
-          ? {
-              ...item,
-              anotherItem: { exist: true, value: newValue }, // Update input value
-              // item: {
-              //   id: "custom_item", // Custom item has no ID
-              //   name: newValue, // Store user input as item name
-              //   price: null,
-              //   currency: "NIS",
-              //   item_number: null,
-              // },
-            }
-          : item
-      )
+    const updatedItems = formik.values.invoiceItems.map((item, index) =>
+      index === invoiceItemIndex
+        ? {
+            ...item,
+            anotherItem: { exist: true, value: newValue },
+          }
+        : item
     );
+    formik.setFieldValue("invoiceItems", updatedItems);
   };
 
-  console.table(invoiceItems);
-
   const handleChangeItemPrice = (e, invoiceItemIndex) => {
-    setInvoiceItems((prevInvoiceItems) =>
-      prevInvoiceItems.map((item, index) =>
-        index === invoiceItemIndex
-          ? {
-              ...item,
-              itemPrice: e.target.value,
-              totalPriceItem: e.target.value * (item.itemQuantity || 0),
-            }
-          : item
-      )
+    const price = e.target.value;
+    const updatedItems = formik.values.invoiceItems.map((item, index) =>
+      index === invoiceItemIndex
+        ? {
+            ...item,
+            itemPrice: price,
+            totalPriceItem: price * (item.itemQuantity || 0),
+          }
+        : item
     );
+    formik.setFieldValue("invoiceItems", updatedItems);
   };
 
   const handleChangeItemCurrency = (e, invoiceItemIndex) => {
-    setInvoiceItems((prevInvoiceItems) =>
-      prevInvoiceItems.map((item, index) =>
-        index === invoiceItemIndex
-          ? { ...item, itemCurrency: e.target.value }
-          : item
-      )
+    const currency = e.target.value;
+    const updatedItems = formik.values.invoiceItems.map((item, index) =>
+      index === invoiceItemIndex ? { ...item, itemCurrency: currency } : item
     );
+    formik.setFieldValue("invoiceItems", updatedItems);
   };
-
-  // const [itemQuantity, setItemQuantity] = useState();
 
   const handleChangeItemQuantity = (e, invoiceItemIndex) => {
-    setInvoiceItems((prevInvoiceItems) =>
-      prevInvoiceItems.map((item, index) =>
-        index === invoiceItemIndex
-          ? {
-              ...item,
-              itemQuantity: parseFloat(e.target.value || 0),
-              totalPriceItem: e.target.value * (item.itemPrice || 0),
-            }
-          : item
-      )
+    const quantity = parseFloat(e.target.value || 0);
+    const updatedItems = formik.values.invoiceItems.map((item, index) =>
+      index === invoiceItemIndex
+        ? {
+            ...item,
+            itemQuantity: quantity,
+            totalPriceItem: (item.itemPrice || 0) * quantity,
+          }
+        : item
     );
+    formik.setFieldValue("invoiceItems", updatedItems);
   };
 
-  let addItem = () => {
-    setInvoiceItems((prevItems) => [
-      ...prevItems,
-      {
-        item: items[0],
-        itemPrice: null,
-        itemCurrency: currencies[0],
-        itemQuantity: null,
-        totalPriceItem: null,
-      },
+  const addItem = () => {
+    const newItem = {
+      item: items[0], // default first item from your items list
+      itemPrice: null,
+      itemCurrency: currencies[0], // default currency
+      itemQuantity: null,
+      totalPriceItem: null,
+    };
+    formik.setFieldValue("invoiceItems", [
+      ...formik.values.invoiceItems,
+      newItem,
     ]);
   };
 
   const deleteItem = (invoiceItemIndex) => {
-    setInvoiceItems((prevInvoiceItems) =>
-      prevInvoiceItems.filter((_, index) => index !== invoiceItemIndex)
+    const updatedItems = formik.values.invoiceItems.filter(
+      (_, index) => index !== invoiceItemIndex
+    );
+    formik.setFieldValue("invoiceItems", updatedItems);
+  };
+
+  // Optionally, update invoiceItems based on selectedDeliveries:
+  useEffect(() => {
+    // Example logic: if no deliveries are selected, reset invoiceItems (or remove items with delivery IDs)
+    if (formik.values.selectedDeliveries.length === 0) {
+      if (formik.values.invoiceItems.length === 0) {
+        formik.setFieldValue("invoiceItems", [
+          {
+            item: items[0],
+            itemPrice: null,
+            itemCurrency: currencies[0],
+            itemQuantity: null,
+            totalPriceItem: null,
+          },
+        ]);
+      } else {
+        formik.setFieldValue(
+          "invoiceItems",
+          formik.values.invoiceItems.filter((item) => !item.delivery_item_id)
+        );
+      }
+    } else {
+      // Otherwise, merge items from selected deliveries with existing ones.
+      let filteredItems = formik.values.invoiceItems.filter(
+        (item) => item.item.id !== items[0].id // Remove default item if it exists
+      );
+
+      const selectedDeliveryIds = formik.values.selectedDeliveries.map(
+        (delivery) => delivery.id
+      );
+
+      filteredItems = filteredItems.filter(
+        (item) =>
+          !item.delivery_item_id ||
+          selectedDeliveryIds.includes(item.delivery_item_id)
+      );
+
+      const newItems = formik.values.selectedDeliveries.flatMap((delivery) =>
+        delivery.items.map((item) => ({
+          delivery_item_id: item.delivery_item_id,
+          item: item.item,
+          itemPrice: item.itemPrice,
+          itemCurrency: item.itemCurrency,
+          itemQuantity: item.itemQuantity,
+          totalPriceItem: item.totalPriceItem,
+        }))
+      );
+
+      // Avoid duplicates:
+      newItems.forEach((newItem) => {
+        const exists = filteredItems.some(
+          (existingItem) =>
+            existingItem.delivery_item_id === newItem.delivery_item_id
+        );
+        if (!exists) {
+          filteredItems.push(newItem);
+        }
+      });
+
+      formik.setFieldValue("invoiceItems", filteredItems);
+    }
+  }, [formik.values.selectedDeliveries]); // Runs whenever selectedDeliveries changes
+
+  const handleIsIncludeVATChange = () => {
+    formik.setFieldValue(
+      "invoiceSummary.isIncludeVAT",
+      !formik.values.invoiceSummary.isIncludeVAT
     );
   };
 
+  const handleIsIncludeItemVATChange = () => {
+    formik.setFieldValue(
+      "invoiceSummary.isIncludeItemVAT",
+      !formik.values.invoiceSummary.isIncludeItemVAT
+    );
+  };
+
+  // Compute total price from invoiceItems (using formik state)
   const totalPrice = useMemo(() => {
-    return invoiceItems.reduce(
+    return formik.values.invoiceItems.reduce(
       (sum, item) => sum + (item.totalPriceItem || 0),
       0
     );
-  }, [invoiceItems]);
-  console.log(`my total price is:${totalPrice}`);
-  // //here will create state invoiceItems [{item_number:,name:,itemPrice:,currency:itemQuantity:,totalPriceItem},{}]
-  // //useeffect based on invoiceItems if any change increase or change enter it do map on all invoiceItems and calculate totalPriceItem every item and sum totalPriceItem to set totapPrice
-  // const [totalPriceItem, setTotalPriceItem] = useState();
+  }, [formik.values.invoiceItems]);
 
-  // useEffect(() => {
-  //   setInvoiceItems((prevInvoiceItems) =>
-  //     prevInvoiceItems.map((invoiceItem) => {
-  //       if (
-  //         invoiceItem.item &&
-  //         invoiceItem.item.itemPrice &&
-  //         invoiceItem.item.itemQuantity
-  //       ) {
-  //         return {
-  //           ...invoiceItem,
-  //           totalPriceItem:
-  //             invoiceItem.item.itemPrice * invoiceItem.item.itemQuantity,
-  //         };
-  //       }
-  //       return invoiceItem;
-  //     })
-  //   );
-  // }, [invoiceItems]);
-
-  //alternative of this function I will validation and send API and when return success I will setIsCreatingCustomer false and will automatically clear the data
-  //because I pass isCreatingCustomer based on it when false clear the data
-  const handleCreateCustomer = () => {
-    if (!newCustomer.trim()) return;
-    setNewCustomer("");
-    //I will use the same here
-    const newEntry = { id: newCustomer, name: newCustomer.toLowerCase() };
-    setCustomers([...customers, newEntry]);
-    setCustomer(newEntry);
-    setIsCreatingCustomer(false);
-  };
-
-  const [customerInfo, setCustomerInfo] = useState({
-    Mobile_NO: "",
-    Full_Address: "",
-    City: "",
-    VAT_NO: "",
-  });
-
-  const handleChangeCustomerInfo = (e) => {
-    const { name, value } = e.target;
-    setCustomerInfo((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
-
-  let labels = ["Mobile NO", "Full Address", "City", "VAT NO"];
-  console.log(
-    `customer Information ${customerInfo.Mobile_NO} ${customerInfo.Full_Address} ${customerInfo.City}`
-  );
-  // useEffect depending on the `customer` state
-  // Function to update customer info
-  const updateCustomerInfo = (customer) => ({
-    Mobile_NO: customer?.mobile_NO || "",
-    Full_Address: customer?.full_address || "",
-    City: customer?.city || "",
-    VAT_NO: customer?.VAT_NO || "",
-  });
-
-  // Effect to update customer details
-  useEffect(() => {
-    console.log(`Customer changed: ${customer?.id || "None"}`);
-    setCustomerInfo(updateCustomerInfo(customer));
-  }, [customer]); // ✅ Dependency is now clear
-  // useEffect(() => {
-  //   console.log(`here run first time and when customer change`);
-  //   if (customer.id) {
-  //     console.log(
-  //       `here run first time and when customer change:${customer.id}`
-  //     );
-  //     setCustomerInfo((prev) => ({
-  //       Mobile_NO: customer.mobile_NO,
-  //       Full_Address: customer.full_address,
-  //       City: customer.city,
-  //       VAT_NO: customer.VAT_NO,
-  //     }));
-  //   } else {
-  //     setCustomerInfo((prev) => ({
-  //       Mobile_NO: "",
-  //       Full_Address: "",
-  //       City: "",
-  //       VAT_NO: "",
-  //     }));
-  //   }
-  // }, [formik.values.customer]); // Dependency array: useEffect runs when `customer` changes
-
-  // useEffect depending on the `customer` state
-  useEffect(() => {
-    console.log(`here run first time and when deliveries change`);
-    if (selectedDeliveries.length > 0) {
-      // Find the corresponding customer based on the last selected delivery
-      //compare based on customer_id
-      const selectedOption = customers.find(
-        (item) =>
-          item.id ===
-          selectedDeliveries[selectedDeliveries.length - 1].customer.id
-      );
-
-      if (selectedOption) {
-        setCustomer({
-          ...selectedDeliveries[selectedDeliveries.length - 1].customer,
-        });
-        // formik.setFieldValue("customer", {
-        //   ...selectedDeliveries[selectedDeliveries.length - 1].customer,
-        // });
-      } else {
-        setCustomer({
-          ...(customers.find((item) => item.id === null) || customers[0]),
-        });
-        // formik.setFieldValue("customer", {
-        //   ...(customers.find((item) => item.id === null) || customers[0]),
-        // });
-      }
-    } else {
-      setCustomer({
-        ...(customers.find((item) => item.id === null) || customers[0]),
-      });
-      // formik.setFieldValue("customer", {
-      //   ...(customers.find((item) => item.id === null) || customers[0]),
-      // });
-    }
-  }, [selectedDeliveries]); // Dependency array: useEffect runs when `selectedDeliveries` changes
-
-  let invoiceType = [
-    "Simple User",
-    "Commerical With VAT NO",
-    "Commerical with Free VAT NO",
-    "Company Non Profit",
-  ];
-  const [invoiceTypeOption, setInvoiceTypeOption] = useState(invoiceType[0]);
-
-  const handleChangeInvoiceTypeOption = (e) =>
-    setInvoiceTypeOption(e.target.value);
-  console.log(`invoice type that selected : ${invoiceTypeOption}`);
-
-  let currencyType = ["NIS", "USD", "ERO"];
-  const [currencyTypeOption, setCurrencyTypeOption] = useState(currencyType[0]);
-
-  const handleChangeCurrencyTypeOption = (e) =>
-    setCurrencyTypeOption(e.target.value);
-  console.log(`currency type that selected : ${currencyTypeOption}`);
+  const [clearCanvas, setClearCanvas] = useState(false);
+  const [clearFile, setClearFile] = useState(false);
 
   // here query to get invoice number in useeffect
   function convertNumberToWords(number) {
@@ -689,51 +894,20 @@ const Invoice = () => {
       ? `${integerInWords} point ${decimalInWords}`
       : integerInWords;
   }
-
-  const [totalPriceWithoutVAT, setTotalPriceWithoutVAT] = useState();
-  console.log(`total price without VAT : ${totalPriceWithoutVAT}`);
-
-  const [isIncludeVAT, setIsIncludeVAT] = useState(false);
-
-  const handleIsIncludeVATChange = () => {
-    setIsIncludeVAT(!isIncludeVAT);
-  };
-  console.log(`include vat : ${isIncludeVAT}`);
-
-  const [isIncludeItemVAT, setIsIncludeItemVAT] = useState(false);
-
-  const handleIsIncludeItemVATChange = () => {
-    setIsIncludeItemVAT(!isIncludeItemVAT);
-  };
-  console.log(`include item vat : ${isIncludeItemVAT}`);
-  //here adding useeffect based on isIncludeVAT or isIncludeItemVAT codition inside useeffect isIncludeVAT when true  get vat from DB ans setState on VAT
-
-  const [VAT, setVAT] = useState(0.17);
-  console.log(`VAT : ${VAT}`);
-
-  const [totalVAT, setTotalVAT] = useState(null);
-  console.log(`totalVAT is : ${totalVAT}`);
-
-  const [totalPriceWithVAT, setTotalPriceWithVAT] = useState();
-  console.log(`total Price With VAT : ${totalPriceWithVAT}`);
-
-  const [totalPriceInWords, setTotalPriceInWords] = useState("");
-  console.log(`total Price inwords : ${totalPriceInWords}`);
-
   useEffect(() => {
-    if (totalPrice) {
-      let calculatedTotalPriceWithoutVAT;
-      let calculatedTotalVAT;
-      let calculatedTotalPriceWithVAT;
-      let calculatedTotalPriceInWords;
+    let calculatedTotalPriceWithoutVAT,
+      calculatedTotalVAT,
+      calculatedTotalPriceWithVAT,
+      calculatedTotalPriceInWords;
 
-      if (isIncludeVAT) {
+    if (totalPrice) {
+      if (formik.values.invoiceSummary.isIncludeVAT) {
         calculatedTotalPriceWithoutVAT = totalPrice;
-        calculatedTotalVAT = totalPrice * VAT;
+        calculatedTotalVAT = totalPrice * formik.values.invoiceSummary.VAT;
         calculatedTotalPriceWithVAT =
           calculatedTotalPriceWithoutVAT + calculatedTotalVAT;
         calculatedTotalPriceInWords = calculatedTotalPriceWithVAT;
-      } else if (isIncludeItemVAT) {
+      } else if (formik.values.invoiceSummary.isIncludeItemVAT) {
         calculatedTotalPriceWithoutVAT = totalPrice / 1.17;
         calculatedTotalVAT = calculatedTotalPriceWithoutVAT - totalPrice;
         calculatedTotalPriceWithVAT = totalPrice;
@@ -745,217 +919,88 @@ const Invoice = () => {
         calculatedTotalPriceInWords = calculatedTotalPriceWithoutVAT;
       }
 
-      // Now update state in one go
-      setTotalPriceWithoutVAT(
-        calculatedTotalPriceWithoutVAT?.toString().includes(".")
+      // Optionally round values to one decimal place
+      const roundVal = (val) =>
+        val && val.toString().includes(".")
           ? Number(
-              calculatedTotalPriceWithoutVAT?.toString().split(".")[0] +
+              val.toString().split(".")[0] +
                 "." +
-                calculatedTotalPriceWithoutVAT?.toString().split(".")[1][0]
+                val.toString().split(".")[1][0]
             )
-          : calculatedTotalPriceWithoutVAT
-      );
-      setTotalVAT(
-        calculatedTotalVAT?.toString().includes(".")
-          ? Number(
-              calculatedTotalVAT?.toString().split(".")[0] +
-                "." +
-                calculatedTotalVAT?.toString().split(".")[1][0]
-            )
-          : calculatedTotalVAT
-      );
-      setTotalPriceWithVAT(
-        calculatedTotalPriceWithVAT?.toString().includes(".")
-          ? Number(
-              calculatedTotalPriceWithVAT?.toString().split(".")[0] +
-                "." +
-                calculatedTotalPriceWithVAT?.toString().split(".")[1][0]
-            )
-          : calculatedTotalPriceWithVAT
-      );
-      setTotalPriceInWords(convertNumberToWords(calculatedTotalPriceInWords));
-    } else {
-      setTotalPriceWithoutVAT(null);
-      setTotalVAT(null);
-      setTotalPriceWithVAT(null);
-      setTotalPriceInWords("");
-    }
-  }, [totalPrice, isIncludeVAT, isIncludeItemVAT, VAT]); // Ensure all dependencies are included
+          : val;
 
-  const [signatureInvoice, setSignatureInvoice] = useState({
-    urlSign: null,
-    urlFile: null,
-  }); // here save the signature value just when not null if null does not save
-  console.log(`test invoice urlSign ${signatureInvoice.urlSign}`);
-  console.log(`test invoice urlFile ${signatureInvoice.urlFile}`);
-
-  //adding useeffect based on isCreatingCustomer when true api to get last Customer_number and increment it by one
-  //adding useeffect to get invoice_number and increment it by one
-  useEffect(() => {
-    setInvoiceItems((prevInvoiceItems) => {
-      if (selectedDeliveries.length === 0) {
-        // If no deliveries are selected, reset to default item
-        if (invoiceItems.length === 0) {
-          return [
-            {
-              item: items[0], // Default first item
-              itemPrice: null,
-              itemCurrency: currencies[0], // Default currency
-              itemQuantity: null,
-              totalPriceItem: null,
-            },
-          ];
-        } else {
-          // ✅ Return only invoiceItems that do NOT have `delivery_item_id`
-          return prevInvoiceItems.filter((item) => !item.delivery_item_id);
-        }
-      }
-
-      // Remove the default item if it's present
-      let filteredInvoiceItems = prevInvoiceItems.filter(
-        (item) => item.item.id !== items[0].id // Remove default item if it exists
-      );
-
-      // Get a list of delivery IDs that are still selected
-      const selectedDeliveryIds = selectedDeliveries.map(
-        (delivery) => delivery.id
-      );
-      console.log("sdsddfggggggggggggggggggggggggggggggggggggg");
-      console.log(selectedDeliveryIds);
-
-      // // Remove items belonging to unselected deliveries
-      filteredInvoiceItems = filteredInvoiceItems.filter(
-        (item) =>
-          !item.delivery_item_id || // ✅ Keep items without `delivery_item_id`
-          selectedDeliveryIds.includes(item.delivery_item_id) // ✅ Keep only relevant delivery items
-      );
-
-      // Extract all items from newly selected deliveries
-      const newItems = selectedDeliveries.flatMap((delivery) =>
-        delivery.items.map((item) => ({
-          delivery_item_id: item.delivery_item_id,
-          item: item.item,
-          itemPrice: item.itemPrice,
-          itemCurrency: item.itemCurrency,
-          itemQuantity: item.itemQuantity,
-          totalPriceItem: item.totalPriceItem,
-        }))
-      );
-
-      // Combine new items with existing ones, avoiding duplicates
-      const mergedInvoiceItems = [...filteredInvoiceItems];
-
-      newItems.forEach((newItem) => {
-        const exists = mergedInvoiceItems.some(
-          (existingItem) =>
-            existingItem.delivery_item_id === newItem.delivery_item_id
-        );
-        if (!exists) {
-          mergedInvoiceItems.push(newItem);
-        }
+      formik.setFieldValue("invoiceSummary", {
+        ...formik.values.invoiceSummary,
+        totalPrice: totalPrice,
+        totalPriceWithoutVAT: roundVal(calculatedTotalPriceWithoutVAT),
+        totalVAT: roundVal(calculatedTotalVAT),
+        totalPriceWithVAT: roundVal(calculatedTotalPriceWithVAT),
+        totalPriceInWords: convertNumberToWords(calculatedTotalPriceInWords),
       });
-
-      return mergedInvoiceItems;
-    });
-  }, [selectedDeliveries]);
-
-  const [paymentMethods, setPaymentMethods] = useState([
-    { id: 1, label: "Unpaid", isChecked: true },
-    { id: 2, label: "Cash", isChecked: false },
-    { id: 3, label: "Cheque", isChecked: false },
-    { id: 4, label: "Cash & Cheque", isChecked: false },
-    { id: 5, label: "Bank Transfer", isChecked: false },
+    } else {
+      formik.setFieldValue("invoiceSummary", {
+        ...formik.values.invoiceSummary,
+        totalPriceWithoutVAT: null,
+        totalVAT: null,
+        totalPriceWithVAT: null,
+        totalPriceInWords: "",
+      });
+    }
+  }, [
+    totalPrice,
+    formik.values.invoiceSummary.isIncludeVAT,
+    formik.values.invoiceSummary.isIncludeItemVAT,
+    formik.values.invoiceSummary.VAT,
+    formik.values.invoiceItems,
   ]);
 
-  console.table(paymentMethods);
-
   const handlePaymentMethodsChange = (id) => {
-    setPaymentMethods((prevPaymentMethods) =>
-      prevPaymentMethods.map((paymentMethod) => ({
+    setPaymentMethods((prevPaymentMethods) => {
+      const updated = prevPaymentMethods.map((paymentMethod) => ({
         ...paymentMethod,
-        isChecked: paymentMethod.id === id, // Set only the selected one to true, others false
-      }))
-    );
+        isChecked: paymentMethod.id === id,
+      }));
+      const selected = updated.find((method) => method.isChecked);
+      formik.setFieldValue("paid.type", selected?.label || "");
+      return updated;
+    });
   };
 
-  const [customerReceiptVoucher, setCustomerReceiptVoucher] = useState(
-    customers[0]
-  );
-
-  console.log(`customerReceiptVoucher :${customerReceiptVoucher}`);
-  console.dir(customerReceiptVoucher);
+  const [
+    isCreatingCustomerReceiptVoucher,
+    setIsCreatingCustomerReceiptVoucher,
+  ] = useState(false); // Toggle modal visibility
 
   const handleChangeCustomerReceiptVoucher = (e) => {
     if (e.target.value === "create_new") {
-      setIsCreatingCustomerReceiptVoucher(true); // Show popup to create a new customer
+      setIsCreatingCustomerReceiptVoucher(true);
       return;
     }
-    console.log(
-      `print id of customer ReceiptVoucher from database ${e.target.value}`
-    );
     const selectedOption = customers.find((item) => item.id == e.target.value);
-    setCustomerReceiptVoucher(selectedOption || customers[0]);
+    formik.setFieldValue(
+      "paid.customerReceiptVoucher",
+      selectedOption || customers[0]
+    );
   };
-
-  const [amount, setAmount] = useState();
-
-  const handleChangeAmount = (e) => {
-    setAmount(e.target.value); // Update the state with the new amount
-  };
-  console.log(`amount : ${amount}`);
-
-  const [onAccountOf, setOnAccountOf] = useState("On invoice no 0001");
-
-  const handleChangeOnAccountOf = (e) => {
-    setOnAccountOf(e.target.value);
-  };
-
-  console.log(`onAccountOf : ${onAccountOf}`);
-
-  const [totalAmountInWords, setTotalAmountInWords] = useState("");
-
-  const [note, setNote] = useState("");
-
-  const handleChangeNote = (e) => {
-    setNote(e.target.value);
-  };
-
-  const [currencyReceiptVoucher, setCurrencyReceiptVoucher] = useState("NIS");
-
-  const handleChangeCurrencyReceiptVoucher = (e) => {
-    setCurrencyReceiptVoucher(e.target.value);
-  };
-
-  const [signatureReceiptVoucher, setSignatureReceiptVoucher] = useState({
-    urlSign: null,
-    urlFile: null,
-  }); // here save the signature value just when not null if null does not save
-  console.log(
-    `test receipt voucher urlSign ${signatureReceiptVoucher.urlSign}`
-  );
-  console.log(
-    `test receipt voucher urlFile ${signatureReceiptVoucher.urlFile}`
-  );
-
-  // useEffect(() => {
-  //   const updatedCustomer =
-  //     customers.find((c) => c.id === customer.id) || customers[0];
-  //   setCustomerReceiptVoucher(updatedCustomer);
-  // }, [customer]);
-  useEffect(() => {
-    const updatedCustomer =
-      customers.find((c) => c.id === customer.id) || customers[0];
-    setCustomerReceiptVoucher(updatedCustomer);
-  }, [customer]);
 
   useEffect(() => {
-    isIncludeVAT || isIncludeItemVAT
-      ? setAmount(totalPriceWithVAT)
-      : setAmount(totalPriceWithoutVAT);
-  }, [totalPriceWithVAT, totalPriceWithoutVAT]);
+    formik.values.invoiceSummary.isIncludeVAT ||
+    formik.values.invoiceSummary.isIncludeItemVAT
+      ? formik.setFieldValue(
+          "paid.amount",
+          formik.values.invoiceSummary.totalPriceWithVAT
+        )
+      : formik.setFieldValue(
+          "paid.amount",
+          formik.values.invoiceSummary.totalPriceWithoutVAT
+        );
+  }, [
+    formik.values.invoiceSummary.totalPriceWithVAT,
+    formik.values.invoiceSummary.totalPriceWithoutVAT,
+  ]);
 
-  const [cheques, setCheques] = useState([
-    {
+  const addCheque = () => {
+    const newCheque = {
       bank_name: "",
       cheque_no: null,
       bank_no: null,
@@ -963,193 +1008,47 @@ const Invoice = () => {
       cheque_amount: null,
       date: new Date(),
       cheque_image: "",
-    },
-  ]);
-  console.table(cheques);
+    };
 
-  const handleChangeBankName = (e, chequeIndex) => {
-    setCheques((prevCheques) =>
-      prevCheques.map((cheque, index) =>
-        index === chequeIndex
-          ? {
-              ...cheque,
-              bank_name: e.target.value,
-            }
-          : cheque
-      )
-    );
-  };
-
-  const handleChangeChequeNo = (e, chequeIndex) => {
-    setCheques((prevCheques) =>
-      prevCheques.map((cheque, index) =>
-        index === chequeIndex
-          ? {
-              ...cheque,
-              cheque_no: parseFloat(e.target.value) || 0,
-            }
-          : cheque
-      )
-    );
-  };
-  const handleChangeBankNo = (e, chequeIndex) => {
-    setCheques((prevCheques) =>
-      prevCheques.map((cheque, index) =>
-        index === chequeIndex
-          ? {
-              ...cheque,
-              bank_no: parseFloat(e.target.value) || 0,
-            }
-          : cheque
-      )
-    );
-  };
-  const handleChangeBranchNo = (e, chequeIndex) => {
-    setCheques((prevCheques) =>
-      prevCheques.map((cheque, index) =>
-        index === chequeIndex
-          ? {
-              ...cheque,
-              branch_no: parseFloat(e.target.value) || 0,
-            }
-          : cheque
-      )
-    );
-  };
-
-  const handleChangeChequeAmount = (e, chequeIndex) => {
-    setCheques((prevCheques) =>
-      prevCheques.map((cheque, index) =>
-        index === chequeIndex
-          ? {
-              ...cheque,
-              cheque_amount: parseFloat(e.target.value) || 0,
-            }
-          : cheque
-      )
-    );
-  };
-
-  const handleChangeChequeDate = (date, chequeIndex) => {
-    setCheques((prevCheques) =>
-      prevCheques.map((cheque, index) =>
-        index === chequeIndex
-          ? {
-              ...cheque,
-              date: date,
-            }
-          : cheque
-      )
-    );
-  };
-
-  // const [chequeImage, setChequeImage] = useState({
-  //   urlFile: null,
-  // });
-  // console.log(`cheque Image : ${chequeImage.urlFile}`);
-
-  const handleChequeImageChange = (file, index) => {
-    console.log(`Updating cheque at index: ${index} with file: ${file}`); // ✅ Debugging log
-
-    setCheques((prevCheques) =>
-      prevCheques.map((cheque, i) =>
-        i === index ? { ...cheque, cheque_image: file } : cheque
-      )
-    );
-  };
-  const deleteCheque = (index) => {
-    setCheques((prevCheques) => prevCheques.filter((_, i) => i !== index));
-  };
-
-  let addCheque = () => {
-    setCheques((prevCheques) => [
-      ...prevCheques,
-      {
-        bank_name: "",
-        cheque_no: null,
-        bank_no: null,
-        branch_no: null,
-        cheque_amount: null,
-        date: new Date(),
-        cheque_image: "",
-      },
+    formik.setFieldValue("paid.amountPaid.cheques", [
+      ...formik.values.paid.amountPaid.cheques,
+      newCheque,
     ]);
   };
 
+  const deleteCheque = (index) => {
+    const updatedCheques = formik.values.paid.amountPaid.cheques.filter(
+      (_, i) => i !== index
+    );
+    formik.setFieldValue("paid.amountPaid.cheques", updatedCheques);
+  };
+
   const totalCheque = useMemo(() => {
-    return cheques.reduce(
+    return formik.values.paid.amountPaid.cheques.reduce(
       (sum, cheque) => sum + (parseFloat(cheque.cheque_amount) || 0),
       0
     );
-  }, [cheques]);
-
-  const [cash, setCash] = useState(null);
-  const [messageIsPricePaid, setMessageIsPricePaid] = useState("");
-  const [transferValue, setTransferValue] = useState(null);
-  const [totalCashAndCheque, setTotalCashAndCheque] = useState(null);
+  }, [formik.values.paid.amountPaid.cheques]);
 
   useEffect(() => {
-    setTotalCashAndCheque((cash || 0) + (totalCheque || 0));
-  }, [cash, totalCheque]);
+    formik.setFieldValue("paid.amountPaid.totalCheque", totalCheque);
+  }, [totalCheque]);
 
   useEffect(() => {
-    // Check if ALL items have a valid `totalPriceItem`
-    const allValid =
-      invoiceItems.length > 0 &&
-      invoiceItems.every(
-        (item) =>
-          item.totalPriceItem !== null &&
-          item.totalPriceItem !== undefined &&
-          !isNaN(item.totalPriceItem) // Ensure it's a number
-      );
-
-    console.log(`Check price validity: ${allValid}`); // Should return false initially
-    if (!allValid) {
-      setMessageIsPricePaid("");
-    }
-    if (allValid && totalPrice > 0) {
-      // Determine which payment method is checked
-      const isCashChecked = paymentMethods.find(
-        (method) => method.label === "Cash"
-      )?.isChecked;
-      const isChequeChecked = paymentMethods.find(
-        (method) => method.label === "Cheque"
-      )?.isChecked;
-      const isCashAndChequeChecked = paymentMethods.find(
-        (method) => method.label === "Cash & Cheque"
-      )?.isChecked;
-      const isBankTransferChecked = paymentMethods.find(
-        (method) => method.label === "Bank Transfer"
-      )?.isChecked;
-
-      let isPaid = false;
-
-      if (isCashChecked) {
-        isPaid = totalPrice === (cash || 0);
-      } else if (isChequeChecked) {
-        isPaid = totalPrice === (totalCheque || 0);
-      } else if (isCashAndChequeChecked) {
-        isPaid = totalPrice === (cash || 0) + (totalCheque || 0);
-      } else if (isBankTransferChecked) {
-        isPaid = totalPrice === (transferValue || 0);
-      }
-
-      setMessageIsPricePaid(
-        isPaid ? "Thank you for paying" : "Please pay the full invoice amount"
-      );
+    if (formik.values.paid.type === "Cash & Cheque") {
+      const total =
+        (formik.values.paid.amountPaid.cash || 0) +
+        (formik.values.paid.amountPaid.totalCheque || 0);
+      formik.setFieldValue("paid.amountPaid.totalCashAndCheque", total);
     }
   }, [
-    cash,
-    totalCheque,
-    transferValue,
-    invoiceItems,
-    totalPrice,
-    paymentMethods,
-  ]); // ✅ Added paymentMethods as a dependency
+    formik.values.paid.type,
+    formik.values.paid.amountPaid.cash,
+    formik.values.paid.amountPaid.totalCheque,
+  ]);
 
-  const [fromBankName, setFromBankName] = useState("");
-  const [bankTransferNO, setBankTransferNO] = useState(null);
   useEffect(() => {
+    // Get the selected payment type (paymentMethods can remain as local state)
     let selectedPayment = paymentMethods.find(
       (method) => method.isChecked
     )?.label;
@@ -1157,408 +1056,47 @@ const Invoice = () => {
 
     switch (selectedPayment) {
       case "Cash":
-        amountInWords = convertNumberToWords(cash || 0);
+        amountInWords = convertNumberToWords(
+          formik.values.paid.amountPaid.cash || 0
+        );
         break;
       case "Cheque":
-        amountInWords = convertNumberToWords(totalCheque || 0);
+        amountInWords = convertNumberToWords(
+          formik.values.paid.amountPaid.totalCheque || 0
+        );
         break;
       case "Cash & Cheque":
-        amountInWords = convertNumberToWords(totalCashAndCheque || 0);
+        amountInWords = convertNumberToWords(
+          formik.values.paid.amountPaid.totalCashAndCheque || 0
+        );
         break;
       case "Bank Transfer":
-        amountInWords = convertNumberToWords(transferValue || 0);
+        amountInWords = convertNumberToWords(
+          formik.values.paid.amountPaid.transferValue || 0
+        );
         break;
       default:
         amountInWords = "";
         break;
     }
 
-    setTotalAmountInWords(amountInWords);
-  }, [cash, totalCheque, totalCashAndCheque, transferValue, paymentMethods]);
-  const [receiptVoucherNO, setReceiptVoucherNO] = useState("1".padStart(5, 0));
-
-  const [clearButt, setClearButt] = useState(false);
-
-  const defaultValues = {
-    customer: {
-      customer: customers[0], // Reset customer to the first one
-      customerInfo: {
-        Mobile_NO: "",
-        Full_Address: "",
-        City: "",
-        VAT_NO: "",
-      },
-    },
-    items: [
-      {
-        item: items[0], // Default first item
-        itemPrice: null,
-        itemCurrency: currencies[0], // Default currency
-        itemQuantity: null,
-        totalPriceItem: null,
-      },
-    ],
-    invoiceSummary: {
-      isIncludeVAT: false,
-      isIncludeItemVAT: false,
-      totalPrice: 0,
-      totalPriceWithoutVAT: 0,
-      VAT: 0.17,
-      totalVAT: 0,
-      totalPriceWithVAT: 0,
-      totalPriceInWords: "",
-      signatureInvoice: {
-        urlSign: null,
-        urlFile: null,
-      },
-    },
-  };
-
-  const getPaidValue = () => {
-    const selectedPayment = paymentMethods.find((method) => method.isChecked);
-
-    if (!selectedPayment || selectedPayment.id === 1) {
-      return false;
-    }
-
-    const basePaidData = {
-      type: selectedPayment.label,
-      customerReceiptVoucher,
-      amount,
-      onAccountOf,
-      currencyReceiptVoucher,
-      totalAmountInWords,
-      note,
-      signatureReceiptVoucher,
-      receiptVoucherNO,
-    };
-
-    switch (selectedPayment.label) {
-      case "Cash":
-        return { ...basePaidData, amountPaid: { cash } };
-      case "Cheque":
-        return { ...basePaidData, amountPaid: { cheques, totalCheque } };
-      case "Cash & Cheque":
-        return {
-          ...basePaidData,
-          amountPaid: {
-            cashAndCheques: { cheques, cash },
-            totalCheque,
-            totalCashAndCheque,
-          },
-        };
-      case "Bank Transfer":
-        return {
-          ...basePaidData,
-          amountPaid: { fromBankName, bankTransferNO, transferValue },
-        };
-      default:
-        return false;
-    }
-  };
-  const resetAllStates = () => {
-    // ✅ Reset all state values at once
-    setCustomer(defaultValues.customer.customer);
-    setCustomerInfo(defaultValues.customer.customerInfo);
-    setInvoiceItems(defaultValues.items);
-    setIsIncludeVAT(defaultValues.invoiceSummary.isIncludeVAT);
-    setIsIncludeItemVAT(defaultValues.invoiceSummary.isIncludeItemVAT);
-    setTotalPriceWithoutVAT(defaultValues.invoiceSummary.totalPriceWithoutVAT);
-    setVAT(defaultValues.invoiceSummary.VAT);
-    setTotalVAT(defaultValues.invoiceSummary.totalVAT);
-    setTotalPriceWithVAT(defaultValues.invoiceSummary.totalPriceWithVAT);
-    setTotalPriceInWords(defaultValues.invoiceSummary.totalPriceInWords);
-    setSignatureInvoice(defaultValues.invoiceSummary.signatureInvoice);
-    // ✅ Reset payment-related states
-    setPaymentMethods([
-      { id: 1, label: "Unpaid", isChecked: true },
-      { id: 2, label: "Cash", isChecked: false },
-      { id: 3, label: "Cheque", isChecked: false },
-      { id: 4, label: "Cash & Cheque", isChecked: false },
-      { id: 5, label: "Bank Transfer", isChecked: false },
-    ]);
-
-    // ✅ Reset cheque-related states
-    setCheques([
-      {
-        bank_name: "",
-        cheque_no: null,
-        bank_no: null,
-        branch_no: null,
-        cheque_amount: null,
-        date: new Date(),
-        cheque_image: "",
-      },
-    ]);
-
-    // setTotalCheque(0);
-    setCash(0);
-    setFromBankName("");
-    setBankTransferNO("");
-    setTransferValue("");
-
-    // ✅ Reset file states
-    setSignatureReceiptVoucher({ urlSign: null, urlFile: null });
-    // setInvoicePhoto(null);
-    setCustomerReceiptVoucher(customers[0]);
-    setCurrencyReceiptVoucher("NIS");
-    setAmount(null);
-    setOnAccountOf("On invoice no 0001");
-    setNote("");
-    setTotalAmountInWords("");
-    setSelectedDeliveries([]);
-    setReceiptVoucherNO("1".padStart(5, 0));
-  };
-
-  const validationSchema = yup.object().shape({
-    // Customer section
-    customer: yup.object().shape({
-      customer: yup.object().shape({
-        id: yup.number().required("Customer is required"),
-      }),
-      customerInfo: yup.object().shape({
-        Mobile_NO: yup.string().required("Mobile number is required"),
-        Full_Address: yup.string().required("Full address is required"),
-        City: yup.string().required("City is required"),
-        VAT_NO: yup.string().required("VAT number is required"),
-      }),
-    }),
-
-    // Items section
-    items: yup.array().of(
-      yup.object().shape({
-        item: yup.object().shape({
-          // id: yup.number(),
-          // id: yup.number().required("Item is required"),
-        }),
-        itemPrice: yup
-          .number()
-          .typeError("Item price must be a number")
-          .positive("Item price must be greater than 0")
-          .required("Item price is required"),
-
-        itemQuantity: yup
-          .number()
-          .typeError("Quantity must be a number")
-          .positive("Quantity must be greater than 0")
-          .integer("Quantity must be an integer")
-          .required("Item quantity is required"),
-
-        // ✅ Conditionally require `anotherItem.value` only if `exist: true`
-        anotherItem: yup.object().shape({
-          exist: yup.boolean(),
-          value: yup.string().when("exist", {
-            is: true,
-            then: (schema) => schema.required("Another item value is required"),
-            otherwise: (schema) => schema.notRequired(),
-          }),
-        }),
-      })
-    ),
-
-    // Invoice summary section
-    invoiceSummary: yup.object().shape({
-      signatureInvoice: yup
-        .object()
-        .shape({
-          urlSign: yup.string().nullable(),
-          urlFile: yup.string().nullable(),
-        })
-        .test(
-          "signature-required",
-          "At least one signature (drawn or uploaded) is required",
-          (value) => value?.urlSign || value?.urlFile // ✅ At least one must be provided
-        ),
-    }),
-
-    // ✅ Add validation for `paid`
-    paid: yup
-      .mixed()
-      .test("validate-paid", "Invalid payment details", function (value) {
-        if (!value || value === false) {
-          return true; // No payment method selected, allow form submission
-        }
-
-        const { type, amountPaid } = value;
-
-        if (!type) {
-          return true;
-        } // Payment type is required
-
-        switch (type) {
-          case "Cash":
-            return (
-              (typeof amountPaid?.cash === "number" && amountPaid.cash > 0) ||
-              this.createError({
-                path: "paid.amountPaid.cash",
-                message: "Cash is required and must be greater than 0",
-              })
-            );
-
-          case "Cheque":
-            return (
-              (Array.isArray(amountPaid?.cheques) &&
-                amountPaid.cheques.length > 0 &&
-                amountPaid.cheques.every(
-                  (cheque) =>
-                    cheque.bank_name &&
-                    cheque.cheque_no &&
-                    cheque.bank_no &&
-                    cheque.branch_no &&
-                    cheque.cheque_amount &&
-                    cheque.date &&
-                    cheque.cheque_image
-                ) &&
-                amountPaid.totalCheque) ||
-              this.createError({
-                path: "paid.amountPaid.cheques",
-                message: "All cheque fields are required",
-              })
-            );
-
-          case "Cash & Cheque":
-            return (
-              (Array.isArray(amountPaid?.cashAndCheques?.cheques) &&
-                amountPaid.cashAndCheques.cheques.length > 0 &&
-                amountPaid.cashAndCheques.cheques.every(
-                  (cheque) =>
-                    cheque.bank_name &&
-                    cheque.cheque_no &&
-                    cheque.bank_no &&
-                    cheque.branch_no &&
-                    cheque.cheque_amount &&
-                    cheque.date &&
-                    cheque.cheque_image
-                ) &&
-                amountPaid.totalCheque > 0 &&
-                amountPaid.cashAndCheques.cash > 0 &&
-                amountPaid.totalCashAndCheque > 0) ||
-              this.createError({
-                path: "paid.amountPaid.cashAndCheques",
-                message: "Both cash and cheque details are required",
-              })
-            );
-
-          // case "Bank Transfer":
-          //   return (
-          //     (typeof amountPaid?.fromBankName === "string" &&
-          //       amountPaid.fromBankName.trim() !== "" &&
-          //       typeof amountPaid?.bankTransferNO === "string" &&
-          //       amountPaid.bankTransferNO.trim() !== "" &&
-          //       typeof amountPaid?.transferValue === "number" &&
-          //       amountPaid.transferValue > 0) ||
-          //     this.createError({
-          //       path: "paid",
-          //       message: "Bank transfer details are required",
-          //     })
-          //   );
-
-          // default:
-          //   return this.createError({
-          //     path: "paid",
-          //     message: "Invalid payment type",
-          //   });
-        }
-      }),
-  });
-
-  const formik = useFormik({
-    initialValues: {
-      invoiceNO: "1".padStart(5, 0),
-      selectedDeliveries,
-      customer: {
-        customer: { ...customer },
-        customerInfo: { ...customerInfo },
-      },
-      items: [...invoiceItems],
-      invoiceSummary: {
-        isIncludeVAT,
-        isIncludeItemVAT,
-        totalPrice,
-        totalPriceWithoutVAT,
-        VAT,
-        totalVAT,
-        totalPriceWithVAT,
-        totalPriceInWords,
-        signatureInvoice,
-      },
-      paid: getPaidValue(), // Dynamically assign paid value
-    },
-    validationSchema,
-    onSubmit: (values, { resetForm }) => {
-      console.log("Submitting Invoice Data:", values);
-      dispatch(saveInHistory(values));
-      resetAllStates();
-      resetForm({ values: defaultValues });
-      setClearButt(!clearButt);
-    },
-  });
-
-  console.log("before and after reset Data :", formik.values);
-  // ✅ Sync Formik values when customer state changes
-  useEffect(() => {
-    const updatedInvoiceSummary = {
-      isIncludeVAT,
-      isIncludeItemVAT,
-      totalPrice,
-      totalPriceWithoutVAT,
-      VAT,
-      totalVAT,
-      totalPriceWithVAT,
-      totalPriceInWords,
-      signatureInvoice,
-    };
-
-    formik.setValues((prevValues) => ({
-      ...prevValues,
-      invoiceNO: "1".padStart(5, 0),
-      customer: {
-        customer: { ...customer },
-        customerInfo: { ...customerInfo },
-      },
-      items: [...invoiceItems],
-      invoiceSummary: updatedInvoiceSummary,
-      selectedDeliveries,
-      paid: getPaidValue(), // ✅ Dynamically update "paid" value inside useEffect
-    }));
+    // Update the Formik field directly
+    formik.setFieldValue("paid.totalAmountInWords", amountInWords);
   }, [
-    selectedDeliveries,
-    customer,
-    customerInfo,
-    invoiceItems,
-    isIncludeVAT,
-    isIncludeItemVAT,
-    totalPrice,
-    totalPriceWithoutVAT,
-    VAT,
-    totalVAT,
-    totalPriceWithVAT,
-    totalPriceInWords,
-    signatureInvoice,
-    paymentMethods, // ✅ Ensure changes in payment method trigger an update
-    customerReceiptVoucher,
-    amount,
-    onAccountOf,
-    currencyReceiptVoucher,
-    totalAmountInWords,
-    note,
-    signatureReceiptVoucher,
-    cash,
-    cheques,
-    totalCheque,
-    fromBankName,
-    bankTransferNO,
-    transferValue,
-    receiptVoucherNO,
+    formik.values.paid.amountPaid.cash,
+    formik.values.paid.amountPaid.totalCheque,
+    formik.values.paid.amountPaid.totalCashAndCheque,
+    formik.values.paid.amountPaid.transferValue,
+    paymentMethods, // If paymentMethods is updated externally
   ]);
 
-  // useEffect(() => {
-  //   invoiceItems.forEach((invoiceItem, index) => {
-  //     if (invoiceItem?.anotherItem?.exist) {
-  //       formik.setFieldError(`items.${index}.item.id`, "");
-  //     }
-  //   });
-  // }, [invoiceItems]);
+  useEffect(() => {
+    const updatedCustomer =
+      customers.find((c) => c.id === formik.values.customer.customer.id) ||
+      customers[0];
+    formik.setFieldValue("paid.customerReceiptVoucher", updatedCustomer);
+  }, [formik.values.customer.customer]);
+
   return (
     <>
       <Header />
@@ -1585,69 +1123,58 @@ const Invoice = () => {
             <label className="text-xl">Delivery Numbers: &nbsp; </label>
             <MultiSelectInput
               options={deliveries}
-              selectedOptions={selectedDeliveries} // Pass the full selected object ✅ Correct
-              setSelectedOptions={setSelectedDeliveries}
+              selectedOptions={formik.values.selectedDeliveries} // Pass the full selected object ✅ Correct
+              setSelectedOptions={(selected) =>
+                formik.setFieldValue("selectedDeliveries", selected)
+              }
+              // setSelectedOptions={setSelectedDeliveries}
               placeholder="Select Your Delivery Number"
             />
           </div>
-          {/* <div className=" border w-80 ">
-          <InvoiceLangSelect />
-        </div> */}
         </section>
         <section className="border rounded-[20px] p-10 pb-0">
-          <div className="  flex-center-v-space-between mb-5">
+          <div className="flex-center-v-space-between mb-5">
             <h1 className="text-2xl font-semibold">Customer</h1>
-            <NumberValue label="Customer" num={customer.customer_number} />
+            <NumberValue
+              label="Customer"
+              num={formik.values.customer.customer.customer_number}
+            />
           </div>
-          <div className=" grid-5-cols-center-x gap-y-10 h-24">
+          <div className="grid-5-cols-center-x gap-y-10 h-24">
             <div className="">
               <CreatableDropDown
+                key={formik.values.customer.customer.id} // Add a key prop
                 options={customers}
-                option={customer}
-                // option={formik.values.customer}
+                option={formik.values.customer.customer} // Using Formik state
                 handleChangeOption={handleChangeCustomer}
                 valueKey="id"
                 label="name"
-                // label={"select customer"}
                 width="w-96"
               />
-
-              {formik.touched.customer?.customer &&
-              formik.errors.customer?.customer?.id ? (
-                <p className="text-red-500 text-sm mt-1">
-                  {formik.errors.customer.customer.id}
-                </p>
-              ) : null}
             </div>
-            {Object.keys(customerInfo).map((key, index) => {
-              console.log("assssssssl");
-              console.log(customerInfo);
+            {Object.keys(formik.values.customer.customerInfo).map(
+              (key, index) => {
+                const labels = ["Mobile NO", "Full Address", "City", "VAT NO"];
+                return (
+                  <div key={key}>
+                    <Input
+                      name={key}
+                      value={formik.values.customer.customerInfo[key] || ""}
+                      handleChange={handleChangeCustomerInfo}
+                      label={labels[index]}
+                    />
+                  </div>
+                );
+              }
+            )}
 
-              return (
-                <div>
-                  <Input
-                    key={key}
-                    name={key}
-                    value={customerInfo[key] || ""} // Ensure value is never null
-                    handleChange={handleChangeCustomerInfo}
-                    label={labels[index]}
-                    // width="w-80"
-                  />
-
-                  {formik.touched.customer?.customerInfo?.[key] &&
-                  formik.errors.customer?.customerInfo?.[key] ? (
-                    <p className="text-red-500 text-sm mt-1">
-                      {formik.errors.customer.customerInfo[key]}
-                    </p>
-                  ) : null}
-                </div>
-              );
-            })}
+            {formik.errors.customer && (
+              <div style={{ color: "red" }}>{formik.errors.customer}</div>
+            )}
           </div>
         </section>
-
         <section className="border rounded-[20px] p-10">
-          <div className="  flex-center-v-space-between">
+          <div className="flex-center-v-space-between">
             <h1 className="text-2xl font-semibold">Item</h1>
             <button
               className="bg-green-600 text-white w-10 h-10 rounded-full flex-vx-center relative group"
@@ -1661,230 +1188,221 @@ const Invoice = () => {
               </span>
             </button>
           </div>
-          <div className=" grid ">
-            {invoiceItems.map((invoiceItem, index) => {
-              return (
-                <div
-                  key={index}
-                  className={`${
-                    invoiceItem?.anotherItem?.exist
-                      ? "grid-8-cols-center-x"
-                      : "grid-7-cols-center-x"
-                  }  h-24`}
-                >
-                  <NumberValue
-                    label="Item"
-                    num={invoiceItem.item.item_number}
-                    width="w-40"
+          <div className="grid">
+            {formik.values.invoiceItems.map((invoiceItem, index) => (
+              <div
+                key={index}
+                className={`${
+                  invoiceItem?.anotherItem?.exist
+                    ? "grid-8-cols-center-x"
+                    : "grid-7-cols-center-x"
+                } h-24`}
+              >
+                <NumberValue
+                  label="Item"
+                  num={invoiceItem.item.item_number}
+                  width="w-40"
+                />
+                <div>
+                  <CreatableDropDown
+                    options={items}
+                    option={invoiceItem.item}
+                    handleChangeOption={(e) => handleChangeItem(e, index)}
+                    valueKey="id"
+                    label="name"
+                    width="w-48"
+                    item={"anotherItem"} // Ensures "another" option is available
                   />
-                  <div>
-                    <CreatableDropDown
-                      options={items}
-                      option={invoiceItem.item}
-                      handleChangeOption={(e) => handleChangeItem(e, index)}
-                      valueKey="id"
-                      label="name"
-                      width="w-48"
-                      item={"anotherItem"} // Ensure another item is included
-                    />
-                    {/* {!invoiceItem.anotherItem?.exist &&
-                    formik.touched.items?.[index]?.item &&
-                    formik.errors.items?.[index]?.item?.id && (
+                  {/* {formik.touched.invoiceItems?.[index]?.item &&
+                    formik.errors.invoiceItems?.[index]?.item?.id && (
                       <p className="text-red-500 text-sm mt-1">
-                        {formik.errors.items[index].item.id}
+                        {formik.errors.invoiceItems[index].item.id}
                       </p>
                     )} */}
-                    {formik.touched.items?.[index]?.item &&
-                    formik.errors.items?.[index]?.item?.id ? (
-                      <p className="text-red-500 text-sm mt-1">
-                        {formik.errors.items[index].item.id}
-                      </p>
-                    ) : null}
-                  </div>
-                  {invoiceItem.anotherItem?.exist ? (
-                    <div>
-                      <Input
-                        key={`another_item_${index}`}
-                        name="another_item"
-                        value={invoiceItem.anotherItem.value || ""} // Ensure value is never null
-                        handleChange={(e) => handleChangeAnotherItem(e, index)}
-                        label="Another item"
-                        width="w-48"
-                      />
-                      {formik.touched.items?.[index]?.anotherItem?.value &&
-                      formik.errors.items?.[index]?.anotherItem?.value ? (
-                        <p className="text-red-500 text-sm mt-1">
-                          {formik.errors.items[index].anotherItem.value}
-                        </p>
-                      ) : null}
-                    </div>
-                  ) : null}
-                  <div>
-                    <Input
-                      key={"item_price"}
-                      name={"Price"}
-                      value={invoiceItem.itemPrice || ""} // Ensure value is never null
-                      handleChange={(e) => handleChangeItemPrice(e, index)}
-                      label={"Item price"}
-                      width="w-40"
-                    />
-
-                    {formik.touched.items?.[index]?.itemPrice &&
-                    formik.errors.items?.[index]?.itemPrice ? (
-                      <p className="text-red-500 text-sm mt-1">
-                        {formik.errors.items[index].itemPrice}
-                      </p>
-                    ) : null}
-                  </div>
-                  <div>
-                    <DropDown
-                      options={currencies}
-                      option={invoiceItem.itemCurrency}
-                      handleChangeOption={(e) =>
-                        handleChangeItemCurrency(e, index)
-                      }
-                      label={"Select item currency "}
-                      width="w-40"
-                      // bottom={"35%"}
-                    />
-                  </div>
-                  <div>
-                    <Input
-                      key={"item_quantity"}
-                      name={"quantity"}
-                      value={invoiceItem.itemQuantity || ""}
-                      handleChange={(e) => handleChangeItemQuantity(e, index)}
-                      label={"Item quantity"}
-                      width="w-40"
-                    />
-
-                    {formik.touched.items?.[index]?.itemQuantity &&
-                    formik.errors.items?.[index]?.itemQuantity ? (
-                      <p className="text-red-500 text-sm mt-1">
-                        {formik.errors.items[index].itemQuantity}
-                      </p>
-                    ) : null}
-                  </div>
-
-                  <Input
-                    key={"total_price_item"}
-                    name={"Price"}
-                    value={invoiceItem.totalPriceItem || ""}
-                    label={"Total price item"}
-                    width="w-40"
-                    readOnly={true}
-                  />
-
-                  <button
-                    className="relative group w-10 h-10 flex-vx-center"
-                    onClick={() => deleteItem(index)}
-                  >
-                    <DeleteIcon />
-
-                    {/* Tooltip */}
-                    <span className="absolute -top-11 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-lg rounded-md px-4 py-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">
-                      Delete Item
-                    </span>
-                  </button>
                 </div>
-              );
-            })}
+                {invoiceItem.anotherItem?.exist && (
+                  <div>
+                    <Input
+                      key={`another_item_${index}`}
+                      name="another_item"
+                      value={invoiceItem.anotherItem.value || ""}
+                      handleChange={(e) => handleChangeAnotherItem(e, index)}
+                      label="Another item"
+                      width="w-48"
+                    />
+                    {/* {formik.touched.invoiceItems?.[index]?.anotherItem?.value &&
+                      formik.errors.invoiceItems?.[index]?.anotherItem
+                        ?.value && (
+                        <p className="text-red-500 text-sm mt-1">
+                          {formik.errors.invoiceItems[index].anotherItem.value}
+                        </p>
+                      )} */}
+                  </div>
+                )}
+                <div>
+                  <Input
+                    key={"item_price"}
+                    name={"Price"}
+                    value={invoiceItem.itemPrice || ""}
+                    handleChange={(e) => handleChangeItemPrice(e, index)}
+                    label={"Item price"}
+                    width="w-40"
+                  />
+                  {/* {formik.touched.invoiceItems?.[index]?.itemPrice &&
+                    formik.errors.invoiceItems?.[index]?.itemPrice && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {formik.errors.invoiceItems[index].itemPrice}
+                      </p>
+                    )} */}
+                </div>
+                <div>
+                  <DropDown
+                    options={currencies}
+                    option={invoiceItem.itemCurrency}
+                    handleChangeOption={(e) =>
+                      handleChangeItemCurrency(e, index)
+                    }
+                    label={"Select item currency"}
+                    width="w-40"
+                  />
+                </div>
+                <div>
+                  <Input
+                    key={"item_quantity"}
+                    name={"quantity"}
+                    value={invoiceItem.itemQuantity || ""}
+                    handleChange={(e) => handleChangeItemQuantity(e, index)}
+                    label={"Item quantity"}
+                    width="w-40"
+                  />
+                  {/* {formik.touched.invoiceItems?.[index]?.itemQuantity &&
+                    formik.errors.invoiceItems?.[index]?.itemQuantity && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {formik.errors.invoiceItems[index].itemQuantity}
+                      </p>
+                    )} */}
+                </div>
+                <Input
+                  key={"total_price_item"}
+                  name={"Price"}
+                  value={invoiceItem.totalPriceItem || ""}
+                  label={"Total price item"}
+                  width="w-40"
+                  readOnly={true}
+                />
+                <button
+                  className="relative group w-10 h-10 flex-vx-center"
+                  onClick={() => deleteItem(index)}
+                >
+                  <DeleteIcon />
+                  {/* Tooltip */}
+                  <span className="absolute -top-11 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-lg rounded-md px-4 py-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">
+                    Delete Item
+                  </span>
+                </button>
+              </div>
+            ))}
           </div>
-          <div className=" flex-center-v-end-x gap-10">
+          <div className="flex-center-v-end-x gap-10">
             <Input
               key={"total_price"}
               name={"Price"}
-              value={totalPrice || ""}
-              label={"Total price "}
+              value={formik.values.invoiceSummary.totalPrice || ""}
+              label={"Total price"}
               width="w-40"
               readOnly={true}
             />
             <CheckBox
-              isChecked={isIncludeItemVAT}
+              isChecked={formik.values.invoiceSummary.isIncludeItemVAT}
               handleChange={handleIsIncludeItemVATChange}
               label="Include Item VAT"
-              style={isIncludeVAT}
+              style={formik.values.invoiceSummary.isIncludeVAT}
             />
           </div>
-        </section>
 
+          {/* Display Errors for Invoice Items */}
+          {formik.errors.invoiceItems && (
+            <div style={{ color: "red" }}>{formik.errors.invoiceItems}</div>
+          )}
+        </section>
         <section className="border rounded-[20px] p-10 grid gap-10 ">
           <h1 className="text-2xl font-semibold">Invoice Summary</h1>
           <div className="flex gap-10">
             <Input
               key={"Total_Price_without_VAT"}
-              name={"Price"}
-              value={totalPriceWithoutVAT || ""}
+              name={"Total_Price_without_VAT"}
+              value={formik.values.invoiceSummary.totalPriceWithoutVAT || ""}
               label={"Total Price Without VAT"}
               readOnly={true}
             />
             <CheckBox
-              isChecked={isIncludeVAT}
+              isChecked={formik.values.invoiceSummary.isIncludeVAT}
               handleChange={handleIsIncludeVATChange}
               label="Include VAT"
-              style={isIncludeItemVAT}
+              style={formik.values.invoiceSummary.isIncludeItemVAT}
+              // You may remove style={isIncludeItemVAT} if not needed
             />
           </div>
-          {isIncludeVAT || isIncludeItemVAT ? (
+          {(formik.values.invoiceSummary.isIncludeVAT ||
+            formik.values.invoiceSummary.isIncludeItemVAT) && (
             <div className="flex gap-10">
               <Input
                 key={"VAT"}
-                name={"Price"}
-                value={VAT}
+                name={"VAT"}
+                value={formik.values.invoiceSummary.VAT}
                 label={"VAT"}
                 readOnly={true}
               />
-
               <Input
                 key={"Total_VAT"}
-                name={"Price"}
-                value={totalVAT || ""}
+                name={"Total_VAT"}
+                value={formik.values.invoiceSummary.totalVAT || ""}
                 label={"Total VAT"}
                 readOnly={true}
               />
               <Input
                 key={"Total_Price_With_VAT"}
-                name={"Price"}
-                value={totalPriceWithVAT || ""}
+                name={"Total_Price_With_VAT"}
+                value={formik.values.invoiceSummary.totalPriceWithVAT || ""}
                 label={"Total Price With VAT"}
                 readOnly={true}
               />
             </div>
-          ) : (
-            ""
           )}
           <div>
-            {" "}
             <Input
               key={"total_Price_IN_Words"}
               name={"total_Price_IN_Words"}
-              value={totalPriceInWords}
+              value={formik.values.invoiceSummary.totalPriceInWords}
               label={"Total Price In Words"}
               readOnly={true}
             />
           </div>
-          {/* <div> */}
           <div className="grid-2-cols-center-vx">
             <div className="w-50rem ">
-              <p className="text-lg	font-medium	 center-x">
+              <p className="text-lg font-medium center-x">
                 Enter Your Signature
               </p>
               <Signature
-                setSignature={setSignatureInvoice}
-                signature={signatureInvoice}
-                clearButt={clearButt}
-                setClearButt={setClearButt}
+                setSignature={(url) => {
+                  formik.setFieldValue("invoiceSummary.signatureInvoice", url);
+                  // if (url) {
+                  //   setClearFile(true); // Trigger clear file input
+                  // }
+                }}
+                signature={formik.values.invoiceSummary.signatureInvoice}
+                // setSignature={setSignatureInvoice}
+                // signature={signatureInvoice}
+                setClearFile={setClearFile}
+                clearFile={clearFile}
+                setClearCanvas={setClearCanvas}
+                clearCanvas={clearCanvas}
               />
             </div>
-
             <div className="border">
-              {signatureInvoice.urlSign || signatureInvoice.urlFile ? (
+              {formik.values.invoiceSummary.signatureInvoice ? (
                 <img
-                  src={
-                    signatureInvoice.urlSign && signatureInvoice.urlFile
-                      ? signatureInvoice.urlFile // Show urlFile if both exist
-                      : signatureInvoice.urlSign || signatureInvoice.urlFile // Show the existing URL
-                  }
+                  src={formik.values.invoiceSummary.signatureInvoice}
                   alt="Signature"
                   className="w-[18rem] h-[9rem]"
                 />
@@ -1892,32 +1410,35 @@ const Invoice = () => {
                 "Invoice Signature"
               )}
             </div>
-
-            <div className=" w-full  flex-vx-center flex-col  ">
-              <div className="  font-semibold text-xl tracking-[0.2rem]">
-                OR{" "}
-              </div>
+            <div className="w-full flex-vx-center flex-col">
+              <div className="font-semibold text-xl tracking-[0.2rem]">OR</div>
               <FileInput
-                setFile={setSignatureInvoice}
-                file={signatureInvoice}
+                setFile={(url) => {
+                  formik.setFieldValue("invoiceSummary.signatureInvoice", url);
+                  // if (url) {
+                  //   setClearCanvas(true); // Trigger clear canvas
+                  // }
+                }}
+                file={formik.values.invoiceSummary.signatureInvoice}
                 name={"Choose Signature Image"}
                 label={"upload signature"}
                 type={"PNG"}
-                clearButt={clearButt}
-                setClearButt={setClearButt}
+                setClearFile={setClearFile}
+                clearFile={clearFile}
+                setClearCanvas={setClearCanvas}
+                clearCanvas={clearCanvas}
               />
               <div className="h-[.1rem]">
-                {formik.touched.invoiceSummary?.signatureInvoice &&
-                formik.errors.invoiceSummary?.signatureInvoice ? (
-                  <p className="text-red-500 text-sm mt-1 ">
-                    {formik.errors.invoiceSummary.signatureInvoice}
-                  </p>
-                ) : null}
+                {formik.errors.invoiceSummary && (
+                  <div style={{ color: "red" }}>
+                    {formik.errors.invoiceSummary}
+                  </div>
+                )}
               </div>
             </div>
           </div>
-          {/* </div> */}
         </section>
+
         <section className="border rounded-[20px] p-10 grid gap-10 ">
           <h1 className="text-2xl font-semibold">Payment Method</h1>
           <div className="center-v gap-10">
@@ -1935,10 +1456,10 @@ const Invoice = () => {
           {!paymentMethods?.[0]?.isChecked && (
             <div className="border grid gap-10">
               <HeaderReceiptVoucher
-                name={customer.company_name}
+                name={formik.values.paid.customerReceiptVoucher.company_name}
                 title="Receipt Voucher"
                 invoiceNum={formik.values.invoiceNO}
-                receiptVoucherNum={receiptVoucherNO}
+                receiptVoucherNum={formik.values.paid.receiptVoucherNO}
               />
 
               <div className="px-10 grid gap-10">
@@ -1953,7 +1474,7 @@ const Invoice = () => {
                 <div className="grid-5-cols-center-vx gap-10">
                   <CreatableDropDown
                     options={customers}
-                    option={customerReceiptVoucher}
+                    option={formik.values.paid.customerReceiptVoucher}
                     handleChangeOption={handleChangeCustomerReceiptVoucher}
                     valueKey="id"
                     label="name"
@@ -1963,8 +1484,13 @@ const Invoice = () => {
                   <Input
                     key="amount"
                     name="Price"
-                    value={amount || ""}
-                    handleChange={handleChangeAmount}
+                    value={formik.values.paid.amount || ""}
+                    handleChange={(e) =>
+                      formik.setFieldValue(
+                        "paid.amount",
+                        parseFloat(e.target.value) || 0
+                      )
+                    }
                     label="Amount to be paid"
                     width="w-48"
                   />
@@ -1972,8 +1498,10 @@ const Invoice = () => {
                   <Input
                     key="on_account_of"
                     name="on_account_of"
-                    value={onAccountOf || ""}
-                    handleChange={handleChangeOnAccountOf}
+                    value={formik.values.paid.onAccountOf || ""}
+                    handleChange={(e) =>
+                      formik.setFieldValue("paid.onAccountOf", e.target.value)
+                    }
                     label="On account of"
                     width="w-48"
                   />
@@ -1989,13 +1517,18 @@ const Invoice = () => {
 
                   <DropDown
                     options={currencies}
-                    option={currencyReceiptVoucher}
-                    handleChangeOption={handleChangeCurrencyReceiptVoucher}
+                    option={formik.values.paid.currencyReceiptVoucher}
+                    handleChangeOption={(e) =>
+                      formik.setFieldValue(
+                        "paid.currencyReceiptVoucher",
+                        e.target.value
+                      )
+                    }
                     label="Select Item Currency"
                     width="w-40"
                   />
                 </div>
-                {messageIsPricePaid && (
+                {/* {messageIsPricePaid && (
                   <div className=" ">
                     <p
                       className={` text-sm font-medium ${
@@ -2007,7 +1540,7 @@ const Invoice = () => {
                       {messageIsPricePaid}
                     </p>
                   </div>
-                )}
+                )} */}
 
                 {(paymentMethods?.[1]?.isChecked ||
                   paymentMethods?.[3]?.isChecked) && (
@@ -2017,20 +1550,23 @@ const Invoice = () => {
                       <Input
                         key={"cash"}
                         name={"Price"}
-                        value={cash || ""} // Ensure value is never null
+                        value={formik.values.paid.amountPaid.cash || ""} // Ensure value is never null
                         handleChange={(e) =>
-                          setCash(parseFloat(e.target.value) || 0)
+                          formik.setFieldValue(
+                            "paid.amountPaid.cash",
+                            parseFloat(e.target.value) || 0
+                          )
                         }
                         label={"Cash"}
                         width="w-40"
                       />
 
-                      {formik.touched.paid?.amountPaid?.cash &&
+                      {/* {formik.touched.paid?.amountPaid?.cash &&
                       formik.errors.paid?.amountPaid?.cash ? (
                         <p className="text-red-500 text-sm mt-1">
                           {formik.errors.paid.amountPaid.cash}
                         </p>
-                      ) : null}
+                      ) : null} */}
                     </div>
                   </div>
                 )}
@@ -2053,100 +1589,153 @@ const Invoice = () => {
                       </button>
                     </div>
 
-                    {cheques.map((cheque, index) => {
-                      return (
-                        <div className="grid grid-cols-8 items-center justify-items-center ">
-                          <Input
-                            key={"bank_name"}
-                            name={"bank_name"}
-                            value={cheque.bank_name || ""} // Ensure value is never null
-                            handleChange={(e) => handleChangeBankName(e, index)}
-                            label={"Bank name"}
-                            width="w-48"
-                          />
-                          <Input
-                            key={"cheque_no"}
-                            name={"cheque_no"}
-                            value={cheque.cheque_no || ""} // Ensure value is never null
-                            handleChange={(e) => handleChangeChequeNo(e, index)}
-                            label={"Cheque NO"}
-                            width="w-40"
-                          />
-                          <Input
-                            key={"bank_no"}
-                            name={"bank_no"}
-                            value={cheque.bank_no || ""} // Ensure value is never null
-                            handleChange={(e) => handleChangeBankNo(e, index)}
-                            label={"Bank NO"}
-                            width="w-40"
-                          />
-                          <Input
-                            key={"branch_no"}
-                            name={"branch_no"}
-                            value={cheque.branch_no || ""} // Ensure value is never null
-                            handleChange={(e) => handleChangeBranchNo(e, index)}
-                            label={"Branch NO"}
-                            width="w-40"
-                          />
-                          <Input
-                            key="cheque_amount"
-                            name="Price"
-                            value={cheque.cheque_amount || ""}
-                            handleChange={(e) =>
-                              handleChangeChequeAmount(e, index)
-                            }
-                            label="Cheque amount"
-                            width="w-40"
-                          />
-                          <div className="flex flex-col items-start ">
-                            <label className="text-gray-700 font-medium">
-                              Select Date:
-                            </label>
-                            <DatePicker
-                              id="custom-datepicker"
-                              selected={cheque.date}
-                              onChange={(date) =>
-                                handleChangeChequeDate(date, index)
+                    {formik.values.paid.amountPaid.cheques.map(
+                      (cheque, index) => {
+                        return (
+                          <div className="grid grid-cols-8 items-center justify-items-center ">
+                            <Input
+                              key={"bank_name"}
+                              name={"bank_name"}
+                              value={
+                                formik.values.paid.amountPaid.cheques[index]
+                                  .bank_name || ""
                               }
-                              className="w-40 border border-gray-300 rounded-lg px-4 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              handleChange={(e) =>
+                                formik.setFieldValue(
+                                  `paid.amountPaid.cheques[${index}].bank_name`,
+                                  e.target.value
+                                )
+                              }
+                              label={"Bank name"}
+                              width="w-48"
                             />
+                            <Input
+                              key={"cheque_no"}
+                              name={"cheque_no"}
+                              value={
+                                formik.values.paid.amountPaid.cheques[index]
+                                  .cheque_no || ""
+                              }
+                              handleChange={(e) =>
+                                formik.setFieldValue(
+                                  `paid.amountPaid.cheques[${index}].cheque_no`,
+                                  e.target.value
+                                )
+                              }
+                              label={"Cheque NO"}
+                              width="w-40"
+                            />
+                            <Input
+                              key={"bank_no"}
+                              name={"bank_no"}
+                              value={
+                                formik.values.paid.amountPaid.cheques[index]
+                                  .bank_no || ""
+                              }
+                              handleChange={(e) =>
+                                formik.setFieldValue(
+                                  `paid.amountPaid.cheques[${index}].bank_no`,
+                                  e.target.value
+                                )
+                              }
+                              label={"Bank NO"}
+                              width="w-40"
+                            />
+                            <Input
+                              key={"branch_no"}
+                              name={"branch_no"}
+                              value={
+                                formik.values.paid.amountPaid.cheques[index]
+                                  .branch_no || ""
+                              }
+                              handleChange={(e) =>
+                                formik.setFieldValue(
+                                  `paid.amountPaid.cheques[${index}].branch_no`,
+                                  e.target.value
+                                )
+                              }
+                              label={"Branch NO"}
+                              width="w-40"
+                            />
+                            <Input
+                              key="cheque_amount"
+                              name="Price"
+                              value={
+                                formik.values.paid.amountPaid.cheques[index]
+                                  .cheque_amount || ""
+                              }
+                              handleChange={(e) =>
+                                formik.setFieldValue(
+                                  `paid.amountPaid.cheques[${index}].cheque_amount`,
+                                  e.target.value
+                                )
+                              }
+                              label="Cheque amount"
+                              width="w-40"
+                            />
+                            <div className="flex flex-col items-start ">
+                              <label className="text-gray-700 font-medium">
+                                Select Date:
+                              </label>
+                              <DatePicker
+                                id="custom-datepicker"
+                                selected={
+                                  formik.values.paid.amountPaid.cheques[index]
+                                    .date
+                                }
+                                onChange={(date) =>
+                                  formik.setFieldValue(
+                                    `paid.amountPaid.cheques[${index}].date`,
+                                    date
+                                  )
+                                }
+                                className="w-40 border border-gray-300 rounded-lg px-4 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              />
+                            </div>
+                            <FileInput
+                              setFile={(file) =>
+                                formik.setFieldValue(
+                                  `paid.amountPaid.cheques[${index}].cheque_image`,
+                                  file
+                                )
+                              }
+                              file={{
+                                urlFile:
+                                  formik.values.paid.amountPaid.cheques[index]
+                                    .cheque_image,
+                              }}
+                              name="Choose Cheque Image"
+                              label={"upload cheque image"}
+                              index={index} // ✅ Explicitly pass the index
+                            />
+
+                            <button
+                              className="relative group w-10 h-10 flex-vx-center"
+                              onClick={() => deleteCheque(index)}
+                            >
+                              <DeleteIcon />
+
+                              {/* Tooltip */}
+                              <span className="absolute -top-11 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-lg rounded-md px-4 py-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">
+                                Delete Cheque
+                              </span>
+                            </button>
+
+                            {/* {formik.touched.paid?.amountPaid?.cheques &&
+                            formik.errors.paid?.amountPaid?.cheques ? (
+                              <p className="text-red-500 text-sm mt-1">
+                                {formik.errors.paid.amountPaid.cheques}
+                              </p>
+                            ) : null} */}
                           </div>
-                          <FileInput
-                            setFile={(file) =>
-                              handleChequeImageChange(file, index)
-                            } // ✅ Correctly pass index
-                            file={{ urlFile: cheque.cheque_image }}
-                            name="Choose Cheque Image"
-                            label={"upload cheque image"}
-                            index={index} // ✅ Explicitly pass the index
-                          />
-
-                          <button
-                            className="relative group w-10 h-10 flex-vx-center"
-                            onClick={() => deleteCheque(index)}
-                          >
-                            <DeleteIcon />
-
-                            {/* Tooltip */}
-                            <span className="absolute -top-11 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-lg rounded-md px-4 py-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">
-                              Delete Cheque
-                            </span>
-                          </button>
-
-                          {formik.touched.paid?.amountPaid?.cheques &&
-                          formik.errors.paid?.amountPaid?.cheques ? (
-                            <p className="text-red-500 text-sm mt-1">
-                              {formik.errors.paid.amountPaid.cheques}
-                            </p>
-                          ) : null}
-                        </div>
-                      );
-                    })}
+                        );
+                      }
+                    )}
                     <div className="  flex-center-v-end-x">
                       <Input
                         key={"total_cheque"}
                         name={"Price"}
-                        value={totalCheque || ""}
+                        value={formik.values.paid.amountPaid.totalCheque || ""}
                         label={"Total cheque "}
                         width="w-40"
                         readOnly={true}
@@ -2159,18 +1748,20 @@ const Invoice = () => {
                     <Input
                       key={"total_cash_cheque"}
                       name={"Price"}
-                      value={totalCashAndCheque || ""}
+                      value={
+                        formik.values.paid.amountPaid.totalCashAndCheque || ""
+                      }
                       label={"Total cash and cheque "}
                       width="w-48"
                       readOnly={true}
                     />
 
-                    {formik.touched.paid?.amountPaid?.cashAndCheques &&
+                    {/* {formik.touched.paid?.amountPaid?.cashAndCheques &&
                     formik.errors.paid?.amountPaid?.cashAndCheques ? (
                       <p className="text-red-500 text-sm mt-1">
                         {formik.errors.paid.amountPaid.cashAndCheques}
                       </p>
-                    ) : null}
+                    ) : null} */}
                   </div>
                 )}
                 {paymentMethods?.[4]?.isChecked && (
@@ -2180,9 +1771,12 @@ const Invoice = () => {
                       <Input
                         key={"from_bank_name"}
                         name={"from_bank_name"}
-                        value={fromBankName || ""} // Ensure value is never null
+                        value={formik.values.paid.amountPaid.fromBankName || ""} // Ensure value is never null
                         handleChange={(e) =>
-                          setFromBankName(e.target.value || "")
+                          formik.setFieldValue(
+                            "paid.amountPaid.fromBankName",
+                            e.target.value || ""
+                          )
                         }
                         label={"From bank name"}
                         width="w-48"
@@ -2191,9 +1785,14 @@ const Invoice = () => {
                       <Input
                         key={"bank_transfer_no"}
                         name={"bank_no"}
-                        value={bankTransferNO || ""} // Ensure value is never null
+                        value={
+                          formik.values.paid.amountPaid.bankTransferNO || ""
+                        } // Ensure value is never null
                         handleChange={(e) =>
-                          setBankTransferNO(parseFloat(e.target.value) || 0)
+                          formik.setFieldValue(
+                            "paid.amountPaid.bankTransferNO",
+                            parseFloat(e.target.value) || 0
+                          )
                         }
                         label={"Bank transfer NO"}
                         width="w-40"
@@ -2201,9 +1800,14 @@ const Invoice = () => {
                       <Input
                         key={"transfer value"}
                         name={"Price"}
-                        value={transferValue || ""} // Ensure value is never null
+                        value={
+                          formik.values.paid.amountPaid.transferValue || ""
+                        } // Ensure value is never null
                         handleChange={(e) =>
-                          setTransferValue(parseFloat(e.target.value) || 0)
+                          formik.setFieldValue(
+                            "paid.amountPaid.transferValue",
+                            parseFloat(e.target.value) || 0
+                          )
                         }
                         label={"Transfer value"}
                         width="w-40"
@@ -2215,7 +1819,7 @@ const Invoice = () => {
                   <Input
                     key="total_price_in_words"
                     name="total_price_in_words"
-                    value={totalAmountInWords || ""}
+                    value={formik.values.paid.totalAmountInWords || ""}
                     label="Total Amount in Words"
                     readOnly
                     width="w-80"
@@ -2224,8 +1828,10 @@ const Invoice = () => {
                 <Input
                   key="note"
                   name="note"
-                  value={note || ""}
-                  handleChange={handleChangeNote}
+                  value={formik.values.paid.note || ""}
+                  handleChange={(e) =>
+                    formik.setFieldValue("paid.note", e.target.value || "")
+                  }
                   label="Note"
                   width="w-full"
                 />
@@ -2235,19 +1841,20 @@ const Invoice = () => {
                       Enter Your Signature
                     </p>
                     <Signature
-                      setSignature={setSignatureReceiptVoucher}
-                      signature={signatureReceiptVoucher}
+                      setSignature={(url) => {
+                        formik.setFieldValue(
+                          "paid.signatureReceiptVoucher",
+                          url
+                        );
+                      }}
+                      signature={formik.values.paid.signatureReceiptVoucher}
                     />
                   </div>
 
                   <div className="border">
-                    {signatureReceiptVoucher?.urlSign ||
-                    signatureReceiptVoucher?.urlFile ? (
+                    {formik.values.paid.signatureReceiptVoucher ? (
                       <img
-                        src={
-                          signatureReceiptVoucher?.urlFile ||
-                          signatureReceiptVoucher?.urlSign
-                        }
+                        src={formik.values.paid.signatureReceiptVoucher}
                         alt="Signature"
                         className="w-[18rem] h-[9rem]"
                       />
@@ -2261,8 +1868,13 @@ const Invoice = () => {
                       OR
                     </div>
                     <FileInput
-                      setFile={setSignatureReceiptVoucher}
-                      file={signatureReceiptVoucher}
+                      setFile={(url) => {
+                        formik.setFieldValue(
+                          "paid.signatureReceiptVoucher",
+                          url
+                        );
+                      }}
+                      file={formik.values.paid.signatureReceiptVoucher}
                       name="Choose Signature Image"
                       label={"upload signature"}
                       type={"PNG"}
@@ -2271,6 +1883,10 @@ const Invoice = () => {
                 </div>
               </div>
             </div>
+          )}
+          {/* Display Single Error Message for Paid Section */}
+          {formik.errors.paid && (
+            <div style={{ color: "red" }}>{formik.errors.paid}</div>
           )}
         </section>
 
@@ -2282,6 +1898,7 @@ const Invoice = () => {
             Save in history
           </button>
         </section>
+
         {(isCreatingCustomer || isCreatingCustomerReceiptVoucher) && (
           <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg shadow-lg p-6 border w-full max-w-[60rem]">
@@ -2289,22 +1906,8 @@ const Invoice = () => {
                 <h1 className="text-3xl font-bold">Create Customer</h1>
                 <button
                   onClick={() => {
-                    const resetCustomerData =
-                      customers.find((item) => item.id === null) ||
-                      customers[0];
-
-                    if (isCreatingCustomer) {
-                      setCustomer(resetCustomerData);
-                      // formik.setFieldValue(
-                      //   "customer",
-                      //   resetCustomerData || customers[0]
-                      // );
-                      setIsCreatingCustomer(false);
-                    }
-                    if (isCreatingCustomerReceiptVoucher) {
-                      setCustomerReceiptVoucher(resetCustomerData);
-                      setIsCreatingCustomerReceiptVoucher(false);
-                    }
+                    setIsCreatingCustomer(false);
+                    setIsCreatingCustomerReceiptVoucher(false);
                   }}
                   className="text-3xl font-bold text-gray-600 hover:text-red-600"
                 >
@@ -2316,47 +1919,31 @@ const Invoice = () => {
             </div>
           </div>
         )}
-
         {isCreatingItem && (
           <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center z-50 ">
-            <div className=" bg-white rounded-lg shadow-lg py-10 px-6 border w-full max-w-[60rem]">
+            <div className="bg-white rounded-lg shadow-lg py-10 px-6 border w-full max-w-[60rem]">
               <div className="flex-center-v-space-between mb-[1.6rem]">
-                <h1 className="text-3xl font-bold ">Create Item</h1>
-
+                <h1 className="text-3xl font-bold">Create Item</h1>
                 <button
                   onClick={() => {
                     if (selectedItemIndex !== null) {
-                      setInvoiceItems((prevInvoiceItems) => {
-                        // Create a completely new array to trigger re-render
-                        const updatedInvoiceItems = prevInvoiceItems.map(
-                          (item, index) =>
-                            index === selectedItemIndex
-                              ? {
-                                  ...item,
-                                  item: {
-                                    ...(items.find(
-                                      (item) => item.id === null
-                                    ) || items[0]),
-                                  }, // Create a new object reference
-
-                                  itemPrice: (
-                                    items.find((item) => item.id === null) ||
-                                    items[0]
-                                  ).price,
-                                  itemCurrency: (
-                                    items.find((item) => item.id === null) ||
-                                    items[0]
-                                  ).currency,
-                                  totalPriceItem:
-                                    ((
-                                      items.find((item) => item.id === null) ||
-                                      items[0]
-                                    ).price || 0) * (item.itemQuantity || 0), // Use selectedOption.price
-                                }
-                              : item
+                      const newDefaultItem =
+                        items.find((itm) => itm.id === null) || items[0];
+                      const updatedInvoiceItems =
+                        formik.values.invoiceItems.map((item, index) =>
+                          index === selectedItemIndex
+                            ? {
+                                ...item,
+                                item: { ...newDefaultItem },
+                                itemPrice: newDefaultItem.price,
+                                itemCurrency: newDefaultItem.currency,
+                                totalPriceItem:
+                                  (newDefaultItem.price || 0) *
+                                  (item.itemQuantity || 0),
+                              }
+                            : item
                         );
-                        return [...updatedInvoiceItems]; // Ensures React detects the change
-                      });
+                      formik.setFieldValue("invoiceItems", updatedInvoiceItems);
                     }
                     setIsCreatingItem(false);
                     setSelectedItemIndex(null);
@@ -2366,7 +1953,6 @@ const Invoice = () => {
                   &times;
                 </button>
               </div>
-
               <CreateItem />
             </div>
           </div>

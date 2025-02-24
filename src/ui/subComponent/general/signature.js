@@ -1,7 +1,9 @@
 import React, { useEffect, useRef } from "react";
+import { useState } from "react";
 
 const Signature = (props) => {
   const canvasRef = useRef(null);
+  const [hasSignature, setHasSignature] = useState(false);
 
   let isMouseDownOrTouchStart = false;
   let previousX = 0;
@@ -90,10 +92,13 @@ const Signature = (props) => {
     if (!canvas) return;
 
     const dataUrl = canvas.toDataURL("image/png"); // Get the canvas data as a URL
-    props.setSignature((prevState) => ({
-      ...prevState, // Preserve all existing state properties
-      urlSign: dataUrl, // Update only urlSign
-    }));
+    setHasSignature(true);
+    props.setSignature(dataUrl);
+    // props.setClearFile(!props.clearFile);
+    // props.setSignature((prevState) => ({
+    //   ...prevState, // Preserve all existing state properties
+    //   urlSign: dataUrl, // Update only urlSign
+    // }));
   };
 
   // Handle save button click
@@ -106,7 +111,7 @@ const Signature = (props) => {
     try {
       const url = canvasRef.current.toDataURL("image/png");
       console.log("Canvas URL:", url);
-      props.setSignature({ ...props.signature, urlSign: url }); // Pass the data to the parent component
+      props.setSignature(url); // Pass the data to the parent component
 
       // Download the image
       const link = document.createElement("a");
@@ -127,19 +132,21 @@ const Signature = (props) => {
 
     const ctx = canvas.getContext("2d");
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+    setHasSignature(false);
+    props.setSignature(null);
 
-    props.setSignature((prevState) => ({
-      ...prevState, // Preserve all existing state properties
-      urlSign: null, // Clear only urlSign
-    }));
+    // props.setSignature((prevState) => ({
+    //   ...prevState, // Preserve all existing state properties
+    //   urlSign: null, // Clear only urlSign
+    // }));
   };
 
-  useEffect(() => {
-    if (props?.clearButt) {
-      handleClear();
-      props.setClearButt(!props.clearButt);
-    }
-  }, [props?.clearButt]);
+  // useEffect(() => {
+  //   if (props.clearCanvas) {
+  //     handleClear();
+  //     props.setClearCanvas(false);
+  //   }
+  // }, [props.clearCanvas]);
 
   return (
     <>
@@ -163,11 +170,11 @@ const Signature = (props) => {
           type="button"
           onClick={handleClear}
           className={`px-4 py-2 rounded transition duration-200 ${
-            props.signature.urlSign
+            hasSignature
               ? "bg-red-500 text-white hover:bg-red-600"
               : "bg-gray-300 text-gray-500 cursor-not-allowed"
           }`}
-          disabled={!props.signature.urlSign}
+          disabled={!hasSignature}
         >
           Clear
         </button>

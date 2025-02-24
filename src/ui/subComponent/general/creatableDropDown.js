@@ -1,21 +1,16 @@
-import React, { useEffect, useState } from "react";
+import React, { useMemo } from "react";
 
 const CreatableDropDown = (props) => {
-  const [selectedValue, setSelectedValue] = useState(
-    props.option[props.valueKey] || ""
+  const selectedValue = useMemo(
+    () => props.option[props.valueKey] || "",
+    [props.option, props.valueKey]
   );
-
-  // Update the state when props.option changes
-  useEffect(() => {
-    setSelectedValue(props.option[props.valueKey] || "");
-  }, [props.option]); // Watch for changes in props.option
 
   return (
     <div className="relative">
       <select
         value={selectedValue}
         onChange={(e) => {
-          setSelectedValue(e.target.value);
           props.handleChangeOption(e); // Call the parent handler
         }}
         className={`block ${

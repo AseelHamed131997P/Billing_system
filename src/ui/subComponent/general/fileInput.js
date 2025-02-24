@@ -9,6 +9,10 @@ const FileInput = ({
   clearButt,
   setClearButt,
   type,
+  setClearFile,
+  clearFile,
+  setClearCanvas,
+  clearCanvas,
 }) => {
   // ✅ Accept index as a prop
   const [selectedFile, setSelectedFile] = useState(null);
@@ -33,10 +37,12 @@ const FileInput = ({
         if (typeof index !== "undefined") {
           setFile(reader.result, index);
         } else {
-          setFile((prevState) => ({
-            ...prevState,
-            urlFile: reader.result, // Update only urlFile
-          }));
+          setFile(reader.result);
+          // setClearCanvas(!clearCanvas);
+          // setFile((prevState) => ({
+          //   ...prevState,
+          //   urlFile: reader.result, // Update only urlFile
+          // }));
         }
       };
 
@@ -52,10 +58,12 @@ const FileInput = ({
       setFile(null, index);
     } else {
       // ✅ If index is NOT provided, update only urlFile (global state)
-      setFile((prevState) => ({
-        ...prevState, // Preserve existing state properties
-        urlFile: null, // Update only urlFile
-      }));
+      setFile(null);
+
+      // setFile((prevState) => ({
+      //   ...prevState, // Preserve existing state properties
+      //   urlFile: null, // Update only urlFile
+      // }));
     }
 
     // Reset the file input value
@@ -65,12 +73,12 @@ const FileInput = ({
     }
   };
 
-  useEffect(() => {
-    if (clearButt !== undefined && clearButt) {
-      handleClear();
-      setClearButt(!clearButt);
-    }
-  }, [clearButt]);
+  // useEffect(() => {
+  //   if (clearFile) {
+  //     handleClear();
+  //     setClearFile(false);
+  //   }
+  // }, [clearFile]);
 
   return (
     <div>
