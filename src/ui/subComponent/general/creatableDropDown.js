@@ -1,10 +1,17 @@
 import React, { useMemo } from "react";
 
 const CreatableDropDown = (props) => {
-  const selectedValue = useMemo(
-    () => props.option[props.valueKey] || "",
-    [props.option, props.valueKey]
-  );
+  // const selectedValue = useMemo(
+  //   () => props.option[props.valueKey] || "",
+  //   [props.option, props.valueKey]
+  // );
+
+  const selectedValue = useMemo(() => {
+    if (props.option?.isAnotherItem) {
+      return "-1"; // Unique ID for "Another Item"
+    }
+    return props.option?.[props.valueKey] || ""; // Default behavior
+  }, [props.option, props.valueKey]);
 
   return (
     <div className="relative">
@@ -23,7 +30,7 @@ const CreatableDropDown = (props) => {
           </option>
         ))}
         {props.item ? (
-          <option value="another" className="text-blue-500 font-semibold">
+          <option value="-1" className="text-blue-500 font-semibold">
             Another Item
           </option>
         ) : null}

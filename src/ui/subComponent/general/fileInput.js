@@ -13,9 +13,11 @@ const FileInput = ({
   clearFile,
   setClearCanvas,
   clearCanvas,
+  selectedFile,
+  setSelectedFile,
 }) => {
   // ✅ Accept index as a prop
-  const [selectedFile, setSelectedFile] = useState(null);
+  // const [selectedFile, setSelectedFile] = useState(null);
 
   // Handle file selection
   const handleFileChange = (event) => {

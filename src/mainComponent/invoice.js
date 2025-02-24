@@ -340,26 +340,17 @@ const Invoice = () => {
   //req get vat
 
   const basePaidSchema = yup.object().shape({
-    type: yup.string().required("Payment type is required"),
-    customerReceiptVoucher: yup
-      .object()
-      .shape({ id: yup.number().required("Customer is required") }),
-    amount: yup
-      .number()
-      .required("Amount is required")
-      .positive("Amount must be greater than 0"),
-    onAccountOf: yup.string().required("On account of is required"),
-    currencyReceiptVoucher: yup.string().required("Currency is required"),
-    signatureReceiptVoucher: yup.string().required("Signature is required"),
+    type: yup.string().required(),
+    customerReceiptVoucher: yup.object().shape({ id: yup.number().required() }),
+    amount: yup.number().required().positive(),
+    onAccountOf: yup.string().required(),
+    signatureReceiptVoucher: yup.string().required(),
   });
 
   // Schema for "Cash" type
   const cashSchema = yup.object().shape({
     amountPaid: yup.object().shape({
-      cash: yup
-        .number()
-        .required("Cash amount is required")
-        .positive("Cash must be greater than 0"),
+      cash: yup.number().required().positive(),
     }),
   });
 
@@ -370,61 +361,59 @@ const Invoice = () => {
         .array()
         .of(
           yup.object().shape({
-            bank_name: yup.string().required("Bank name is required"),
-            cheque_no: yup.string().required("Cheque number is required"),
-            bank_no: yup.string().required("Bank number is required"),
-            branch_no: yup.string().required("Branch number is required"),
-            cheque_amount: yup.number().required("Cheque amount is required"),
-            date: yup.date().required("Date is required"),
-            cheque_image: yup.string().required("Cheque image is required"),
+            bank_name: yup.string().required(),
+            cheque_no: yup.string().required(),
+            bank_no: yup.string().required(),
+            branch_no: yup.string().required(),
+            cheque_amount: yup.number().required(),
+            date: yup.date().required(),
+            cheque_image: yup.string().required(),
           })
         )
-        .required("At least one cheque is required"),
+        .required(),
     }),
   });
 
   // Schema for "Cash & Cheque" type
   const cashAndChequeSchema = yup.object().shape({
     amountPaid: yup.object().shape({
-      cash: yup
-        .number()
-        .required("Cash amount is required")
-        .positive("Cash must be greater than 0"),
+      cash: yup.number().required().positive(),
       cheques: yup
         .array()
         .of(
           yup.object().shape({
-            bank_name: yup.string().required("Bank name is required"),
-            cheque_no: yup.string().required("Cheque number is required"),
-            bank_no: yup.string().required("Bank number is required"),
-            branch_no: yup.string().required("Branch number is required"),
-            cheque_amount: yup.number().required("Cheque amount is required"),
-            date: yup.date().required("Date is required"),
-            cheque_image: yup.string().required("Cheque image is required"),
+            bank_name: yup.string().required(),
+            cheque_no: yup.string().required(),
+            bank_no: yup.string().required(),
+            branch_no: yup.string().required(),
+            cheque_amount: yup.number().required(),
+            date: yup.date().required(),
+            cheque_image: yup.string().required(),
           })
         )
-        .required("At least one cheque is required"),
+        .required(),
     }),
   });
 
   // Schema for "Bank Transfer" type
   const bankTransferSchema = yup.object().shape({
     amountPaid: yup.object().shape({
-      fromBankName: yup.string().required("From bank name is required"),
-      bankTransferNO: yup
-        .number()
-        .required("Bank transfer number is required")
-        .positive("bank transfer NO must be greater than 0"),
-      transferValue: yup
-        .number()
-        .required("Transfer value is required")
-        .positive("Transfer value must be greater than 0"),
+      fromBankName: yup.string().required(),
+      bankTransferNO: yup.string().required(),
+      transferValue: yup.number().required().positive(),
     }),
   });
 
-  // Schema for "Unpaid" type
   const unpaidSchema = yup.object().shape({
-    amountPaid: yup.object().notRequired(), // Skip validation for amountPaid
+    // Skip validation for all fields in basePaidSchema
+    customerReceiptVoucher: yup.object().notRequired(),
+    amount: yup.number().notRequired(),
+    onAccountOf: yup.string().notRequired(),
+    currencyReceiptVoucher: yup.string().notRequired(),
+    signatureReceiptVoucher: yup.string().notRequired(),
+
+    // Skip validation for amountPaid
+    amountPaid: yup.object().notRequired(),
   });
 
   // Function to dynamically build the schema based on the type
@@ -439,7 +428,7 @@ const Invoice = () => {
       case "Bank Transfer":
         return basePaidSchema.concat(bankTransferSchema);
       case "Unpaid":
-        return basePaidSchema.concat(unpaidSchema);
+        return unpaidSchema;
       default:
         return basePaidSchema; // Fallback to base schema
     }
@@ -449,13 +438,13 @@ const Invoice = () => {
     // Customer section
     customer: yup.object().shape({
       customer: yup.object().shape({
-        id: yup.number().required("Customer is required"),
+        id: yup.number().required(),
       }),
       customerInfo: yup.object().shape({
-        Mobile_NO: yup.string().required("Mobile number is required"),
-        Full_Address: yup.string().required("Full address is required"),
-        City: yup.string().required("City is required"),
-        VAT_NO: yup.string().required("VAT number is required"),
+        Mobile_NO: yup.string().required(),
+        Full_Address: yup.string().required(),
+        City: yup.string().required(),
+        VAT_NO: yup.string().required(),
       }),
     }),
 
@@ -463,26 +452,31 @@ const Invoice = () => {
     invoiceItems: yup.array().of(
       yup.object().shape({
         item: yup.object().shape({
-          id: yup.number().required("Item is required"), // Ensure an item is selected
-        }),
-        itemPrice: yup
-          .number()
-          .typeError("Item price must be a number")
-          .positive("Item price must be greater than 0")
-          .required("Item price is required"),
+          id: yup.number().required(),
+          value: yup
+            .string()
+            .test(
+              "is-required-if-another-item",
+              "Another Item value is required",
+              function (value) {
+                const { id } = this.parent;
+                if (id === -1) {
+                  return !!value;
+                }
 
-        itemQuantity: yup
-          .number()
-          .typeError("Quantity must be a number")
-          .positive("Quantity must be greater than 0")
-          .integer("Quantity must be an integer")
-          .required("Item quantity is required"),
+                return true;
+              }
+            ),
+        }),
+        itemPrice: yup.number().typeError().positive().required(),
+
+        itemQuantity: yup.number().typeError().positive().integer().required(),
       })
     ),
 
     // Invoice summary section
     invoiceSummary: yup.object().shape({
-      signatureInvoice: yup.string().required("Invoice signature is required"),
+      signatureInvoice: yup.string().required(),
     }),
 
     // Paid section (dynamically built based on type)
@@ -552,43 +546,34 @@ const Invoice = () => {
       const errors = {};
 
       try {
-        // Validate the entire schema
         validationSchema.validateSync(values, { abortEarly: false });
       } catch (err) {
-        // Check if the error has the expected structure
         if (err.inner && Array.isArray(err.inner)) {
-          // Check if there are any errors in the invoiceItems section
           const hasInvoiceItemsErrors = err.inner.some((error) =>
             error.path.startsWith("invoiceItems")
           );
 
           if (hasInvoiceItemsErrors) {
-            // Set a single error message for the invoiceItems section
             errors.invoiceItems =
-              "All the values are required, and item price and quantity must be > 0";
+              "All the values are required, item price and quantity must be greater than 0,quantity must be integer";
           }
 
-          // Handle errors for the invoiceSummary section
           const hasInvoiceSummaryErrors = err.inner.some((error) =>
             error.path.startsWith("invoiceSummary.signatureInvoice")
           );
 
           if (hasInvoiceSummaryErrors) {
-            // Set a specific error message for the invoiceSummary section
             errors.invoiceSummary = "Signature is required";
           }
 
-          // Check if there are any errors in the customer section
           const hasCustomerErrors = err.inner.some((error) =>
             error.path.startsWith("customer")
           );
 
           if (hasCustomerErrors) {
-            // Set a specific error message for the customer section
             errors.customer = "All fields in the customer section are required";
           }
 
-          // Handle paid errors
           const hasPaidErrors = err.inner.some((error) =>
             error.path.startsWith("paid")
           );
@@ -596,7 +581,6 @@ const Invoice = () => {
             errors.paid = "Payment details are invalid or incomplete";
           }
         } else {
-          // Handle unexpected errors (e.g., schema configuration errors)
           console.error("Unexpected validation error:", err);
           errors.general = "An unexpected error occurred during validation.";
         }
@@ -686,15 +670,15 @@ const Invoice = () => {
       return;
     }
 
-    if (selectedValue === "another") {
+    if (selectedValue === "-1") {
       // If user selects "another", enable input field
       const updatedItems = formik.values.invoiceItems.map((item, index) =>
         index === invoiceItemIndex
           ? {
               ...item,
+              item: { id: -1, isAnotherItem: true, value: "" }, // Set flag for "Another Item"
               itemPrice: null,
               itemCurrency: "NIS",
-              anotherItem: { exist: true, value: "" },
             }
           : item
       );
@@ -715,7 +699,6 @@ const Invoice = () => {
             itemCurrency: selectedOption.currency,
             totalPriceItem:
               (selectedOption.price || 0) * (item.itemQuantity || 0),
-            anotherItem: { exist: false, value: "" },
           }
         : item
     );
@@ -728,7 +711,7 @@ const Invoice = () => {
       index === invoiceItemIndex
         ? {
             ...item,
-            anotherItem: { exist: true, value: newValue },
+            item: { id: -1, isAnotherItem: true, value: newValue },
           }
         : item
     );
@@ -741,7 +724,7 @@ const Invoice = () => {
       index === invoiceItemIndex
         ? {
             ...item,
-            itemPrice: price,
+            itemPrice: parseFloat(price) || 0,
             totalPriceItem: price * (item.itemQuantity || 0),
           }
         : item
@@ -870,7 +853,7 @@ const Invoice = () => {
 
   // Compute total price from invoiceItems (using formik state)
   const totalPrice = useMemo(() => {
-    return formik.values.invoiceItems.reduce(
+    formik.values.invoiceSummary.totalPrice = formik.values.invoiceItems.reduce(
       (sum, item) => sum + (item.totalPriceItem || 0),
       0
     );
@@ -895,6 +878,7 @@ const Invoice = () => {
       : integerInWords;
   }
   useEffect(() => {
+    const { totalPrice } = formik.values.invoiceSummary;
     let calculatedTotalPriceWithoutVAT,
       calculatedTotalVAT,
       calculatedTotalPriceWithVAT,
@@ -947,7 +931,7 @@ const Invoice = () => {
       });
     }
   }, [
-    totalPrice,
+    formik.values.invoiceSummary.totalPrice,
     formik.values.invoiceSummary.isIncludeVAT,
     formik.values.invoiceSummary.isIncludeItemVAT,
     formik.values.invoiceSummary.VAT,
@@ -1097,6 +1081,52 @@ const Invoice = () => {
     formik.setFieldValue("paid.customerReceiptVoucher", updatedCustomer);
   }, [formik.values.customer.customer]);
 
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [messageIsPricePaid, setMessageIsPricePaid] = useState("");
+
+  useEffect(() => {
+    const { amount, amountPaid } = formik.values.paid;
+
+    // Exit early if no payment amount is provided
+    if (amount === null) {
+      setMessageIsPricePaid("");
+      return;
+    }
+
+    // Destructure payment method flags (with a fallback to an empty object)
+    const { isChecked: isCashChecked } =
+      paymentMethods.find((m) => m.label === "Cash") || {};
+    const { isChecked: isChequeChecked } =
+      paymentMethods.find((m) => m.label === "Cheque") || {};
+    const { isChecked: isCashAndChequeChecked } =
+      paymentMethods.find((m) => m.label === "Cash & Cheque") || {};
+    const { isChecked: isBankTransferChecked } =
+      paymentMethods.find((m) => m.label === "Bank Transfer") || {};
+
+    let isPaid = false;
+
+    if (isCashChecked) {
+      isPaid = amount === (amountPaid.cash || 0);
+    } else if (isChequeChecked) {
+      isPaid = amount === (amountPaid.totalCheque || 0);
+    } else if (isCashAndChequeChecked) {
+      isPaid = amount === (amountPaid.totalCashAndCheque || 0);
+    } else if (isBankTransferChecked) {
+      isPaid = amount === (amountPaid.transferValue || 0);
+    }
+
+    setMessageIsPricePaid(
+      isPaid ? "Thank you for paying" : "Please pay the full invoice amount"
+    );
+  }, [
+    formik.values.paid.amount,
+    formik.values.paid.amountPaid.cash,
+    formik.values.paid.amountPaid.totalCheque,
+    formik.values.paid.amountPaid.totalCashAndCheque,
+    formik.values.paid.amountPaid.transferValue,
+    paymentMethods,
+  ]);
+
   return (
     <>
       <Header />
@@ -1140,7 +1170,7 @@ const Invoice = () => {
               num={formik.values.customer.customer.customer_number}
             />
           </div>
-          <div className="grid-5-cols-center-x gap-y-10 h-24">
+          <div className="grid-5-cols-center-x gap-y-2  h-[6rem]">
             <div className="">
               <CreatableDropDown
                 key={formik.values.customer.customer.id} // Add a key prop
@@ -1169,11 +1199,13 @@ const Invoice = () => {
             )}
 
             {formik.errors.customer && (
-              <div style={{ color: "red" }}>{formik.errors.customer}</div>
+              <div className="text-red-500 col-start-1 col-span-full justify-self-start ">
+                {formik.errors.customer}
+              </div>
             )}
           </div>
         </section>
-        <section className="border rounded-[20px] p-10">
+        <section className="border rounded-[20px] p-10 grid gap-y-10">
           <div className="flex-center-v-space-between">
             <h1 className="text-2xl font-semibold">Item</h1>
             <button
@@ -1188,100 +1220,73 @@ const Invoice = () => {
               </span>
             </button>
           </div>
-          <div className="grid">
+          <div className="grid gap-y-5">
             {formik.values.invoiceItems.map((invoiceItem, index) => (
               <div
                 key={index}
                 className={`${
-                  invoiceItem?.anotherItem?.exist
+                  invoiceItem?.item?.isAnotherItem
                     ? "grid-8-cols-center-x"
                     : "grid-7-cols-center-x"
-                } h-24`}
+                } `}
               >
                 <NumberValue
                   label="Item"
                   num={invoiceItem.item.item_number}
                   width="w-40"
                 />
-                <div>
-                  <CreatableDropDown
-                    options={items}
-                    option={invoiceItem.item}
-                    handleChangeOption={(e) => handleChangeItem(e, index)}
-                    valueKey="id"
-                    label="name"
+                <CreatableDropDown
+                  options={items}
+                  option={
+                    invoiceItem.item?.isAnotherItem
+                      ? { isAnotherItem: true } // Indicates "Another Item" is selected
+                      : invoiceItem.item
+                  }
+                  // option={invoiceItem.item}
+                  handleChangeOption={(e) => handleChangeItem(e, index)}
+                  valueKey="id"
+                  label="name"
+                  width="w-48"
+                  item={"anotherItem"} // Ensures "another" option is available
+                />
+
+                {invoiceItem.item?.isAnotherItem && (
+                  <Input
+                    key={`another_item_${index}`}
+                    name="another_item"
+                    value={invoiceItem.item.value || ""}
+                    handleChange={(e) => handleChangeAnotherItem(e, index)}
+                    label="Another item"
                     width="w-48"
-                    item={"anotherItem"} // Ensures "another" option is available
                   />
-                  {/* {formik.touched.invoiceItems?.[index]?.item &&
-                    formik.errors.invoiceItems?.[index]?.item?.id && (
-                      <p className="text-red-500 text-sm mt-1">
-                        {formik.errors.invoiceItems[index].item.id}
-                      </p>
-                    )} */}
-                </div>
-                {invoiceItem.anotherItem?.exist && (
-                  <div>
-                    <Input
-                      key={`another_item_${index}`}
-                      name="another_item"
-                      value={invoiceItem.anotherItem.value || ""}
-                      handleChange={(e) => handleChangeAnotherItem(e, index)}
-                      label="Another item"
-                      width="w-48"
-                    />
-                    {/* {formik.touched.invoiceItems?.[index]?.anotherItem?.value &&
-                      formik.errors.invoiceItems?.[index]?.anotherItem
-                        ?.value && (
-                        <p className="text-red-500 text-sm mt-1">
-                          {formik.errors.invoiceItems[index].anotherItem.value}
-                        </p>
-                      )} */}
-                  </div>
                 )}
-                <div>
-                  <Input
-                    key={"item_price"}
-                    name={"Price"}
-                    value={invoiceItem.itemPrice || ""}
-                    handleChange={(e) => handleChangeItemPrice(e, index)}
-                    label={"Item price"}
-                    width="w-40"
-                  />
-                  {/* {formik.touched.invoiceItems?.[index]?.itemPrice &&
-                    formik.errors.invoiceItems?.[index]?.itemPrice && (
-                      <p className="text-red-500 text-sm mt-1">
-                        {formik.errors.invoiceItems[index].itemPrice}
-                      </p>
-                    )} */}
-                </div>
-                <div>
-                  <DropDown
-                    options={currencies}
-                    option={invoiceItem.itemCurrency}
-                    handleChangeOption={(e) =>
-                      handleChangeItemCurrency(e, index)
-                    }
-                    label={"Select item currency"}
-                    width="w-40"
-                  />
-                </div>
-                <div>
-                  <Input
-                    key={"item_quantity"}
-                    name={"quantity"}
-                    value={invoiceItem.itemQuantity || ""}
-                    handleChange={(e) => handleChangeItemQuantity(e, index)}
-                    label={"Item quantity"}
-                    width="w-40"
-                  />
-                  {/* {formik.touched.invoiceItems?.[index]?.itemQuantity &&
-                    formik.errors.invoiceItems?.[index]?.itemQuantity && (
-                      <p className="text-red-500 text-sm mt-1">
-                        {formik.errors.invoiceItems[index].itemQuantity}
-                      </p>
-                    )} */}
-                </div>
+
+                <Input
+                  key={"item_price"}
+                  name={"Price"}
+                  value={invoiceItem.itemPrice || ""}
+                  handleChange={(e) => handleChangeItemPrice(e, index)}
+                  label={"Item price"}
+                  width="w-40"
+                />
+
+                <DropDown
+                  options={currencies}
+                  option={invoiceItem.itemCurrency}
+                  handleChangeOption={(e) => handleChangeItemCurrency(e, index)}
+                  label={"Select item currency"}
+                  width="w-40"
+                />
+
+                <Input
+                  key={"item_quantity"}
+                  name={"quantity"}
+                  value={invoiceItem.itemQuantity || ""}
+                  handleChange={(e) => handleChangeItemQuantity(e, index)}
+                  label={"Item quantity"}
+                  width="w-40"
+                />
+
                 <Input
                   key={"total_price_item"}
                   name={"Price"}
@@ -1320,9 +1325,8 @@ const Invoice = () => {
             />
           </div>
 
-          {/* Display Errors for Invoice Items */}
           {formik.errors.invoiceItems && (
-            <div style={{ color: "red" }}>{formik.errors.invoiceItems}</div>
+            <div className="text-red-500">{formik.errors.invoiceItems}</div>
           )}
         </section>
         <section className="border rounded-[20px] p-10 grid gap-10 ">
@@ -1428,13 +1432,12 @@ const Invoice = () => {
                 setClearCanvas={setClearCanvas}
                 clearCanvas={clearCanvas}
               />
-              <div className="h-[.1rem]">
-                {formik.errors.invoiceSummary && (
-                  <div style={{ color: "red" }}>
-                    {formik.errors.invoiceSummary}
-                  </div>
-                )}
-              </div>
+
+              {formik.errors.invoiceSummary && (
+                <div className="text-red-500 mt-5">
+                  {formik.errors.invoiceSummary}
+                </div>
+              )}
             </div>
           </div>
         </section>
@@ -1506,15 +1509,6 @@ const Invoice = () => {
                     width="w-48"
                   />
 
-                  {/* <Input
-                  key="total_price_in_words"
-                  name="total_price_in_words"
-                  value={totalAmountInWords || ""}
-                  label="Total Amount in Words"
-                  readOnly
-                  width="w-80"
-                /> */}
-
                   <DropDown
                     options={currencies}
                     option={formik.values.paid.currencyReceiptVoucher}
@@ -1528,7 +1522,7 @@ const Invoice = () => {
                     width="w-40"
                   />
                 </div>
-                {/* {messageIsPricePaid && (
+                {messageIsPricePaid && (
                   <div className=" ">
                     <p
                       className={` text-sm font-medium ${
@@ -1540,7 +1534,7 @@ const Invoice = () => {
                       {messageIsPricePaid}
                     </p>
                   </div>
-                )} */}
+                )}
 
                 {(paymentMethods?.[1]?.isChecked ||
                   paymentMethods?.[3]?.isChecked) && (
@@ -1707,6 +1701,8 @@ const Invoice = () => {
                               name="Choose Cheque Image"
                               label={"upload cheque image"}
                               index={index} // ✅ Explicitly pass the index
+                              selectedFile={selectedFile}
+                              setSelectedFile={setSelectedFile}
                             />
 
                             <button
@@ -1791,7 +1787,7 @@ const Invoice = () => {
                         handleChange={(e) =>
                           formik.setFieldValue(
                             "paid.amountPaid.bankTransferNO",
-                            parseFloat(e.target.value) || 0
+                            e.target.value || ""
                           )
                         }
                         label={"Bank transfer NO"}
@@ -1926,25 +1922,25 @@ const Invoice = () => {
                 <h1 className="text-3xl font-bold">Create Item</h1>
                 <button
                   onClick={() => {
-                    if (selectedItemIndex !== null) {
-                      const newDefaultItem =
-                        items.find((itm) => itm.id === null) || items[0];
-                      const updatedInvoiceItems =
-                        formik.values.invoiceItems.map((item, index) =>
-                          index === selectedItemIndex
-                            ? {
-                                ...item,
-                                item: { ...newDefaultItem },
-                                itemPrice: newDefaultItem.price,
-                                itemCurrency: newDefaultItem.currency,
-                                totalPriceItem:
-                                  (newDefaultItem.price || 0) *
-                                  (item.itemQuantity || 0),
-                              }
-                            : item
-                        );
-                      formik.setFieldValue("invoiceItems", updatedInvoiceItems);
-                    }
+                    // if (selectedItemIndex !== null) {
+                    //   const newDefaultItem =
+                    //     items.find((itm) => itm.id === null) || items[0];
+                    //   const updatedInvoiceItems =
+                    //     formik.values.invoiceItems.map((item, index) =>
+                    //       index === selectedItemIndex
+                    //         ? {
+                    //             ...item,
+                    //             item: { ...newDefaultItem },
+                    //             itemPrice: newDefaultItem.price,
+                    //             itemCurrency: newDefaultItem.currency,
+                    //             totalPriceItem:
+                    //               (newDefaultItem.price || 0) *
+                    //               (item.itemQuantity || 0),
+                    //           }
+                    //         : item
+                    //     );
+                    //   formik.setFieldValue("invoiceItems", updatedInvoiceItems);
+                    // }
                     setIsCreatingItem(false);
                     setSelectedItemIndex(null);
                   }}
