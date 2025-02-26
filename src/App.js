@@ -15,6 +15,10 @@ import {
   TaxCopy,
   Reports,
   Support,
+  PrintableComponent,
+  CreateInvoice,
+  Settings,
+  DeliveryInvoices,
 } from "./mainComponent/index";
 import { useNavigate } from "react-router-dom";
 import React, { useEffect } from "react";
@@ -70,6 +74,22 @@ function App() {
           <Route path="/taxCopy" element={<PrivateRoute element={TaxCopy} />} />
           <Route path="/reports" element={<PrivateRoute element={Reports} />} />
           <Route path="/support" element={<PrivateRoute element={Support} />} />
+          <Route
+            path="/print-invoice"
+            element={<PrivateRoute element={PrintableComponent} />}
+          />
+          <Route
+            path="/create-invoice"
+            element={<PrivateRoute element={CreateInvoice} />}
+          />
+          <Route
+            path="/settings"
+            element={<PrivateRoute element={Settings} />}
+          />
+          <Route
+            path="/deliveryInvoices"
+            element={<PrivateRoute element={DeliveryInvoices} />}
+          />
         </>
       </Routes>
     </>

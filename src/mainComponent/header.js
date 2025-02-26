@@ -3,6 +3,7 @@ import logo_agile from "../img/logo_agile.png";
 import "./login.css";
 import "../CSS/general.css";
 import "../index.css";
+import { useEffect } from "react";
 
 import { useTranslation } from "react-i18next";
 import {
@@ -21,6 +22,7 @@ import {
   Table,
   LangSelect,
 } from "../ui/subComponent/general/index.js";
+import { SettingIcon } from "../../src/svgs/index.js";
 
 import Agile from "../img/agile.png";
 import { useDispatch, useSelector } from "react-redux";
@@ -30,6 +32,13 @@ const Header = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
+
+  // useEffect(() => {
+  //   // Redirect from "/create-invoice" to "/invoice"
+  //   if (location.pathname === "/create-invoice") {
+  //     navigate("/invoice", { replace: true });
+  //   }
+  // }, [location, navigate]);
 
   const handleChangePath = (e, path) => {
     e.preventDefault();
@@ -54,6 +63,7 @@ const Header = () => {
           { name: "Items", path: "/item" },
           { name: "Receipt voucher", path: "/recieptVoucher" },
           { name: "Return invoices", path: "/returnInvoices" },
+          { name: "Delivery invoices", path: "/deliveryInvoices" },
           { name: "Tax copy", path: "/taxCopy" },
           { name: "Reports", path: "/reports" },
           { name: "Support", path: "/support" },
@@ -79,6 +89,15 @@ const Header = () => {
             className="text-2xl font-medium transition-colors text-black"
           >
             Logout
+          </a>
+        </li>
+        <li className="ml-5">
+          <a
+            href="#"
+            onClick={(e) => handleChangePath(e, "/settings")}
+            className="text-gray-700 hover:text-blue-500 transition-colors"
+          >
+            <SettingIcon />
           </a>
         </li>
         <li className="ml-[4.8rem]">

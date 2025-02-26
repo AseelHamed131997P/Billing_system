@@ -20,3 +20,12 @@ export const saveInHistory = (values) => (dispatch) => {
     console.error("Error saving invoice in localStorage:", error);
   }
 };
+
+export const saveAndPrint = (values, buttonName) => (dispatch) => {
+  console.log("Invoice for print:", values);
+
+  try {
+  } catch (error) {
+    console.error("Error saving invoice in database:", error);
+  }
+};

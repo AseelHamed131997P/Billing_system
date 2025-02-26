@@ -31,11 +31,101 @@ import DeleteIcon from "../svgs/deleteIcon.js";
 import * as yup from "yup";
 import { useFormik, ErrorMessage, Formik } from "formik";
 
-// const ErrorText = ({ name }) => (
-//   <ErrorMessage name={name}>
-//     {(msg) => <p className="text-red-500 text-sm mt-1">{msg}</p>}
-//   </ErrorMessage>
-// );
+import {
+  Banknote,
+  CreditCard,
+  Wallet,
+  Ban as Bank,
+  AlertCircle,
+  Calendar,
+  DollarSign,
+  Clock,
+  Users,
+  ChevronDown,
+  Upload,
+  Plus,
+} from "lucide-react";
+
+// Define the receipt types and their properties
+const RECEIPT_TYPES = {
+  cash: {
+    icon: Banknote,
+    label: "Cash",
+    description: "Cash payment receipt",
+  },
+  cheque: {
+    icon: CreditCard,
+    label: "Cheque",
+    description: "Cheque payment receipt",
+  },
+  "cash&cheque": {
+    icon: Wallet,
+    label: "Cash & Cheque",
+    description: "Combined cash and cheque payment",
+  },
+  bankTransfer: {
+    icon: Bank,
+    label: "Bank Transfer",
+    description: "Bank transfer receipt",
+  },
+  unpaid: {
+    icon: AlertCircle,
+    label: "Unpaid",
+    description: "Unpaid receipt record",
+  },
+};
+
+// Mock data - In a real app, this would come from an API
+const receiptData = {
+  cash: {
+    total: 25,
+    amount: 15000,
+    lastReceipt: "2023-12-10T10:30:00",
+  },
+  cheque: {
+    total: 40,
+    amount: 25000,
+    postdated: 5,
+    returned: 2,
+  },
+  "cash&cheque": {
+    total: 10,
+    amount: 18000,
+  },
+  bankTransfer: {
+    total: 15,
+    amount: 30000,
+    lastTransfer: "2023-12-10T09:00:00",
+  },
+  unpaid: {
+    total: 8,
+    amount: 12000,
+    customers: 6,
+  },
+};
+
+function SummaryCard({ title, icon: Icon, stats, className }) {
+  return (
+    <div className={`bg-white rounded-xl shadow-sm p-6 ${className}`}>
+      <div className="flex items-center gap-3 mb-4">
+        <div className="p-2 rounded-lg bg-indigo-50">
+          <Icon className="w-6 h-6 text-indigo-600" />
+        </div>
+        <h3 className="font-semibold text-gray-900">{title}</h3>
+      </div>
+      <div className="space-y-3">{stats}</div>
+    </div>
+  );
+}
+
+function StatItem({ label, value }) {
+  return (
+    <div className="flex justify-between items-center text-sm">
+      <span className="text-gray-600">{label}</span>
+      <span className="font-medium text-gray-900">{value}</span>
+    </div>
+  );
+}
 
 const ReceiptVoucher = () => {
   const dispatch = useDispatch();
@@ -1467,11 +1557,381 @@ const ReceiptVoucher = () => {
   //   });
   // }, [invoiceItems]);
   const [onInvoice, setOnInvoice] = useState(true);
+  const [showVoucherSelection, setShowVoucherSelection] = useState(false);
+  const [selectedType, setSelectedType] = useState(null);
+  const [formData, setFormData] = useState({
+    customer: "",
+    amount: "",
+    invoice: "",
+    currency: "USD",
+    details: "",
+    notes: "",
+    signature: "",
+  });
+
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleString();
+  };
+
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+    }).format(amount);
+  };
+
+  const handleInputChange = (e) => {
+    setFormData((prev) => ({
+      ...prev,
+      [e.target.name]: e.target.value,
+    }));
+  };
+
+  const handleVoucherTypeSelect = (type) => {
+    setSelectedType(type);
+  };
+
   return (
     <>
       <Header />
-      <form onSubmit={formik.handleSubmit} className="p-10 border grid gap-10">
-        <section className="border rounded-[20px] p-10 grid gap-10 ">
+      <form
+        onSubmit={formik.handleSubmit}
+        className="p-10 border grid gap-10 bg-gray-50 min-h-screen"
+      >
+        <div className="max-w-7xl mx-auto px-4 py-8">
+          <div className="flex items-center gap-3 mb-8">
+            <Wallet className="w-8 h-8 text-indigo-600" />
+            <h1 className="text-2xl font-bold text-gray-900">
+              Receivables Management
+            </h1>
+          </div>
+
+          {/* Summary Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+            <SummaryCard
+              title="Cash Receipts"
+              icon={Banknote}
+              stats={
+                <>
+                  <StatItem
+                    label="Total Receipts"
+                    value={receiptData.cash.total}
+                  />
+                  <StatItem
+                    label="Total Amount"
+                    value={formatCurrency(receiptData.cash.amount)}
+                  />
+                  <StatItem
+                    label="Last Receipt"
+                    value={formatDate(receiptData.cash.lastReceipt)}
+                  />
+                </>
+              }
+            />
+
+            <SummaryCard
+              title="Cheque Receipts"
+              icon={CreditCard}
+              stats={
+                <>
+                  <StatItem
+                    label="Total Cheques"
+                    value={receiptData.cheque.total}
+                  />
+                  <StatItem
+                    label="Total Amount"
+                    value={formatCurrency(receiptData.cheque.amount)}
+                  />
+                  <StatItem
+                    label="Postdated Cheques"
+                    value={receiptData.cheque.postdated}
+                  />
+                  <StatItem
+                    label="Returned Cheques"
+                    value={receiptData.cheque.returned}
+                  />
+                </>
+              }
+            />
+
+            <SummaryCard
+              title="Cash & Cheque Receipts"
+              icon={Wallet}
+              stats={
+                <>
+                  <StatItem
+                    label="Total Receipts"
+                    value={receiptData["cash&cheque"].total}
+                  />
+                  <StatItem
+                    label="Total Amount"
+                    value={formatCurrency(receiptData["cash&cheque"].amount)}
+                  />
+                </>
+              }
+            />
+
+            <SummaryCard
+              title="Bank Transfers"
+              icon={Bank}
+              stats={
+                <>
+                  <StatItem
+                    label="Total Transfers"
+                    value={receiptData.bankTransfer.total}
+                  />
+                  <StatItem
+                    label="Total Amount"
+                    value={formatCurrency(receiptData.bankTransfer.amount)}
+                  />
+                  <StatItem
+                    label="Last Transfer"
+                    value={formatDate(receiptData.bankTransfer.lastTransfer)}
+                  />
+                </>
+              }
+            />
+
+            <SummaryCard
+              title="Unpaid Receipts"
+              icon={AlertCircle}
+              className="md:col-span-2 lg:col-span-1"
+              stats={
+                <>
+                  <StatItem
+                    label="Unpaid Receipts"
+                    value={receiptData.unpaid.total}
+                  />
+                  <StatItem
+                    label="Total Due"
+                    value={formatCurrency(receiptData.unpaid.amount)}
+                  />
+                  <StatItem
+                    label="Customers"
+                    value={receiptData.unpaid.customers}
+                  />
+                </>
+              }
+            />
+          </div>
+
+          {/* Add New Receipt Section with Voucher Type Selection */}
+          <div className="mb-8">
+            <div className="flex flex-col gap-4">
+              <div className="flex items-center gap-4">
+                <button
+                  onClick={() => setShowVoucherSelection(!showVoucherSelection)}
+                  className="w-10 h-10 rounded-full bg-indigo-600 flex items-center justify-center hover:bg-indigo-700 transition-colors"
+                >
+                  <Plus className="w-6 h-6 text-white" />
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Voucher Type Selection */}
+          {/* <div
+            className={`bg-white rounded-xl shadow-sm p-6 mb-8 transition-all duration-300 ${
+              showVoucherSelection
+                ? "opacity-100 visible"
+                : "opacity-0 invisible hidden"
+            }`}
+          >
+            <h2 className="text-xl font-semibold text-gray-900 mb-6">
+              Select Receipt Voucher Type
+            </h2>
+            <div className="flex flex-wrap gap-3">
+              {Object.entries(RECEIPT_TYPES).map(([type, { label }]) => (
+                <button
+                  key={type}
+                  onClick={() => handleVoucherTypeSelect(type)}
+                  className={`px-6 py-2 rounded-lg text-sm font-medium transition-colors
+                  ${
+                    selectedType === type
+                      ? "bg-indigo-600 text-white"
+                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div> */}
+
+          {/* Voucher Details Form */}
+          {/* {selectedType && (
+            <div className="bg-white rounded-xl shadow-sm p-6 mb-8">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="p-2 rounded-lg bg-indigo-50">
+                  {(() => {
+                    const Icon = RECEIPT_TYPES[selectedType].icon;
+                    return <Icon className="w-6 h-6 text-indigo-600" />;
+                  })()}
+                </div>
+                <h2 className="text-lg font-semibold text-gray-900">
+                  {RECEIPT_TYPES[selectedType].label} Receipt Details
+                </h2>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Customer
+                    </label>
+                    <div className="relative">
+                      <select
+                        name="customer"
+                        value={formData.customer}
+                        onChange={handleInputChange}
+                        className="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                      >
+                        <option value="">Select customer</option>
+                        <option value="1">Customer 1</option>
+                        <option value="2">Customer 2</option>
+                      </select>
+                      <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Amount
+                    </label>
+                    <div className="relative">
+                      <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                      <input
+                        type="number"
+                        name="amount"
+                        value={formData.amount}
+                        onChange={handleInputChange}
+                        className="block w-full pl-10 rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                        placeholder="Enter amount"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Invoice Number
+                    </label>
+                    <input
+                      type="text"
+                      name="invoice"
+                      value={formData.invoice}
+                      onChange={handleInputChange}
+                      className="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                      placeholder="Enter invoice number"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Currency
+                    </label>
+                    <div className="relative">
+                      <select
+                        name="currency"
+                        value={formData.currency}
+                        onChange={handleInputChange}
+                        className="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                      >
+                        <option value="USD">USD</option>
+                        <option value="EUR">EUR</option>
+                        <option value="GBP">GBP</option>
+                      </select>
+                      <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Payment Details
+                    </label>
+                    <textarea
+                      name="details"
+                      value={formData.details}
+                      onChange={handleInputChange}
+                      rows={3}
+                      className="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                      placeholder="Enter payment details"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Notes
+                    </label>
+                    <textarea
+                      name="notes"
+                      value={formData.notes}
+                      onChange={handleInputChange}
+                      rows={3}
+                      className="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                      placeholder="Add any additional notes"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Signature
+                    </label>
+                    <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg">
+                      <div className="space-y-1 text-center">
+                        <Upload className="mx-auto h-12 w-12 text-gray-400" />
+                        <div className="flex text-sm text-gray-600">
+                          <label
+                            htmlFor="signature"
+                            className="relative cursor-pointer rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-indigo-500"
+                          >
+                            <span>Upload signature</span>
+                            <input
+                              id="signature"
+                              name="signature"
+                              type="file"
+                              className="sr-only"
+                            />
+                          </label>
+                        </div>
+                        <p className="text-xs text-gray-500">
+                          PNG, JPG up to 10MB
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-6 flex justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedType(null);
+                    setShowVoucherSelection(false);
+                  }}
+                  className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
+                >
+                  Save Receipt
+                </button>
+              </div>
+            </div>
+          )} */}
+        </div>
+
+        <section
+          className={`border rounded-[20px] p-10 grid gap-10 bg-white ${
+            showVoucherSelection
+              ? "opacity-100 visible"
+              : "opacity-0 invisible hidden"
+          }`}
+        >
           <h1 className="text-2xl font-semibold">Payment Method</h1>
           <div className="center-v gap-10">
             {paymentMethods.map((paymentMethod) => (
@@ -1807,7 +2267,13 @@ const ReceiptVoucher = () => {
           </div>
         </section>
 
-        <section className="border rounded-[20px] p-10 grid gap-10">
+        <section
+          className={`border rounded-[20px] p-10 grid gap-10 bg-white ${
+            showVoucherSelection
+              ? "opacity-100 visible"
+              : "opacity-0 invisible hidden"
+          }`}
+        >
           <button
             type="button"
             class="w-40 px-4 py-2 bg-green-600 text-white text-xl font-semibold rounded-md hover:bg-green-500 active:bg-green-700 focus:outline-none transition duration-300 ease-in-out"

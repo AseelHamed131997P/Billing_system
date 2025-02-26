@@ -14,3 +14,8 @@ export { default as ReturnInvoices } from "./returnInvoices";
 export { default as TaxCopy } from "./taxCopy";
 export { default as Reports } from "./reports";
 export { default as Support } from "./support";
+export { default as PrintableComponent } from "./printableComponent.js";
+export { default as CreateInvoice } from "./createInvoice";
+export { default as Settings } from "./settings";
+export { default as DeliveryInvoices } from "./deliveryInvoices";
+export { default as ShowInvoice } from "./showInvoice.js";
