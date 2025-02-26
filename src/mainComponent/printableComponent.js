@@ -77,32 +77,14 @@ const PrintableComponent = () => {
     doc.write(`
       <html>
         <head>
-        
+          <title>Print Invoice</title>
+          <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css">
           <style>
-            body { font-family: Arial, sans-serif; padding: 20px; }
             @media print {
-  @page {
-    margin: 0; /* Removes default margins (title, date, and footer) */
-    size: auto; /* Ensures full-page printing */
-  }
-
-  body {
-    margin: 0;
-    padding: 0;
-   
-   
-   
-  }
-}
-
-            .invoice-container {
-             width:90%;
-             margin: 0 auto;
-             margin-top:40px;
-              background: white;
-              border:1px solid black
+              @page { margin: 0; }
+              body { margin: 0; padding: 20px; background: white; color: black; }
+              .invoice-container { width: 90%; margin: 0 auto; border: 1px solid black;  }
             }
-           
           </style>
         </head>
         <body>
@@ -127,9 +109,10 @@ const PrintableComponent = () => {
       {/* Invoice Section (Only this will be printed) */}
       <div
         ref={printRef}
-        className="w-full max-w-2xl bg-white shadow-md border border-gray-300 print:shadow-none print:border-none "
+        className="w-full max-w-2xl bg-white shadow-md border border-gray-300 print:shadow-none print:border-none"
       >
         <ShowInvoice data={sampleInvoiceData} />
+
         {/* <h1 className="text-2xl font-bold text-center mb-4">Invoice Details</h1>
         <p className="text-lg">
           <span className="font-semibold">Invoice Number:</span>{" "}

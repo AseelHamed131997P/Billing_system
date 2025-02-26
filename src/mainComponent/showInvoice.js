@@ -7,7 +7,7 @@ import React from "react";
 
 const ShowInvoice = ({ data }) => {
   return (
-    <div className="max-w-3xl mx-auto bg-white p-8 rounded-lg shadow-lg">
+    <div className="max-w-3xl mx-auto bg-white p-8 rounded-lg shadow-lg border">
       <div className="bg-[#6527BE] text-white p-6 rounded-t-lg">
         <div className="flex justify-between items-start">
           <div>

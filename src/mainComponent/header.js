@@ -55,7 +55,7 @@ const Header = () => {
   return (
     <header className="bg-white h-24 flex-center-v-space-between px-10 drop-shadow-md">
       <img src={Agile} alt="logo" className="h-24" />
-      <ul className="center-v gap-10">
+      <ul className="center-v gap-5">
         {[
           { name: "Home", path: "/home" },
           { name: "Invoices", path: "/invoice" },
@@ -72,7 +72,7 @@ const Header = () => {
             <a
               href="#"
               onClick={(e) => handleChangePath(e, item.path)}
-              className={`text-2xl font-medium transition-colors ${
+              className={`text-lg font-medium transition-colors ${
                 location.pathname === item.path
                   ? "text-blue-700"
                   : "text-black hover:text-blue-500"
@@ -86,7 +86,7 @@ const Header = () => {
           <a
             href="#"
             onClick={logoutSubmit}
-            className="text-2xl font-medium transition-colors text-black"
+            className="text-lg font-medium transition-colors text-black"
           >
             Logout
           </a>

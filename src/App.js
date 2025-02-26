@@ -19,6 +19,8 @@ import {
   CreateInvoice,
   Settings,
   DeliveryInvoices,
+  CreateDeliveryInvoice,
+  NewReturnInvoice,
 } from "./mainComponent/index";
 import { useNavigate } from "react-router-dom";
 import React, { useEffect } from "react";
@@ -89,6 +91,14 @@ function App() {
           <Route
             path="/deliveryInvoices"
             element={<PrivateRoute element={DeliveryInvoices} />}
+          />
+          <Route
+            path="/create-delivery-invoice"
+            element={<PrivateRoute element={CreateDeliveryInvoice} />}
+          />
+          <Route
+            path="/new-return-invoice"
+            element={<PrivateRoute element={NewReturnInvoice} />}
           />
         </>
       </Routes>

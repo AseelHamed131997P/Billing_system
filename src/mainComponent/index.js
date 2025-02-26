@@ -19,3 +19,5 @@ export { default as CreateInvoice } from "./createInvoice";
 export { default as Settings } from "./settings";
 export { default as DeliveryInvoices } from "./deliveryInvoices";
 export { default as ShowInvoice } from "./showInvoice.js";
+export { default as CreateDeliveryInvoice } from "./createDeliveryInvoice.js";
+export { default as NewReturnInvoice } from "./newReturnInvoice.js";

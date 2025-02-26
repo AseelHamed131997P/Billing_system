@@ -22,7 +22,7 @@ import {
   Table,
 } from "../ui/subComponent/general/index.js";
 
-const ReturnInvoices = () => {
+const NewReturnInvoice = () => {
   const navigate = useNavigate();
 
   const [itemInfo, setItemInfo] = useState({
@@ -94,18 +94,18 @@ const ReturnInvoices = () => {
     return (
       <div className="flex gap-2">
         <>
-          {/* <button
+          <button
             // onClick={onEdit}
             className="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600"
           >
-            Edit
-          </button> */}
-          <button
+            Rotate
+          </button>
+          {/* <button
             //  onClick={onDelete}
             className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
           >
             Show or Send
-          </button>
+          </button> */}
         </>
       </div>
     );
@@ -145,17 +145,11 @@ const ReturnInvoices = () => {
       id: "actions",
       enableSorting: false,
     },
-    // {
-    //   accessorKey: "invoice_NO",
-    //   header: "Invoice NO",
-    //   cell: (info) => info.getValue(),
-
-    //   enableSorting: true,
-    // },
     {
       accessorKey: "invoice_NO",
-      header: "Returned invoice from invoice NO",
+      header: "Invoice NO",
       cell: (info) => info.getValue(),
+
       enableSorting: true,
     },
     {
@@ -202,18 +196,10 @@ const ReturnInvoices = () => {
         <div className="overflow-hidden bg-white rounded-[2rem] shadow-[rgba(17,17,26,0.05)_0px_1px_0px,_rgba(17,17,26,0.1)_0px_0px_8px] margin-auto max-w-[111rem]">
           <HeaderRegister />
 
-          <section className="box-section ">
-            <button
-              className="ml-10 bg-indigo-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-indigo-700"
-              onClick={() => navigate("/new-return-invoice")}
-            >
-              <Plus className="h-5 w-5" />
-              New Return Invoice
-            </button>
-
+          <section className="box-section">
             <div className="p-10">
               <h2 className="text-2xl font-semibold text-gray-800 mb-4">
-                {`List of Returned invoices :`}
+                {`List of invoices :`}
               </h2>
 
               <Table
@@ -236,4 +222,4 @@ const ReturnInvoices = () => {
   );
 };
 
-export default ReturnInvoices;
+export default NewReturnInvoice;

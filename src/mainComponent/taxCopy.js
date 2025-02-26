@@ -5,6 +5,7 @@ import "../CSS/general.css";
 import { LangSelect, Number } from "../ui/subComponent/general";
 import { useTranslation } from "react-i18next";
 import { Header } from "./index.js";
+import DatePicker from "react-datepicker";
 
 import {
   Routes,
@@ -93,16 +94,10 @@ const TaxCopy = () => {
       <div className="flex gap-2">
         <>
           <button
-            // onClick={onEdit}
-            className="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600"
-          >
-            Edit
-          </button>
-          <button
             //  onClick={onDelete}
             className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
           >
-            Show or Send
+            Print or Send
           </button>
         </>
       </div>
@@ -186,6 +181,18 @@ const TaxCopy = () => {
       enableSorting: true,
     },
   ];
+  const [invoiceDate, setInvoiceDate] = useState({
+    date: new Date(),
+    toDate: new Date(), // ✅ Add toDate state
+  });
+
+  const handleChangeChequeDate = (date) => {
+    setInvoiceDate((prev) => ({ ...prev, date }));
+  };
+
+  const handleChangeToDate = (date) => {
+    setInvoiceDate((prev) => ({ ...prev, toDate: date }));
+  };
   return (
     <>
       <Header />
@@ -195,9 +202,46 @@ const TaxCopy = () => {
 
           <section className="box-section">
             <div className="p-10">
-              <h2 className="text-2xl font-semibold text-gray-800 mb-4">
-                {`Invoices stored in the history :`}
-              </h2>
+              <div className="p-5 ">
+                <h2 className="text-2xl font-semibold text-gray-800 mb-10">
+                  Tax Copy from Invoices:
+                </h2>
+
+                {/* Date Pickers with Labels */}
+                <div className="flex items-center gap-6">
+                  {/* From Date */}
+                  <div className="flex flex-col">
+                    <label
+                      htmlFor="from-date"
+                      className="text-gray-700 font-medium mb-1"
+                    >
+                      From:
+                    </label>
+                    <DatePicker
+                      id="from-date"
+                      selected={invoiceDate.date}
+                      onChange={(date) => handleChangeChequeDate(date)}
+                      className="w-40 border border-gray-300 rounded-lg px-4 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+
+                  {/* To Date */}
+                  <div className="flex flex-col">
+                    <label
+                      htmlFor="to-date"
+                      className="text-gray-700 font-medium mb-1"
+                    >
+                      To:
+                    </label>
+                    <DatePicker
+                      id="to-date"
+                      selected={invoiceDate.toDate} // ✅ Ensure you have a state variable for this
+                      onChange={(date) => handleChangeToDate(date)} // ✅ Add a handler function
+                      className="w-40 border border-gray-300 rounded-lg px-4 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                </div>
+              </div>
 
               <Table
                 data={data}

@@ -1598,7 +1598,7 @@ const ReceiptVoucher = () => {
         onSubmit={formik.handleSubmit}
         className="p-10 border grid gap-10 bg-gray-50 min-h-screen"
       >
-        <div className="max-w-7xl mx-auto px-4 py-8">
+        <div className="  w-full  max-w-[100rem] mx-auto px-4 py-8">
           <div className="flex items-center gap-3 mb-8">
             <Wallet className="w-8 h-8 text-indigo-600" />
             <h1 className="text-2xl font-bold text-gray-900">
@@ -1716,17 +1716,14 @@ const ReceiptVoucher = () => {
           </div>
 
           {/* Add New Receipt Section with Voucher Type Selection */}
-          <div className="mb-8">
-            <div className="flex flex-col gap-4">
-              <div className="flex items-center gap-4">
-                <button
-                  onClick={() => setShowVoucherSelection(!showVoucherSelection)}
-                  className="w-10 h-10 rounded-full bg-indigo-600 flex items-center justify-center hover:bg-indigo-700 transition-colors"
-                >
-                  <Plus className="w-6 h-6 text-white" />
-                </button>
-              </div>
-            </div>
+          <div className="p-5 border bg-white rounded-2xl w-full max-w-[100rem] ">
+            <button
+              onClick={() => setShowVoucherSelection(!showVoucherSelection)}
+              className=" bg-indigo-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-indigo-700"
+            >
+              <Plus className="h-5 w-5" />
+              Create Receipt Voucher
+            </button>
           </div>
 
           {/* Voucher Type Selection */}
@@ -1926,7 +1923,7 @@ const ReceiptVoucher = () => {
         </div>
 
         <section
-          className={`border rounded-[20px] p-10 grid gap-10 bg-white ${
+          className={`border rounded-[20px] p-10 grid gap-10 bg-white max-w-[100rem] mx-auto ${
             showVoucherSelection
               ? "opacity-100 visible"
               : "opacity-0 invisible hidden"
@@ -1945,7 +1942,7 @@ const ReceiptVoucher = () => {
               />
             ))}
           </div>
-          <div className="border grid gap-10">
+          <div className="border grid gap-10 pb-10">
             <HeaderReceiptVoucher
               name={customer.company_name}
               title="Receipt Voucher"
@@ -1962,7 +1959,7 @@ const ReceiptVoucher = () => {
                 })}
               </div>
 
-              <div className=" grid-4-cols-center-vx gap-10">
+              <div className=" grid-4-cols-center-vx gap-10 ">
                 <CreatableDropDown
                   options={customers}
                   option={customerReceiptVoucher}
@@ -2225,7 +2222,7 @@ const ReceiptVoucher = () => {
                 label="Note"
                 width="w-full"
               />
-              <div className="grid-2-cols-center-vx">
+              {/* <div className="grid-2-cols-center-vx">
                 <div className="w-50rem">
                   <p className="text-lg font-medium center-x">
                     Enter Your Signature
@@ -2262,13 +2259,13 @@ const ReceiptVoucher = () => {
                     name="Choose Signature Image"
                   />
                 </div>
-              </div>
+              </div> */}
             </div>
           </div>
         </section>
 
         <section
-          className={`border rounded-[20px] p-10 grid gap-10 bg-white ${
+          className={`border rounded-[20px] p-10 grid gap-10 bg-white w-full max-w-[100rem] mx-auto ${
             showVoucherSelection
               ? "opacity-100 visible"
               : "opacity-0 invisible hidden"

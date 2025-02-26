@@ -27,24 +27,15 @@ const AdminAndCompany = () => {
   const navigate = useNavigate(); // Initialize navigate function
   const user = useSelector((state) => state.auth.user); // Get current user state
 
-  const [signatureComp, setSignatureComp] = useState({
-    urlSign: null,
-    urlFile: null,
-  }); // here save the signature value just when not null if null does not save
+  const [signatureComp, setSignatureComp] = useState(""); // here save the signature value just when not null if null does not save
+  const [signatureAdmin, setSignatureAdmin] = useState("");
+  // const [signatureAdmin, setSignatureAdmin] = useState({
+  //   urlSign: null,
+  //   urlFile: null,
+  // }); // here save the signature value just when not null if null does not save
+  console.log(`test  admin urlSign ${signatureAdmin}`);
 
-  const [signatureAdmin, setSignatureAdmin] = useState({
-    urlSign: null,
-    urlFile: null,
-  }); // here save the signature value just when not null if null does not save
-  console.log(`test  admin urlSign ${signatureAdmin.urlSign}`);
-  console.log(`test admin page urlFile ${signatureAdmin.urlFile}`);
-
-  console.log(`test company page urlSign ${signatureComp.urlSign}`);
-  console.log(`test company page urlFile ${signatureComp.urlFile}`);
-
-  console.log(
-    `test company page urlFile type:  typeOf: ${typeof signatureComp.urlFile}`
-  );
+  console.log(`test company page urlSign ${signatureComp}`);
 
   let companyType = [
     "Simple User",
@@ -106,16 +97,12 @@ const AdminAndCompany = () => {
     "VAT NO",
   ];
 
-  const [companyLogo, setCompanyLogo] = useState({
-    urlFile: null,
-  });
+  const [companyLogo, setCompanyLogo] = useState("");
 
-  console.log(`companyLogo: ${companyLogo.urlFile}`);
+  // console.log(`companyLogo: ${companyLogo.urlFile}`);
 
-  const [CompanyLicense, setCompanyLicense] = useState({
-    urlFile: null,
-  });
-  console.log(`Company License: ${CompanyLicense.urlFile}`);
+  const [CompanyLicense, setCompanyLicense] = useState("");
+  // console.log(`Company License: ${CompanyLicense.urlFile}`);
 
   const [invoiceNumber, setInvoiceNumber] = useState({
     start: null,
@@ -148,11 +135,9 @@ const AdminAndCompany = () => {
     `delivery number: ${deliveryNumber.start} _ ${deliveryNumber.end}`
   );
 
-  const [invoicePhoto, setInvoicePhoto] = useState({
-    urlFile: null,
-  });
+  const [invoicePhoto, setInvoicePhoto] = useState("");
 
-  console.log(`invoice Photo: ${invoicePhoto.urlFile}`);
+  // console.log(`invoice Photo: ${invoicePhoto.urlFile}`);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -182,6 +167,15 @@ const AdminAndCompany = () => {
 
     navigate("/home"); // Navigate after updating state
   };
+  const [selectedFileSignAdmin, setSelectedFileSignAdmin] = useState(null);
+  const [selectedFileInvoiceNO, setSelectedFileInvoiceNO] = useState(null);
+  const [selectedFileInvoiceNOStart, setSelectedFileInvoiceNOStart] =
+    useState(null);
+  const [selectedFileInvoiceNOEnd, setSelectedFileInvoiceNOEnd] =
+    useState(null);
+  const [selectedFileCompLogo, setSelectedFileCompLogo] = useState(null);
+  const [selectedFileCompPaper, setSelectedFileCompPaper] = useState(null);
+  const [selectedFileSignComp, setSelectedFileSignComp] = useState(null);
 
   return (
     <main className="bg-[#f1f3f6] pt-[3.2rem] pb-[3.2rem]">
@@ -227,13 +221,9 @@ const AdminAndCompany = () => {
               </div>
 
               <div className="border p-2 col-start-3 row-span-2 center-x">
-                {signatureAdmin.urlSign || signatureAdmin.urlFile ? (
+                {signatureAdmin ? (
                   <img
-                    src={
-                      signatureAdmin.urlSign && signatureAdmin.urlFile
-                        ? signatureAdmin.urlFile // Show urlFile if both exist
-                        : signatureAdmin.urlSign || signatureAdmin.urlFile // Show the existing URL
-                    }
+                    src={signatureAdmin}
                     alt="Signature"
                     className="w-[18rem] h-[9rem]"
                   />
@@ -251,6 +241,8 @@ const AdminAndCompany = () => {
                   file={signatureAdmin}
                   name={"Choose Signature Image"}
                   type={"PNG"}
+                  selectedFile={selectedFileSignAdmin}
+                  setSelectedFile={setSelectedFileSignAdmin}
                 />
               </div>
             </section>
@@ -341,6 +333,8 @@ const AdminAndCompany = () => {
                     file={invoicePhoto}
                     name={"Upload Invoice Photo"}
                     label={"permission image"}
+                    selectedFile={selectedFileInvoiceNO}
+                    setSelectedFile={setSelectedFileInvoiceNO}
                   />
                 ) : (
                   <>
@@ -349,12 +343,16 @@ const AdminAndCompany = () => {
                       file={invoicePhoto}
                       name={"Upload Invoice Photo"}
                       label={"upload start number"}
+                      selectedFile={selectedFileInvoiceNOStart}
+                      setSelectedFile={setSelectedFileInvoiceNOStart}
                     />
                     <FileInput
                       setFile={setInvoicePhoto}
                       file={invoicePhoto}
                       name={"Upload Invoice Photo"}
                       label={"upload end number"}
+                      selectedFile={selectedFileInvoiceNOEnd}
+                      setSelectedFile={setSelectedFileInvoiceNOEnd}
                     />
                   </>
                 )}
@@ -370,6 +368,8 @@ const AdminAndCompany = () => {
                     file={CompanyLicense}
                     name={"Choose Company License"}
                     label={" upload logo"}
+                    selectedFile={selectedFileCompLogo}
+                    setSelectedFile={setSelectedFileCompLogo}
                   />
                 </div>
                 <div className="center-v">
@@ -381,6 +381,8 @@ const AdminAndCompany = () => {
                     file={companyLogo}
                     name={"Choose Company Logo"}
                     label={" upload license paper"}
+                    selectedFile={selectedFileCompPaper}
+                    setSelectedFile={setSelectedFileCompPaper}
                   />
                 </div>
               </div>
@@ -395,13 +397,9 @@ const AdminAndCompany = () => {
               </div>
 
               <div className="border p-2 col-start-3 row-span-2 center-x">
-                {signatureComp.urlSign || signatureComp.urlFile ? (
+                {signatureComp ? (
                   <img
-                    src={
-                      signatureComp.urlSign && signatureComp.urlFile
-                        ? signatureComp.urlFile // Show urlFile if both exist
-                        : signatureComp.urlSign || signatureComp.urlFile // Show the existing URL
-                    }
+                    src={signatureComp}
                     alt="Signature"
                     className="w-[18rem] h-[9rem]"
                   />
@@ -420,6 +418,8 @@ const AdminAndCompany = () => {
                   file={signatureComp}
                   name={"Choose Signature Image"}
                   type={"PNG"}
+                  selectedFile={selectedFileSignComp}
+                  setSelectedFile={setSelectedFileSignComp}
                 />
               </div>
             </section>
